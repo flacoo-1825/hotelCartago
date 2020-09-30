@@ -170,21 +170,21 @@
                                         </div>
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Ciudad de origen</label>
-                                            <input type="text" class="form-control"    placeholder="introduzca la ciudad">
+                                            <input type="text" class="form-control"  v-model="cityOrigin_certificate"  placeholder="introduzca la ciudad">
                                         </div>
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Ciudad de destino</label>
-                                            <input type="text" class="form-control"    placeholder="introduzca la ciudad">
+                                            <input type="text" class="form-control" v-model="cityDestination_certificate"   placeholder="introduzca la ciudad">
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Placa Auto</label>
-                                            <input type="text" class="form-control"    placeholder="Ej: MNZ 328">
+                                            <input type="text" class="form-control"  v-model="placaCar_certificate"  placeholder="Ej: MNZ 328">
                                         </div>
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Placa Moto</label>
-                                            <input type="text" class="form-control"    placeholder="Ej: MNZ 328">
+                                            <input type="text" class="form-control"  v-model="placabike_certificate"  placeholder="Ej: MNZ 328">
                                         </div>
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Cantidad de Personas</label>
@@ -199,7 +199,7 @@
                                         </div>
                                         <div class="col-sm-12 col-md-8 form-group">
                                             <label for="text-input ">Observaciones</label>
-                                            <textarea  class="form-control"    rows="2"></textarea> 
+                                            <textarea  class="form-control"   v-model="observation_certificate" rows="2"></textarea> 
                                         </div>
                                     </div>
                                   </template>
@@ -336,6 +336,9 @@
             entry_certificate : new Date(),
             children_certificate : 0,
             adults_certificate : 0,
+            observation_certificate : '',
+            placaCar_certificate : '',
+            placabike_certificate : '',
             name_client : '',
             firstSurname_client : '',
             secondSurname_client : '',
@@ -532,6 +535,45 @@
 
             },
 
+        registerCertificate(){
+
+                let me = this;
+                var url  = 'certificate/register';
+                axios.post(url,{
+
+                            'number_certificate'          :    this.number_certificate,
+                            'cityOrigin_certificate'      :    this.cityOrigin_certificate,
+                            'cityDestination_certificate' :    this.cityDestination_certificate,
+                            'placabike_certificate'       :    this.placabike_certificate,
+                            'placaCar_certificate'        :    this.placaCar_certificate,
+                            'adults_certificate'          :    this.adults_certificate,
+                            'children_certificate'        :    this.children_certificate,
+                            'entry_certificate'           :    this.entry_certificate,
+                            'observation_certificate'     :    this.observation_certificate,
+                    
+                           
+
+                }).then(function (response) {
+                    Swal.fire({
+                      position: 'center',
+                      icon: 'success',
+                      title: 'Tu acta fue registrada con éxito',
+                      showConfirmButton: false,
+                      timer: 1500
+                    });
+                      me.closeModal();
+                      me.listRoomsActive(1,this.search,this.valor);
+
+                  })
+                  .catch(function (error) {
+                        var respuesta = error.response.data;
+                        me.arrayError = respuesta.errors;
+                        console.log(error.response.data);
+                  });
+
+            },
+
+
         openModal(model, accion, data = [] ){
 
           switch(model){
@@ -644,8 +686,8 @@
 
         stateBusy(){
 
-                
                 let me = this;
+                me.registerCertificate();
                 var url  = 'room/statebusy';
                 axios.put(url,{
 

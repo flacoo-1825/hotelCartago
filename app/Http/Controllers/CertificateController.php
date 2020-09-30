@@ -69,7 +69,7 @@ class CertificateController extends Controller
     }
 
 
-    public function searchClient(Request $request){
+    public function searchCertificate(Request $request){
 
         // $cc_certificates = '2425';
 

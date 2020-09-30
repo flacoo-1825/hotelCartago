@@ -82566,6 +82566,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       entry_certificate: new Date(),
       children_certificate: 0,
       adults_certificate: 0,
+      observation_certificate: '',
+      placaCar_certificate: '',
+      placabike_certificate: '',
       name_client: '',
       firstSurname_client: '',
       secondSurname_client: '',
@@ -82744,6 +82747,38 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         console.log(error.response.data);
       });
     },
+    registerCertificate: function registerCertificate() {
+
+      var me = this;
+      var url = 'certificate/register';
+      axios.post(url, {
+
+        'number_certificate': this.number_certificate,
+        'cityOrigin_certificate': this.cityOrigin_certificate,
+        'cityDestination_certificate': this.cityDestination_certificate,
+        'placabike_certificate': this.placabike_certificate,
+        'placaCar_certificate': this.placaCar_certificate,
+        'adults_certificate': this.adults_certificate,
+        'children_certificate': this.children_certificate,
+        'entry_certificate': this.entry_certificate,
+        'observation_certificate': this.observation_certificate
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Tu acta fue registrada con éxito',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+        me.listRoomsActive(1, this.search, this.valor);
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
     openModal: function openModal(model, accion) {
       var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
@@ -82857,6 +82892,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     stateBusy: function stateBusy() {
 
       var me = this;
+      me.registerCertificate();
       var url = 'room/statebusy';
       axios.put(url, {
 
@@ -83674,15 +83710,137 @@ var render = function() {
                               })
                             ]),
                             _vm._v(" "),
-                            _vm._m(2),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ciudad de origen")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cityOrigin_certificate,
+                                    expression: "cityOrigin_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca la ciudad"
+                                },
+                                domProps: { value: _vm.cityOrigin_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cityOrigin_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
                             _vm._v(" "),
-                            _vm._m(3)
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ciudad de destino")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cityDestination_certificate,
+                                    expression: "cityDestination_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca la ciudad"
+                                },
+                                domProps: {
+                                  value: _vm.cityDestination_certificate
+                                },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cityDestination_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
                           ]),
                           _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
-                            _vm._m(4),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Placa Auto")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.placaCar_certificate,
+                                    expression: "placaCar_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "Ej: MNZ 328"
+                                },
+                                domProps: { value: _vm.placaCar_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.placaCar_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
                             _vm._v(" "),
-                            _vm._m(5),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Placa Moto")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.placabike_certificate,
+                                    expression: "placabike_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "Ej: MNZ 328"
+                                },
+                                domProps: { value: _vm.placabike_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.placabike_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
                             _vm._v(" "),
                             _c("div", { staticClass: "col-sm-12 col-md-4" }, [
                               _c("label", { attrs: { for: "text-input " } }, [
@@ -83763,7 +83921,40 @@ var render = function() {
                               1
                             ),
                             _vm._v(" "),
-                            _vm._m(6)
+                            _c(
+                              "div",
+                              { staticClass: "col-sm-12 col-md-8 form-group" },
+                              [
+                                _c("label", { attrs: { for: "text-input " } }, [
+                                  _vm._v("Observaciones")
+                                ]),
+                                _vm._v(" "),
+                                _c("textarea", {
+                                  directives: [
+                                    {
+                                      name: "model",
+                                      rawName: "v-model",
+                                      value: _vm.observation_certificate,
+                                      expression: "observation_certificate"
+                                    }
+                                  ],
+                                  staticClass: "form-control",
+                                  attrs: { rows: "2" },
+                                  domProps: {
+                                    value: _vm.observation_certificate
+                                  },
+                                  on: {
+                                    input: function($event) {
+                                      if ($event.target.composing) {
+                                        return
+                                      }
+                                      _vm.observation_certificate =
+                                        $event.target.value
+                                    }
+                                  }
+                                })
+                              ]
+                            )
                           ])
                         ]
                       : _vm.stateRoom == "register"
@@ -84320,72 +84511,6 @@ var staticRenderFns = [
       { staticClass: "btn btn-primary", attrs: { type: "submit" } },
       [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
     )
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
-      _c("label", { attrs: { for: "text-input " } }, [
-        _vm._v("Ciudad de origen")
-      ]),
-      _vm._v(" "),
-      _c("input", {
-        staticClass: "form-control",
-        attrs: { type: "text", placeholder: "introduzca la ciudad" }
-      })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
-      _c("label", { attrs: { for: "text-input " } }, [
-        _vm._v("Ciudad de destino")
-      ]),
-      _vm._v(" "),
-      _c("input", {
-        staticClass: "form-control",
-        attrs: { type: "text", placeholder: "introduzca la ciudad" }
-      })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
-      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Placa Auto")]),
-      _vm._v(" "),
-      _c("input", {
-        staticClass: "form-control",
-        attrs: { type: "text", placeholder: "Ej: MNZ 328" }
-      })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
-      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Placa Moto")]),
-      _vm._v(" "),
-      _c("input", {
-        staticClass: "form-control",
-        attrs: { type: "text", placeholder: "Ej: MNZ 328" }
-      })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-12 col-md-8 form-group" }, [
-      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Observaciones")]),
-      _vm._v(" "),
-      _c("textarea", { staticClass: "form-control", attrs: { rows: "2" } })
-    ])
   }
 ]
 render._withStripped = true

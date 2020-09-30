@@ -74,3 +74,8 @@ Route::put('product/update','ProductController@update')->name('product.update');
 Route::put('product/activo','ProductController@activo')->name('product.activo');
 Route::put('product/inactivo','ProductController@inactivo')->name('product.inactivo');
 Route::get('product/active','ProductController@listproductActive')->name('v.listproductsActive');
+
+Route::get('certificate','CertificateController@index')->name('certificate.index');
+Route::post('certificate/register','CertificateController@store')->name('certificate.store');
+Route::put('certificate/update','CertificateController@update')->name('certificate.update');
+Route::get('certificate/searchcertificate','CertificateController@searchClient')->name('certificate.searchClient');
