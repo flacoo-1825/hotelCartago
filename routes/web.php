@@ -29,8 +29,12 @@ Route::get('room','RoomController@index')->name('room.index');
 Route::post('room/register','RoomController@store')->name('room.store');
 Route::put('room/update','RoomController@update')->name('room.update');
 Route::put('room/activo','RoomController@activo')->name('room.activo');
+Route::put('room/statebusy','RoomController@statebusy')->name('room.statebusy');
+Route::put('room/statefree','RoomController@statefree')->name('room.statefree');
 Route::put('room/inactivo','RoomController@inactivo')->name('room.inactivo');
 Route::get('room/active','RoomController@listRoomActive')->name('room.listRoomActive');
+
+
 
 Route::get('link','LinkController@index')->name('link.index');
 Route::post('link/register','LinkController@store')->name('link.store');

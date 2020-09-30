@@ -83,7 +83,8 @@ class CustomersController extends Controller
             return ['client'=>['name_client'=>'Usuario no registrado']];
         }else{
             $customers = Customers::where('cedula_client' ,$cc_customers)
-                        ->select('id','cedula_client','name_client','firstSurname_client','secondSurname_client')
+                        // ->select('id','cedula_client','name_client','firstSurname_client','secondSurname_client',
+                        // 'narionality_client')
                         ->get();
 
             return ['client'=>$customers[0]];

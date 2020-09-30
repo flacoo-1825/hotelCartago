@@ -83,21 +83,21 @@ class RoomController extends Controller
         $room->save();
     }
 
-    public function reservar(Request $request)
+    public function statebusy(Request $request)
     {
         if (!$request->ajax()) return redirect('/');
 
         $room =  Room::findOrFail($request->id);
-        $room->state_type_room = 'R';
+        $room->state = 'Ocupada';
         $room->save();
     }
 
-    public function freeReserva(Request $request)
+    public function statefree(Request $request)
     {
         if (!$request->ajax()) return redirect('/');
 
         $room =  Room::findOrFail($request->id);
-        $room->state_type_rooms = '';
+        $room->state = 'Disponible';
         $room->save();
     }
 

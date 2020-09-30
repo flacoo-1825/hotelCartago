@@ -1426,256 +1426,6 @@ module.exports = g;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = addMonths;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name addMonths
- * @category Month Helpers
- * @summary Add the specified number of months to the given date.
- *
- * @description
- * Add the specified number of months to the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} amount - the amount of months to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- * @returns {Date} the new date with the months added
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Add 5 months to 1 September 2014:
- * var result = addMonths(new Date(2014, 8, 1), 5)
- * //=> Sun Feb 01 2015 00:00:00
- */
-
-function addMonths(dirtyDate, dirtyAmount) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var date = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate);
-  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
-
-  if (isNaN(amount)) {
-    return new Date(NaN);
-  }
-
-  if (!amount) {
-    // If 0 months, no-op to avoid changing times in the hour before end of DST
-    return date;
-  }
-
-  var dayOfMonth = date.getDate(); // The JS Date object supports date math by accepting out-of-bounds values for
-  // month, day, etc. For example, new Date(2020, 1, 0) returns 31 Dec 2019 and
-  // new Date(2020, 13, 1) returns 1 Feb 2021.  This is *almost* the behavior we
-  // want except that dates will wrap around the end of a month, meaning that
-  // new Date(2020, 13, 31) will return 3 Mar 2021 not 28 Feb 2021 as desired. So
-  // we'll default to the end of the desired month by adding 1 to the desired
-  // month and using a date of 0 to back up one day to the end of the desired
-  // month.
-
-  var endOfDesiredMonth = new Date(date.getTime());
-  endOfDesiredMonth.setMonth(date.getMonth() + amount + 1, 0);
-  var daysInMonth = endOfDesiredMonth.getDate();
-
-  if (dayOfMonth >= daysInMonth) {
-    // If we're already at the end of the month, then this is the correct date
-    // and we're done.
-    return endOfDesiredMonth;
-  } else {
-    // Otherwise, we now know that setting the original day-of-month value won't
-    // cause an overflow, so set the desired day-of-month. Note that we can't
-    // just set the date of `endOfDesiredMonth` because that object may have had
-    // its time changed in the unusual case where where a DST transition was on
-    // the last day of the month and its local time was in the hour skipped or
-    // repeated next to a DST transition.  So we use `date` instead which is
-    // guaranteed to still have the original time.
-    date.setFullYear(endOfDesiredMonth.getFullYear(), endOfDesiredMonth.getMonth(), dayOfMonth);
-    return date;
-  }
-}
-
-/***/ }),
-/* 19 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = addMilliseconds;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name addMilliseconds
- * @category Millisecond Helpers
- * @summary Add the specified number of milliseconds to the given date.
- *
- * @description
- * Add the specified number of milliseconds to the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} amount - the amount of milliseconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- * @returns {Date} the new date with the milliseconds added
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Add 750 milliseconds to 10 July 2014 12:45:30.000:
- * var result = addMilliseconds(new Date(2014, 6, 10, 12, 45, 30, 0), 750)
- * //=> Thu Jul 10 2014 12:45:30.750
- */
-
-function addMilliseconds(dirtyDate, dirtyAmount) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var timestamp = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate).getTime();
-  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
-  return new Date(timestamp + amount);
-}
-
-/***/ }),
-/* 20 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name startOfISOWeekYear
- * @category ISO Week-Numbering Year Helpers
- * @summary Return the start of an ISO week-numbering year for the given date.
- *
- * @description
- * Return the start of an ISO week-numbering year,
- * which always starts 3 days before the year's first Thursday.
- * The result will be in the local timezone.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @returns {Date} the start of an ISO week-numbering year
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // The start of an ISO week-numbering year for 2 July 2005:
- * var result = startOfISOWeekYear(new Date(2005, 6, 2))
- * //=> Mon Jan 03 2005 00:00:00
- */
-
-function startOfISOWeekYear(dirtyDate) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
-  var year = Object(__WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__["a" /* default */])(dirtyDate);
-  var fourthOfJanuary = new Date(0);
-  fourthOfJanuary.setFullYear(year, 0, 4);
-  fourthOfJanuary.setHours(0, 0, 0, 0);
-  var date = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuary);
-  return date;
-}
-
-/***/ }),
-/* 21 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = isSameDay;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-/**
- * @name isSameDay
- * @category Day Helpers
- * @summary Are the given dates in the same day?
- *
- * @description
- * Are the given dates in the same day?
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} dateLeft - the first date to check
- * @param {Date|Number} dateRight - the second date to check
- * @returns {Boolean} the dates are in the same day
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Are 4 September 06:00:00 and 4 September 18:00:00 in the same day?
- * var result = isSameDay(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 4, 18, 0))
- * //=> true
- */
-
-function isSameDay(dirtyDateLeft, dirtyDateRight) {
-  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var dateLeftStartOfDay = Object(__WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__["a" /* default */])(dirtyDateLeft);
-  var dateRightStartOfDay = Object(__WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__["a" /* default */])(dirtyDateRight);
-  return dateLeftStartOfDay.getTime() === dateRightStartOfDay.getTime();
-}
-
-/***/ }),
-/* 22 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = subMilliseconds;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name subMilliseconds
- * @category Millisecond Helpers
- * @summary Subtract the specified number of milliseconds from the given date.
- *
- * @description
- * Subtract the specified number of milliseconds from the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} amount - the amount of milliseconds to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- * @returns {Date} the new date with the milliseconds subtracted
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Subtract 750 milliseconds from 10 July 2014 12:45:30.000:
- * var result = subMilliseconds(new Date(2014, 6, 10, 12, 45, 30, 0), 750)
- * //=> Thu Jul 10 2014 12:45:29.250
- */
-
-function subMilliseconds(dirtyDate, dirtyAmount) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
-  return Object(__WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__["a" /* default */])(dirtyDate, -amount);
-}
-
-/***/ }),
-/* 23 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_date_fns__ = __webpack_require__(161);
 
@@ -5973,6 +5723,256 @@ _extends(DatePicker, {
 
 
 /***/ }),
+/* 19 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = addMonths;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name addMonths
+ * @category Month Helpers
+ * @summary Add the specified number of months to the given date.
+ *
+ * @description
+ * Add the specified number of months to the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of months to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the months added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 5 months to 1 September 2014:
+ * var result = addMonths(new Date(2014, 8, 1), 5)
+ * //=> Sun Feb 01 2015 00:00:00
+ */
+
+function addMonths(dirtyDate, dirtyAmount) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var date = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate);
+  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
+
+  if (isNaN(amount)) {
+    return new Date(NaN);
+  }
+
+  if (!amount) {
+    // If 0 months, no-op to avoid changing times in the hour before end of DST
+    return date;
+  }
+
+  var dayOfMonth = date.getDate(); // The JS Date object supports date math by accepting out-of-bounds values for
+  // month, day, etc. For example, new Date(2020, 1, 0) returns 31 Dec 2019 and
+  // new Date(2020, 13, 1) returns 1 Feb 2021.  This is *almost* the behavior we
+  // want except that dates will wrap around the end of a month, meaning that
+  // new Date(2020, 13, 31) will return 3 Mar 2021 not 28 Feb 2021 as desired. So
+  // we'll default to the end of the desired month by adding 1 to the desired
+  // month and using a date of 0 to back up one day to the end of the desired
+  // month.
+
+  var endOfDesiredMonth = new Date(date.getTime());
+  endOfDesiredMonth.setMonth(date.getMonth() + amount + 1, 0);
+  var daysInMonth = endOfDesiredMonth.getDate();
+
+  if (dayOfMonth >= daysInMonth) {
+    // If we're already at the end of the month, then this is the correct date
+    // and we're done.
+    return endOfDesiredMonth;
+  } else {
+    // Otherwise, we now know that setting the original day-of-month value won't
+    // cause an overflow, so set the desired day-of-month. Note that we can't
+    // just set the date of `endOfDesiredMonth` because that object may have had
+    // its time changed in the unusual case where where a DST transition was on
+    // the last day of the month and its local time was in the hour skipped or
+    // repeated next to a DST transition.  So we use `date` instead which is
+    // guaranteed to still have the original time.
+    date.setFullYear(endOfDesiredMonth.getFullYear(), endOfDesiredMonth.getMonth(), dayOfMonth);
+    return date;
+  }
+}
+
+/***/ }),
+/* 20 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = addMilliseconds;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name addMilliseconds
+ * @category Millisecond Helpers
+ * @summary Add the specified number of milliseconds to the given date.
+ *
+ * @description
+ * Add the specified number of milliseconds to the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of milliseconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the milliseconds added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 750 milliseconds to 10 July 2014 12:45:30.000:
+ * var result = addMilliseconds(new Date(2014, 6, 10, 12, 45, 30, 0), 750)
+ * //=> Thu Jul 10 2014 12:45:30.750
+ */
+
+function addMilliseconds(dirtyDate, dirtyAmount) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var timestamp = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate).getTime();
+  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
+  return new Date(timestamp + amount);
+}
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeekYear;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name startOfISOWeekYear
+ * @category ISO Week-Numbering Year Helpers
+ * @summary Return the start of an ISO week-numbering year for the given date.
+ *
+ * @description
+ * Return the start of an ISO week-numbering year,
+ * which always starts 3 days before the year's first Thursday.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of an ISO week-numbering year
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of an ISO week-numbering year for 2 July 2005:
+ * var result = startOfISOWeekYear(new Date(2005, 6, 2))
+ * //=> Mon Jan 03 2005 00:00:00
+ */
+
+function startOfISOWeekYear(dirtyDate) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
+  var year = Object(__WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__["a" /* default */])(dirtyDate);
+  var fourthOfJanuary = new Date(0);
+  fourthOfJanuary.setFullYear(year, 0, 4);
+  fourthOfJanuary.setHours(0, 0, 0, 0);
+  var date = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuary);
+  return date;
+}
+
+/***/ }),
+/* 22 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = isSameDay;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+/**
+ * @name isSameDay
+ * @category Day Helpers
+ * @summary Are the given dates in the same day?
+ *
+ * @description
+ * Are the given dates in the same day?
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} dateLeft - the first date to check
+ * @param {Date|Number} dateRight - the second date to check
+ * @returns {Boolean} the dates are in the same day
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Are 4 September 06:00:00 and 4 September 18:00:00 in the same day?
+ * var result = isSameDay(new Date(2014, 8, 4, 6, 0), new Date(2014, 8, 4, 18, 0))
+ * //=> true
+ */
+
+function isSameDay(dirtyDateLeft, dirtyDateRight) {
+  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var dateLeftStartOfDay = Object(__WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__["a" /* default */])(dirtyDateLeft);
+  var dateRightStartOfDay = Object(__WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__["a" /* default */])(dirtyDateRight);
+  return dateLeftStartOfDay.getTime() === dateRightStartOfDay.getTime();
+}
+
+/***/ }),
+/* 23 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = subMilliseconds;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name subMilliseconds
+ * @category Millisecond Helpers
+ * @summary Subtract the specified number of milliseconds from the given date.
+ *
+ * @description
+ * Subtract the specified number of milliseconds from the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of milliseconds to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the milliseconds subtracted
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Subtract 750 milliseconds from 10 July 2014 12:45:30.000:
+ * var result = subMilliseconds(new Date(2014, 6, 10, 12, 45, 30, 0), 750)
+ * //=> Thu Jul 10 2014 12:45:29.250
+ */
+
+function subMilliseconds(dirtyDate, dirtyAmount) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
+  return Object(__WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__["a" /* default */])(dirtyDate, -amount);
+}
+
+/***/ }),
 /* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -6334,6 +6334,92 @@ function startOfUTCWeek(dirtyDate, dirtyOptions) {
 /* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(298);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(299)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
+			var newContent = require("!!../css-loader/index.js!./index.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function (global, factory) {
+	 true ? module.exports = factory(__webpack_require__(18)) :
+	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
+	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
+}(this, (function (DatePicker) { 'use strict';
+
+	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
+
+	function unwrapExports (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var es = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports["default"] = void 0;
+	var locale = {
+	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
+	  firstDayOfWeek: 1,
+	  firstWeekContainsDate: 1
+	};
+	var _default = locale;
+	exports["default"] = _default;
+	module.exports = exports.default;
+	});
+
+	var es$1 = unwrapExports(es);
+
+	var lang = {
+	  formatLocale: es$1,
+	  yearFormat: 'YYYY',
+	  monthFormat: 'MMM',
+	  monthBeforeYear: true
+	};
+	DatePicker.locale('es', lang);
+
+	return lang;
+
+})));
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
@@ -6435,7 +6521,7 @@ module.exports = defaults;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6472,13 +6558,13 @@ function isSunday(dirtyDate) {
 }
 
 /***/ }),
-/* 35 */
+/* 37 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addHours;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6514,13 +6600,13 @@ function addHours(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 36 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addQuarters;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6556,7 +6642,7 @@ function addQuarters(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 37 */
+/* 39 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6653,7 +6739,7 @@ function differenceInDays(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 38 */
+/* 40 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6696,13 +6782,13 @@ function startOfQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 39 */
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = eachWeekendOfInterval;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachDayOfInterval_index_js__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSunday_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSunday_index_js__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isWeekend_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -6756,7 +6842,7 @@ function eachWeekendOfInterval(interval) {
 }
 
 /***/ }),
-/* 40 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6798,7 +6884,7 @@ function endOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 41 */
+/* 43 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6840,7 +6926,7 @@ function startOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 42 */
+/* 44 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6880,7 +6966,7 @@ function endOfDay(dirtyDate) {
 }
 
 /***/ }),
-/* 43 */
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6928,7 +7014,7 @@ function getUTCWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 44 */
+/* 46 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7001,7 +7087,7 @@ function startOfWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 45 */
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7042,7 +7128,7 @@ function subDays(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 46 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7094,7 +7180,7 @@ function isSameWeek(dirtyDateLeft, dirtyDateRight, dirtyOptions) {
 }
 
 /***/ }),
-/* 47 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7145,92 +7231,6 @@ function setMonth(dirtyDate, dirtyMonth) {
   date.setMonth(month, Math.min(day, daysInMonth));
   return date;
 }
-
-/***/ }),
-/* 48 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(298);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(299)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
-			var newContent = require("!!../css-loader/index.js!./index.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
-(function (global, factory) {
-	 true ? module.exports = factory(__webpack_require__(23)) :
-	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
-	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
-}(this, (function (DatePicker) { 'use strict';
-
-	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
-
-	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-	}
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var es = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports["default"] = void 0;
-	var locale = {
-	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
-	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
-	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
-	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
-	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
-	  firstDayOfWeek: 1,
-	  firstWeekContainsDate: 1
-	};
-	var _default = locale;
-	exports["default"] = _default;
-	module.exports = exports.default;
-	});
-
-	var es$1 = unwrapExports(es);
-
-	var lang = {
-	  formatLocale: es$1,
-	  yearFormat: 'YYYY',
-	  monthFormat: 'MMM',
-	  monthBeforeYear: true
-	};
-	DatePicker.locale('es', lang);
-
-	return lang;
-
-})));
-
 
 /***/ }),
 /* 50 */
@@ -10307,7 +10307,7 @@ module.exports = Cancel;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__isSunday_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__isSunday_index_js__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSaturday_index_js__ = __webpack_require__(58);
 
 
@@ -10462,7 +10462,7 @@ function addISOWeekYears(dirtyDate, dirtyAmount) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = setISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -10521,7 +10521,7 @@ function setISOWeekYear(dirtyDate, dirtyISOWeekYear) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addMinutes;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10563,7 +10563,7 @@ function addMinutes(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addSeconds;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10604,7 +10604,7 @@ function addSeconds(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11287,7 +11287,7 @@ function endOfWeek(dirtyDate, dirtyOptions) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = format;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_formatters_index_js__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_format_longFormatters_index_js__ = __webpack_require__(81);
@@ -12774,7 +12774,7 @@ function getISODay(dirtyDate) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -12861,7 +12861,7 @@ function getTime(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -13060,7 +13060,7 @@ function lastDayOfMonth(dirtyDate) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = sub;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subDays_index_js__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subDays_index_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMonths_index_js__ = __webpack_require__(98);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -13139,7 +13139,7 @@ function sub(dirtyDate, duration) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subMonths;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13180,7 +13180,7 @@ function subMonths(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_assign_index_js__ = __webpack_require__(85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_longFormatters_index_js__ = __webpack_require__(81);
@@ -13826,7 +13826,7 @@ function startOfHour(dirtyDate) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameISOWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13992,7 +13992,7 @@ function isSameMonth(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameQuarter;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfQuarter_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfQuarter_index_js__ = __webpack_require__(40);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -46831,7 +46831,7 @@ module.exports = __webpack_require__(119);
 var utils = __webpack_require__(3);
 var bind = __webpack_require__(51);
 var Axios = __webpack_require__(121);
-var defaults = __webpack_require__(33);
+var defaults = __webpack_require__(35);
 
 /**
  * Create an instance of Axios
@@ -46904,7 +46904,7 @@ module.exports = function isBuffer (obj) {
 "use strict";
 
 
-var defaults = __webpack_require__(33);
+var defaults = __webpack_require__(35);
 var utils = __webpack_require__(3);
 var InterceptorManager = __webpack_require__(129);
 var dispatchRequest = __webpack_require__(130);
@@ -47400,7 +47400,7 @@ module.exports = InterceptorManager;
 var utils = __webpack_require__(3);
 var transformData = __webpack_require__(131);
 var isCancel = __webpack_require__(55);
-var defaults = __webpack_require__(33);
+var defaults = __webpack_require__(35);
 var isAbsoluteURL = __webpack_require__(132);
 var combineURLs = __webpack_require__(133);
 
@@ -63330,10 +63330,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -63796,17 +63796,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport addBusinessDays */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__addDays_index_js__ = __webpack_require__(9);
 /* unused harmony reexport addDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__addHours_index_js__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__addHours_index_js__ = __webpack_require__(37);
 /* unused harmony reexport addHours */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addISOWeekYears_index_js__ = __webpack_require__(59);
 /* unused harmony reexport addISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(20);
 /* unused harmony reexport addMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addMinutes_index_js__ = __webpack_require__(61);
 /* unused harmony reexport addMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(19);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__addQuarters_index_js__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__addQuarters_index_js__ = __webpack_require__(38);
 /* unused harmony reexport addQuarters */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__addSeconds_index_js__ = __webpack_require__(62);
 /* unused harmony reexport addSeconds */
@@ -63840,7 +63840,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport differenceInCalendarWeeks */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__differenceInCalendarYears_index_js__ = __webpack_require__(68);
 /* unused harmony reexport differenceInCalendarYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__differenceInDays_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__differenceInDays_index_js__ = __webpack_require__(39);
 /* unused harmony reexport differenceInDays */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__differenceInHours_index_js__ = __webpack_require__(69);
 /* unused harmony reexport differenceInHours */
@@ -63870,7 +63870,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport eachQuarterOfInterval */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__eachWeekOfInterval_index_js__ = __webpack_require__(176);
 /* unused harmony reexport eachWeekOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__eachWeekendOfInterval_index_js__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
 /* unused harmony reexport eachWeekendOfInterval */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_41__eachWeekendOfMonth_index_js__ = __webpack_require__(177);
 /* unused harmony reexport eachWeekendOfMonth */
@@ -63878,7 +63878,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport eachWeekendOfYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_43__eachYearOfInterval_index_js__ = __webpack_require__(179);
 /* unused harmony reexport eachYearOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44__endOfDay_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44__endOfDay_index_js__ = __webpack_require__(44);
 /* unused harmony reexport endOfDay */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_45__endOfDecade_index_js__ = __webpack_require__(180);
 /* unused harmony reexport endOfDecade */
@@ -63890,7 +63890,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport endOfISOWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_49__endOfMinute_index_js__ = __webpack_require__(184);
 /* unused harmony reexport endOfMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_50__endOfMonth_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_50__endOfMonth_index_js__ = __webpack_require__(42);
 /* unused harmony reexport endOfMonth */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_51__endOfQuarter_index_js__ = __webpack_require__(185);
 /* unused harmony reexport endOfQuarter */
@@ -64008,7 +64008,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport isMonday */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_108__isPast_index_js__ = __webpack_require__(244);
 /* unused harmony reexport isPast */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(22);
 /* unused harmony reexport isSameDay */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_110__isSameHour_index_js__ = __webpack_require__(100);
 /* unused harmony reexport isSameHour */
@@ -64024,13 +64024,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport isSameQuarter */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_116__isSameSecond_index_js__ = __webpack_require__(107);
 /* unused harmony reexport isSameSecond */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_117__isSameWeek_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_117__isSameWeek_index_js__ = __webpack_require__(48);
 /* unused harmony reexport isSameWeek */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_118__isSameYear_index_js__ = __webpack_require__(109);
 /* unused harmony reexport isSameYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_119__isSaturday_index_js__ = __webpack_require__(58);
 /* unused harmony reexport isSaturday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_120__isSunday_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_120__isSunday_index_js__ = __webpack_require__(36);
 /* unused harmony reexport isSunday */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_121__isThisHour_index_js__ = __webpack_require__(246);
 /* unused harmony reexport isThisHour */
@@ -64114,7 +64114,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport setMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_161__setMinutes_index_js__ = __webpack_require__(280);
 /* unused harmony reexport setMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__ = __webpack_require__(49);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_163__setQuarter_index_js__ = __webpack_require__(281);
 /* unused harmony reexport setQuarter */
@@ -64134,13 +64134,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport startOfHour */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_171__startOfISOWeek_index_js__ = __webpack_require__(11);
 /* unused harmony reexport startOfISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(21);
 /* unused harmony reexport startOfISOWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_173__startOfMinute_index_js__ = __webpack_require__(104);
 /* unused harmony reexport startOfMinute */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__ = __webpack_require__(30);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_175__startOfQuarter_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_175__startOfQuarter_index_js__ = __webpack_require__(40);
 /* unused harmony reexport startOfQuarter */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_176__startOfSecond_index_js__ = __webpack_require__(108);
 /* unused harmony reexport startOfSecond */
@@ -64150,9 +64150,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport startOfTomorrow */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_179__startOfWeek_index_js__ = __webpack_require__(10);
 /* unused harmony reexport startOfWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_180__startOfWeekYear_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_180__startOfWeekYear_index_js__ = __webpack_require__(46);
 /* unused harmony reexport startOfWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__ = __webpack_require__(43);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_182__startOfYesterday_index_js__ = __webpack_require__(289);
 /* unused harmony reexport startOfYesterday */
@@ -64160,13 +64160,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport sub */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_184__subBusinessDays_index_js__ = __webpack_require__(290);
 /* unused harmony reexport subBusinessDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_185__subDays_index_js__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_185__subDays_index_js__ = __webpack_require__(47);
 /* unused harmony reexport subDays */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_186__subHours_index_js__ = __webpack_require__(291);
 /* unused harmony reexport subHours */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_187__subISOWeekYears_index_js__ = __webpack_require__(70);
 /* unused harmony reexport subISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(23);
 /* unused harmony reexport subMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_189__subMinutes_index_js__ = __webpack_require__(292);
 /* unused harmony reexport subMinutes */
@@ -64390,7 +64390,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_toInteger_index_js__ = __webpack_require__(2);
@@ -64818,7 +64818,7 @@ function compareDesc(dirtyDateLeft, dirtyDateRight) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65085,7 +65085,7 @@ function differenceInQuarters(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInDays_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInDays_index_js__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65145,7 +65145,7 @@ function differenceInWeeks(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addHours_index_js__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addHours_index_js__ = __webpack_require__(37);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65279,8 +65279,8 @@ function eachMonthOfInterval(dirtyInterval) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addQuarters_index_js__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfQuarter_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addQuarters_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfQuarter_index_js__ = __webpack_require__(40);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65429,9 +65429,9 @@ function eachWeekOfInterval(dirtyInterval, options) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfMonth_index_js__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(42);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65482,8 +65482,8 @@ function eachWeekendOfMonth(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(39);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfYear_index_js__ = __webpack_require__(74);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65898,7 +65898,7 @@ function endOfSecond(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfDay_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfDay_index_js__ = __webpack_require__(44);
 
 /**
  * @name endOfToday
@@ -66564,7 +66564,7 @@ function findIndex(array, predicate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getUTCISOWeek_index_js__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_getUTCISOWeekYear_index_js__ = __webpack_require__(79);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_getUTCWeek_index_js__ = __webpack_require__(80);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getUTCWeekYear_index_js__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getUTCWeekYear_index_js__ = __webpack_require__(45);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addLeadingZeros_index_js__ = __webpack_require__(16);
 
 
@@ -67478,7 +67478,7 @@ function startOfUTCISOWeekYear(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfUTCWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getUTCWeekYear_index_js__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getUTCWeekYear_index_js__ = __webpack_require__(45);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -68237,7 +68237,7 @@ function formatRFC7231(dirtyDate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__format_index_js__ = __webpack_require__(76);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -68380,7 +68380,7 @@ function fromUnixTime(dirtyUnixTime) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -68547,7 +68547,7 @@ function getHours(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -69062,7 +69062,7 @@ function getYear(dirtyDate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInYears_index_js__ = __webpack_require__(72);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__differenceInHours_index_js__ = __webpack_require__(69);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__differenceInMinutes_index_js__ = __webpack_require__(71);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__differenceInSeconds_index_js__ = __webpack_require__(29);
@@ -69487,8 +69487,8 @@ function isFuture(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__endOfDay_index_js__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__endOfDay_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(42);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -69837,7 +69837,7 @@ function isMatch(dateString, formatString, dirtyOptions) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getUTCWeekYear_index_js__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getUTCWeekYear_index_js__ = __webpack_require__(45);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_setUTCDay_index_js__ = __webpack_require__(239);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_setUTCISODay_index_js__ = __webpack_require__(240);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_setUTCISOWeek_index_js__ = __webpack_require__(241);
@@ -71550,7 +71550,7 @@ function isPast(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71848,7 +71848,7 @@ function isThisSecond(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71977,7 +71977,7 @@ function isThursday(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72019,7 +72019,7 @@ function isToday(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72233,8 +72233,8 @@ function isWithinInterval(dirtyDate, dirtyInterval) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subDays_index_js__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subDays_index_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72506,7 +72506,7 @@ function lastDayOfYear(dirtyDate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_format_lightFormatters_index_js__ = __webpack_require__(77);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73205,7 +73205,7 @@ function roundToNearestMinutes(dirtyDate, options) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__setMonth_index_js__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__setMonth_index_js__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -73685,7 +73685,7 @@ function setMinutes(dirtyDate, dirtyMinutes) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setMonth_index_js__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setMonth_index_js__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73841,7 +73841,7 @@ function setWeek(dirtyDate, dirtyWeek, dirtyOptions) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -74164,7 +74164,7 @@ function subBusinessDays(dirtyDate, dirtyAmount) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addHours_index_js__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addHours_index_js__ = __webpack_require__(37);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74246,7 +74246,7 @@ function subMinutes(dirtyDate, dirtyAmount) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addQuarters_index_js__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addQuarters_index_js__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -76900,10 +76900,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -78495,10 +78495,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -82213,7 +82213,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.Disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.Disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.Disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.Disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n.certificate label {\n       font-size: 30px;\n       padding-right: 10px;\n}\n.certificate h2{\n       color: rgb(235, 23, 23);\n       font-size: 40px;\n}\n\n", ""]);
 
 // exports
 
@@ -82224,6 +82224,11 @@ exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    pos
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
 //
@@ -82371,311 +82376,664 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    data: function data() {
-        return {
-            name_room: 'Clase de habitación',
-            type_id: 0,
-            type_room: 0,
-            number: '',
-            price: '',
-            frozen: '',
-            state: '',
-            price_air: '',
-            arrayroom: [],
-            arrayRoom: [],
-            RActive: [],
-            rooms: '',
-            opcion: 'Elige una opción',
-            modal: 0,
-            titleModal: '',
-            accion: 0,
-            rooms_id: 0,
-            desactivar: 0,
-            condition: 1,
-            search: '',
-            valor: 'state',
-            arrayError: [],
-            pagination: {
-                'total': 0,
-                'current_page': 0,
-                'per_page': 0,
-                'last_page': 0,
-                'from': 0,
-                'to': 0
-            },
-            offset: 3
-        };
+  data: function data() {
+    return {
+      lang: {
+        formatLocale: {
+          firstDayOfWeek: 7
+        },
+        monthBeforeYear: false
+      },
+      name_room: 'Clase de habitación',
+      type_id: 0,
+      type_room: 0,
+      stateRoom: 'Disponible',
+      cc_client: '',
+      arrayUsuarioCliente: [],
+      cedula_client: '',
+      entry_certificate: new Date(),
+      children_certificate: 0,
+      adults_certificate: 0,
+      name_client: '',
+      firstSurname_client: '',
+      secondSurname_client: '',
+      phone_client: '',
+      birth_date_client: new Date(),
+      gender_client: 0,
+      age_client: '',
+      state_client: 0,
+      number_certificate: '032CT',
+      email_client: '',
+      address_client: '',
+      city_client: '',
+      nationality_client: '',
+      number: '',
+      price: '',
+      frozen: '',
+      state: '',
+      price_air: '',
+      arrayroom: [],
+      client: [],
+      arrayRoom: [],
+      rooms: '',
+      opcion: 'Elige una opción',
+      modal: 0,
+      titleModal: '',
+      accion: 0,
+      rooms_id: 0,
+      desactivar: 0,
+      condition: 1,
+      search: '',
+      valor: 'state',
+      arrayError: [],
+      pagination: {
+        'total': 0,
+        'current_page': 0,
+        'per_page': 0,
+        'last_page': 0,
+        'from': 0,
+        'to': 0
+      },
+      offset: 3,
+      es: __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__["es"]
+    };
+  },
+
+  computed: {
+    //muestra la pagina activa
+    isActived: function isActived() {
+      return this.pagination.current_page;
     },
+    //Calcula las paginas
+    pagesNumber: function pagesNumber() {
+      if (!this.pagination.to) {
+        return [];
+      }
 
-    computed: {
-        //muestra la pagina activa
-        isActived: function isActived() {
-            return this.pagination.current_page;
-        },
-        //Calcula las paginas
-        pagesNumber: function pagesNumber() {
-            if (!this.pagination.to) {
-                return [];
-            }
+      var from = this.pagination.current_page - this.offset;
+      if (from < 1) {
+        from = 1;
+      }
 
-            var from = this.pagination.current_page - this.offset;
-            if (from < 1) {
-                from = 1;
-            }
+      var to = from + this.offset * 2;
+      if (to >= this.pagination.last_page) {
+        to = this.pagination.last_page;
+      }
 
-            var to = from + this.offset * 2;
-            if (to >= this.pagination.last_page) {
-                to = this.pagination.last_page;
-            }
-
-            var pagesArray = [];
-            while (from <= to) {
-                pagesArray.push(from);
-                from++;
-            }
-            return pagesArray;
-        }
-    },
-
-    methods: {
-        listRoomsActive: function listRoomsActive(page, search, valor) {
-            var me = this;
-            var url = 'room/active?page=' + page + '&search=' + search + "&valor=" + valor;
-            axios.get(url).then(function (response) {
-                var respuesta = response.data;
-                me.arrayRoom = respuesta.room.data;
-                me.pagination = respuesta.pagination;
-                // console.log(respuesta);
-            }).catch(function (error) {
-                console.log(error);
-            });
-        },
-        cambiarPagina: function cambiarPagina(page, search, valor) {
-            var me = this;
-            //Actualiza la página actual
-            me.pagination.current_page = page;
-            //Envia la petición para visualizar la data de esa página
-            me.listRooms(page, search, valor);
-        },
-        openModal: function openModal(model, accion) {
-            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-
-
-            switch (model) {
-                case "room":
-                    {
-
-                        switch (accion) {
-                            case "create":
-                                {
-                                    this.modal = 1;
-                                    this.desactivar = 0;
-                                    this.titleModal = 'Ingreso de husped';
-                                    this.accion = 1;
-                                    this.type_room = 0;
-                                    this.number = '';
-                                    this.price = '';
-                                    this.price_air = '';
-                                    this.frozen = 'Seleccione una opción...';
-                                    this.state = 'Seleccione una opción...';
-                                    this.type_id = 1;
-
-                                    break;
-                                };
-
-                            case "edit":
-                                {
-
-                                    //console.log(data);
-                                    this.modal = 1;
-                                    this.desactivar = 0;
-                                    this.titleModal = 'Información';
-                                    this.accion = 2;
-                                    this.habitacion_id = data['rooms_id'];
-                                    this.type_room = data['type_room_id'];
-                                    this.number = data['number'];
-                                    this.price = data['price'];
-                                    this.price_air = data['price_air'];
-                                    this.frozen = data['frozen'];
-                                    this.state = data['state'];
-                                    this.type_id = data['type_room_id'];
-
-                                    break;
-                                };
-
-                            case "ver":
-                                {
-
-                                    //console.log(data);
-                                    this.modal = 1;
-                                    this.desactivar = 1;
-                                    this.titleModal = 'Información completa de la habitación';
-                                    this.accion = 3;
-                                    this.habitacion_id = data['rooms_id'];
-                                    this.type_room = data['type_room'];
-                                    this.number = data['number'];
-                                    this.price = data['price'];
-                                    this.price_air = data['price_air'];
-                                    this.frozen = data['frozen'];
-                                    this.state = data['state'];
-                                    this.type_id = data['type_room_id'];
-
-                                    break;
-                                }
-                        }
-                    }
-            }
-        },
-        closeModal: function closeModal() {
-            this.modal = 0;
-            this.arrayError = [];
-            this.listRooms(1, this.search, this.valor);
-        },
-        registerRoom: function registerRoom(page, search, valor) {
-
-            var me = this;
-            var url = 'room/register?page=' + page + '&search=' + search + "&valor=" + valor;
-            axios.post(url, {
-
-                'type_room_id': this.type_room,
-                'number': this.number,
-                'price': this.price,
-                'price_air': this.price_air,
-                'frozen': this.frozen,
-                'state': this.state
-
-            }).then(function (response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Tu habitación fue Registrada con Éxito',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                me.closeModal();
-            }).catch(function (error) {
-                var respuesta = error.response.data;
-                me.arrayError = respuesta.errors;
-                console.log(error.response.data);
-            });
-        },
-        updateRoom: function updateRoom(page, search, valor) {
-
-            var me = this;
-            var url = 'room/update?page=' + page + '&search=' + search + "&valor=" + valor;
-            axios.put(url, {
-
-                'id': this.habitacion_id,
-                'type_id': this.type_id,
-                'number': this.number,
-                'price': this.price,
-                'price_air': this.price_air,
-                'frozen': this.frozen,
-                'state': this.state
-
-            }).then(function (response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Habitación Actualizada con Éxito',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                me.closeModal();
-            }).catch(function (error) {
-                var respuesta = error.response.data;
-                me.arrayError = respuesta.errors;
-                console.log(error.response.data);
-            });
-        },
-        activarRoom: function activarRoom(id) {
-            var _this = this;
-
-            var swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
-
-            swalWithBootstrapButtons.fire({
-                title: 'Está seguro?',
-                text: "Va a Activar ésta habitación!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Si, Activala',
-                cancelButtonText: 'No, Cancelar!',
-                reverseButtons: true
-            }).then(function (result) {
-                if (result.value) {
-
-                    var me = _this;
-
-                    axios.put('room/activo', {
-                        'id': id
-                    }).then(function (response) {
-                        me.listRoom(1, '', 'valor');
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
-
-                    swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Activada.', 'success');
-                } else if (
-                /* Read more about handling dismissals below */
-                result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire('Cancelado', 'Tu tipo de habitación sigue Desactivado :)', 'error');
-                }
-            });
-        },
-        desactivarRoom: function desactivarRoom(id) {
-            var _this2 = this;
-
-            var swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
-
-            swalWithBootstrapButtons.fire({
-                title: 'Está seguro?',
-                text: "Va a desactivar ésta habitación!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Si, Desactivala',
-                cancelButtonText: 'No, Cancelar!',
-                reverseButtons: true
-            }).then(function (result) {
-                if (result.value) {
-
-                    var me = _this2;
-
-                    axios.put('room/inactivo', {
-                        'id': id
-                    }).then(function (response) {
-                        me.listRooms(1, '', 'valor');
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
-
-                    swalWithBootstrapButtons.fire('Desativado!', 'Tu habitación quedó desativada.', 'success');
-                } else if (
-                /* Read more about handling dismissals below */
-                result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire('Cancelado', 'Tu habitación está a salvo :)', 'error');
-                }
-            });
-        }
-    },
-
-    mounted: function mounted() {
-        this.listRoomsActive(1, this.search, this.valor);
+      var pagesArray = [];
+      while (from <= to) {
+        pagesArray.push(from);
+        from++;
+      }
+      return pagesArray;
     }
+  },
+
+  methods: {
+    listRoomsActive: function listRoomsActive(page, search, valor) {
+      var me = this;
+      var url = 'room/active?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.get(url).then(function (response) {
+        var respuesta = response.data;
+        me.arrayRoom = respuesta.room.data;
+        me.pagination = respuesta.pagination;
+        // console.log(respuesta);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    cambiarPagina: function cambiarPagina(page, search, valor) {
+      var me = this;
+      //Actualiza la página actual
+      me.pagination.current_page = page;
+      //Envia la petición para visualizar la data de esa página
+      me.listRoomsActive(page, search, valor);
+    },
+    search_client: function search_client(cc_client) {
+      var me = this;
+      var url = 'customers/searchClient?cc_client=' + cc_client;
+      axios.get(url).then(function (response) {
+        var respuesta = response.data;
+        me.arrayUsuarioCliente = respuesta.client;
+
+        // console.log(usuarioCliente);
+        if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
+          me.closeModal();
+          var swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+              confirmButton: 'btn btn-success',
+              cancelButton: 'btn btn-danger'
+            },
+            buttonsStyling: false
+          });
+          swalWithBootstrapButtons.fire({
+            title: 'El huésped no está registrado!',
+            text: "Desea registrar el huésped?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Registrar',
+            cancelButtonText: 'Cancelar!',
+            reverseButtons: true
+          }).then(function (result) {
+            if (result.value) {
+              me.openModal('room', 'register', me.arrayUsuarioCliente);
+              // swalWithBootstrapButtons.fire(
+              //   'Huésped registrado!',
+              //   'Ya puedes ingresarlo.',
+              //   'success'
+              // )
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              swalWithBootstrapButtons.fire('Cancelado', 'Recuerdad él huésped no está en la base de datos :)', 'error');
+            }
+          });
+        } else {
+          me.closeModal();
+          me.openModal('room', 'certificate', me.arrayUsuarioCliente);
+        }
+
+        // me.id_client = respuesta.client.id;
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    registerCustomers: function registerCustomers(page, search, valor) {
+
+      var me = this;
+      var url = 'customers/register?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.post(url, {
+
+        'cedula_client': this.cedula_client,
+        'name_client': this.name_client,
+        'firstSurname_client': this.firstSurname_client,
+        'secondSurname_client': this.secondSurname_client,
+        'birth_date_client': this.birth_date_client,
+        'gender_client': this.gender_client,
+        'age_client': this.age_client,
+        'address_client': this.address_client,
+        'city_client': this.city_client,
+        'nationality_client': this.nationality_client,
+        'state_client': this.state_client,
+        'phone_client': this.phone_client,
+        'email_client': this.email_client
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Tu huésped fue registrado con éxito',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+        me.search_client(me.cc_client);
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    openModal: function openModal(model, accion) {
+      var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+      switch (model) {
+        case "room":
+          {
+
+            switch (accion) {
+              case "create":
+                {
+                  this.modal = 1;
+                  this.stateRoom = 'Disponible';
+                  this.desactivar = 0;
+                  this.titleModal = 'Ingreso de huésped';
+                  this.accion = 1;
+                  this.cc_client = '';
+                  this.rooms_id = data['id'];
+
+                  break;
+                };
+
+              case "edit":
+                {
+
+                  //console.log(data);
+                  this.modal = 1;
+                  this.stateRoom = 'Ocupada';
+                  this.desactivar = 0;
+                  this.titleModal = 'Información';
+                  this.accion = 2;
+                  this.rooms_id = data['id'];
+                  this.type_room = data['type_room_id'];
+                  this.number = data['number'];
+                  this.price = data['price'];
+                  this.price_air = data['price_air'];
+                  this.frozen = data['frozen'];
+                  this.state = data['state'];
+                  this.type_id = data['type_room_id'];
+
+                  break;
+                };
+
+              case "certificate":
+                {
+
+                  //console.log(data);
+                  this.modal = 1;
+                  this.desactivar = 1;
+                  this.stateRoom = 'certificate';
+                  this.titleModal = 'Acta de entrada';
+                  this.accion = 4;
+                  this.rooms_id;
+                  this.name_client = data['name_client'];
+                  this.type_room = data['type_room'];
+                  this.number = data['number'];
+                  this.price = data['price'];
+                  this.price_air = data['price_air'];
+                  this.frozen = data['frozen'];
+                  this.state = data['state'];
+                  this.type_id = data['type_room_id'];
+                  this.cedula_client = data['cedula_client'];
+                  this.firstSurname_client = data['firstSurname_client'];
+                  this.secondSurname_client = data['secondSurname_client'];
+                  this.birth_date_client = data['birth_date_client'];
+                  this.gender_client = data['gender_client'];
+                  this.age_client = data['age_client'];
+                  this.address_client = data['address_client'];
+                  this.city_client = data['city_client'];
+                  this.nationality_client = data['nationality_client'];
+                  this.state_client = data['state_client'];
+                  this.phone_client = data['phone_client'];
+                  this.email_client = data['email_client'];
+
+                  break;
+                };
+
+              case "register":
+                {
+                  //console.log(data);
+                  this.modal = 1;
+                  this.desactivar = 1;
+                  this.stateRoom = 'register';
+                  this.titleModal = 'Registro de nuevo huésped';
+                  this.accion = 3;
+                  this.cedula_client = '';
+                  this.name_client = '';
+                  this.birth_date_client = '';
+                  this.firstSurname_client = '';
+                  this.secondSurname_client = '';
+                  this.gender_client = 0;
+                  this.age_client = '';
+                  this.address_client = '';
+                  this.city_client = '';
+                  this.nationality_client = '';
+                  this.state_client = 0;
+                  this.phone_client = '';
+                  this.email_client = '';
+
+                  break;
+                }
+            }
+          }
+      }
+    },
+    closeModal: function closeModal() {
+      this.modal = 0;
+      // this.arrayError = [];
+      this.listRoomsActive(1, this.search, this.valor);
+    },
+    stateBusy: function stateBusy() {
+
+      var me = this;
+      var url = 'room/statebusy';
+      axios.put(url, {
+
+        'id': this.rooms_id
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Tu habitación queda en estado Ocupada!',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    stateFree: function stateFree() {
+      var _this = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: 'Está seguro?',
+        text: "Va a facturar ésta habitación!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, facturars',
+        cancelButtonText: 'No, Cancelar!',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          var me = _this;
+          var url = 'room/statefree';
+          axios.put(url, {
+
+            'id': _this.rooms_id
+
+          }).then(function (response) {
+            me.listRoomsActive(1, '', 'valor');
+            me.closeModal();
+          }).catch(function (error) {
+            console.log(error);
+          });
+
+          swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Disponible.', 'success');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire('Cancelado', 'Tu habitacióm sigue Ocupada :)', 'error');
+        }
+      });
+    },
+    updateRoom: function updateRoom(page, search, valor) {
+
+      var me = this;
+      var url = 'room/update?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.put(url, {
+
+        'id': this.habitacion_id,
+        'type_id': this.type_id,
+        'number': this.number,
+        'price': this.price,
+        'price_air': this.price_air,
+        'frozen': this.frozen,
+        'state': this.state
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Habitación Actualizada con Éxito',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    activarRoom: function activarRoom(id) {
+      var _this2 = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: 'Está seguro?',
+        text: "Va a Activar ésta habitación!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, Activala',
+        cancelButtonText: 'No, Cancelar!',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          var me = _this2;
+
+          axios.put('room/activo', {
+            'id': id
+          }).then(function (response) {
+            me.listRoom(1, '', 'valor');
+          }).catch(function (error) {
+            console.log(error);
+          });
+
+          swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Activada.', 'success');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire('Cancelado', 'Tu tipo de habitación sigue Desactivado :)', 'error');
+        }
+      });
+    },
+    desactivarRoom: function desactivarRoom(id) {
+      var _this3 = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: 'Está seguro?',
+        text: "Va a desactivar ésta habitación!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, Desactivala',
+        cancelButtonText: 'No, Cancelar!',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          var me = _this3;
+
+          axios.put('room/inactivo', {
+            'id': id
+          }).then(function (response) {
+            me.listRooms(1, '', 'valor');
+          }).catch(function (error) {
+            console.log(error);
+          });
+
+          swalWithBootstrapButtons.fire('Desativado!', 'Tu habitación quedó desativada.', 'success');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire('Cancelado', 'Tu habitación está a salvo :)', 'error');
+        }
+      });
+    }
+  },
+
+  mounted: function mounted() {
+    this.listRoomsActive(1, this.search, this.valor);
+  }
 });
 
 /***/ }),
@@ -82849,7 +83207,7 @@ var render = function() {
                                   _vm._v(" "),
                                   _c("h2", {
                                     domProps: {
-                                      textContent: _vm._s(room.numbers)
+                                      textContent: _vm._s(room.number)
                                     }
                                   }),
                                   _vm._v(" "),
@@ -83003,7 +83361,7 @@ var render = function() {
                 _c(
                   "form",
                   {
-                    staticClass: "form-horizontal product",
+                    staticClass: "form-horizontal product customers",
                     attrs: {
                       action: "",
                       method: "post",
@@ -83011,23 +83369,828 @@ var render = function() {
                     }
                   },
                   [
-                    _c("div", { staticClass: "row" }, [
-                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
-                        _c("label", { attrs: { for: "text-input " } }, [
-                          _vm._v("Stock")
-                        ]),
-                        _vm._v(" "),
-                        _c("input", {
-                          staticClass: "form-control",
-                          attrs: {
-                            type: "text",
-                            placeholder: "",
-                            disabled: _vm.desactivar == 1
-                          }
-                        })
-                      ])
-                    ])
-                  ]
+                    _vm.stateRoom == "Disponible"
+                      ? [
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-md-3 mb-2" }),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-md-6 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ingrese la cédula del huésped")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cc_client,
+                                    expression: "cc_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "",
+                                  disabled: _vm.desactivar == 1
+                                },
+                                domProps: { value: _vm.cc_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cc_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ])
+                        ]
+                      : _vm.stateRoom == "ocupada"
+                      ? [
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Stock")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "",
+                                  disabled: _vm.desactivar == 1
+                                }
+                              })
+                            ])
+                          ])
+                        ]
+                      : _vm.stateRoom == "certificate"
+                      ? [
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", {
+                              staticClass: "col-md-8 mb-2 certificate"
+                            }),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              {
+                                staticClass:
+                                  "col-md-4 mb-2 certificate  input-group"
+                              },
+                              [
+                                _c("label", { attrs: { for: "text-input " } }, [
+                                  _vm._v("Acta")
+                                ]),
+                                _vm._v(" "),
+                                _c("h2", {
+                                  domProps: {
+                                    textContent: _vm._s(_vm.number_certificate)
+                                  }
+                                })
+                              ]
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-md-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Cliente")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.name_client,
+                                    expression: "name_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.name_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.name_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Primer apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.firstSurname_client,
+                                    expression: "firstSurname_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca apellido paterno"
+                                },
+                                domProps: { value: _vm.firstSurname_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.firstSurname_client =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Segundo apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.secondSurname_client,
+                                    expression: "secondSurname_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca apellido materno"
+                                },
+                                domProps: { value: _vm.secondSurname_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.secondSurname_client =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Cédula")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cedula_client,
+                                    expression: "cedula_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  disabled: _vm.desactivar == 1
+                                },
+                                domProps: { value: _vm.cedula_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cedula_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Celular")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.phone_client,
+                                    expression: " phone_client "
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca el celular"
+                                },
+                                domProps: { value: _vm.phone_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.phone_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "email-input " } }, [
+                                _vm._v("Nacionalidad")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.nationality_client,
+                                    expression: " nationality_client "
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca la nacionalidad"
+                                },
+                                domProps: { value: _vm.nationality_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.nationality_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "email-input " } }, [
+                                _vm._v("Correo Electrónico")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.email_client,
+                                    expression: " email_client "
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "email",
+                                  placeholder: "introduzca el correo"
+                                },
+                                domProps: { value: _vm.email_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.email_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _vm._m(2),
+                            _vm._v(" "),
+                            _vm._m(3)
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _vm._m(4),
+                            _vm._v(" "),
+                            _vm._m(5),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Cantidad de Personas")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.adults_certificate,
+                                    expression: "adults_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "number", placeholder: "Ej: 1" },
+                                domProps: { value: _vm.adults_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.adults_certificate = $event.target.value
+                                  }
+                                }
+                              }),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.children_certificate,
+                                    expression: "children_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "number", placeholder: "Ej: 0" },
+                                domProps: { value: _vm.children_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.children_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c(
+                              "div",
+                              { staticClass: "col-sm-12 col-md-4 form-group" },
+                              [
+                                _c("label", { attrs: { for: "text-input " } }, [
+                                  _vm._v("Fecha de ingreso")
+                                ]),
+                                _vm._v(" "),
+                                _c("date-picker", {
+                                  attrs: {
+                                    language: _vm.es,
+                                    lang: _vm.lang,
+                                    valueType: "format"
+                                  },
+                                  model: {
+                                    value: _vm.entry_certificate,
+                                    callback: function($$v) {
+                                      _vm.entry_certificate = $$v
+                                    },
+                                    expression: "entry_certificate"
+                                  }
+                                })
+                              ],
+                              1
+                            ),
+                            _vm._v(" "),
+                            _vm._m(6)
+                          ])
+                        ]
+                      : _vm.stateRoom == "register"
+                      ? [
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Nombre")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.name_client,
+                                    expression: "name_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.name_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.name_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Primer Apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.firstSurname_client,
+                                    expression: "firstSurname_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.firstSurname_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.firstSurname_client =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Segundo Apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.secondSurname_client,
+                                    expression: "secondSurname_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.secondSurname_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.secondSurname_client =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Identificación")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cedula_client,
+                                    expression: "cedula_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.cedula_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cedula_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Edad")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.age_client,
+                                    expression: "age_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.age_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.age_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "col-lg-4 mb-2" },
+                              [
+                                _c("label", { attrs: { for: "text-input " } }, [
+                                  _vm._v("Fecha de Nacimiento")
+                                ]),
+                                _vm._v(" "),
+                                _c("date-picker", {
+                                  attrs: {
+                                    language: _vm.es,
+                                    lang: _vm.lang,
+                                    valueType: "format"
+                                  },
+                                  model: {
+                                    value: _vm.birth_date_client,
+                                    callback: function($$v) {
+                                      _vm.birth_date_client = $$v
+                                    },
+                                    expression: "birth_date_client"
+                                  }
+                                })
+                              ],
+                              1
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Teléfono")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.phone_client,
+                                    expression: "phone_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.phone_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.phone_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Género")
+                              ]),
+                              _vm._v(" "),
+                              _c(
+                                "select",
+                                {
+                                  directives: [
+                                    {
+                                      name: "model",
+                                      rawName: "v-model",
+                                      value: _vm.gender_client,
+                                      expression: " gender_client "
+                                    }
+                                  ],
+                                  staticClass: "form-control custom-select ",
+                                  on: {
+                                    change: function($event) {
+                                      var $$selectedVal = Array.prototype.filter
+                                        .call($event.target.options, function(
+                                          o
+                                        ) {
+                                          return o.selected
+                                        })
+                                        .map(function(o) {
+                                          var val =
+                                            "_value" in o ? o._value : o.value
+                                          return val
+                                        })
+                                      _vm.gender_client = $event.target.multiple
+                                        ? $$selectedVal
+                                        : $$selectedVal[0]
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("option", { attrs: { value: "0" } }, [
+                                    _vm._v("Seleccione una opción")
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Femenino")]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Masculino")]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Otro")])
+                                ]
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Estado")
+                              ]),
+                              _vm._v(" "),
+                              _c(
+                                "select",
+                                {
+                                  directives: [
+                                    {
+                                      name: "model",
+                                      rawName: "v-model",
+                                      value: _vm.state_client,
+                                      expression: "state_client "
+                                    }
+                                  ],
+                                  staticClass: "form-control custom-select",
+                                  on: {
+                                    change: function($event) {
+                                      var $$selectedVal = Array.prototype.filter
+                                        .call($event.target.options, function(
+                                          o
+                                        ) {
+                                          return o.selected
+                                        })
+                                        .map(function(o) {
+                                          var val =
+                                            "_value" in o ? o._value : o.value
+                                          return val
+                                        })
+                                      _vm.state_client = $event.target.multiple
+                                        ? $$selectedVal
+                                        : $$selectedVal[0]
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("option", { attrs: { value: "0" } }, [
+                                    _vm._v("Seleccione una opción")
+                                  ]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Soltero(a)")]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Casado(a)")]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Union Libre")]),
+                                  _vm._v(" "),
+                                  _c("option", [_vm._v("Viudo(a)")])
+                                ]
+                              )
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Dirección")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.address_client,
+                                    expression: "address_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.address_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.address_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ciudad")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.city_client,
+                                    expression: "city_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.city_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.city_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Nacionalidad")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.nationality_client,
+                                    expression: "nationality_client"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "text", placeholder: "" },
+                                domProps: { value: _vm.nationality_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.nationality_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Correo electrónico")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.email_client,
+                                    expression: " email_client "
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: { type: "email", placeholder: "" },
+                                domProps: { value: _vm.email_client },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.email_client = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ])
+                        ]
+                      : _vm._e()
+                  ],
+                  2
                 )
               ]),
               _vm._v(" "),
@@ -83055,11 +84218,11 @@ var render = function() {
                           staticClass: "btn btn-success  text-white",
                           on: {
                             click: function($event) {
-                              return _vm.registerProduct()
+                              return _vm.search_client(_vm.cc_client)
                             }
                           }
                         },
-                        [_vm._v("Registrar")]
+                        [_vm._v("Ingresar")]
                       )
                     : _vm._e(),
                   _vm._v(" "),
@@ -83070,11 +84233,41 @@ var render = function() {
                           staticClass: "btn btn-success  text-white",
                           on: {
                             click: function($event) {
-                              return _vm.updateProduct()
+                              return _vm.stateFree()
                             }
                           }
                         },
-                        [_vm._v("Actualizar")]
+                        [_vm._v("Facturar")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.accion == 3
+                    ? _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-success  text-white",
+                          on: {
+                            click: function($event) {
+                              return _vm.registerCustomers()
+                            }
+                          }
+                        },
+                        [_vm._v("Registrar")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.accion == 4
+                    ? _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-success  text-white",
+                          on: {
+                            click: function($event) {
+                              return _vm.stateBusy()
+                            }
+                          }
+                        },
+                        [_vm._v("Hospedar")]
                       )
                     : _vm._e(),
                   _vm._v(" "),
@@ -83127,6 +84320,72 @@ var staticRenderFns = [
       { staticClass: "btn btn-primary", attrs: { type: "submit" } },
       [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
     )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Ciudad de origen")
+      ]),
+      _vm._v(" "),
+      _c("input", {
+        staticClass: "form-control",
+        attrs: { type: "text", placeholder: "introduzca la ciudad" }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Ciudad de destino")
+      ]),
+      _vm._v(" "),
+      _c("input", {
+        staticClass: "form-control",
+        attrs: { type: "text", placeholder: "introduzca la ciudad" }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Placa Auto")]),
+      _vm._v(" "),
+      _c("input", {
+        staticClass: "form-control",
+        attrs: { type: "text", placeholder: "Ej: MNZ 328" }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Placa Moto")]),
+      _vm._v(" "),
+      _c("input", {
+        staticClass: "form-control",
+        attrs: { type: "text", placeholder: "Ej: MNZ 328" }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-sm-12 col-md-8 form-group" }, [
+      _c("label", { attrs: { for: "text-input " } }, [_vm._v("Observaciones")]),
+      _vm._v(" "),
+      _c("textarea", { staticClass: "form-control", attrs: { rows: "2" } })
+    ])
   }
 ]
 render._withStripped = true

@@ -41,7 +41,7 @@
                                     <i class="fas fa-bed  p-3  mr-3"></i>
                                     <div class="text-center">
                                       <h3 v-text="room.state"></h3>
-                                      <h2 v-text="room.numbers"></h2>
+                                      <h2 v-text="room.number"></h2>
                                       <div class="text-value-sm text-primary" v-text="room.name"></div>
                                     </div>
                                   </div>
@@ -107,21 +107,187 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal product">
-                                    
-                                    
+                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal product customers">
+                                  <template v-if="stateRoom=='Disponible'">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-2"></div>
+                                        <div class="col-md-6 mb-2">
+                                            <label for="text-input ">Ingrese la cédula del huésped</label>
+                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cc_client">
+                                        </div>
+                                    </div>
+                                  </template>
+                                  <template v-else-if="stateRoom=='ocupada'">
                                     <div class="row">
                                         <div class="col-lg-4 mb-2">
                                             <label for="text-input ">Stock</label>
                                             <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1">
                                         </div>
                                     </div>
+                                  </template>
+                                  <template v-else-if="stateRoom=='certificate'">
+                                    <div class="row">
+                                      <div class="col-md-8 mb-2 certificate">
+                                            
+                                        </div>
+                                        <div class="col-md-4 mb-2 certificate  input-group">
+                                            <label for="text-input ">Acta</label>
+                                            <h2 v-text="number_certificate"></h2>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <label for="text-input ">Cliente</label>
+                                            <input type="text" class="form-control" placeholder=""  v-model="name_client">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Primer apellido</label>
+                                            <input type="text" class="form-control" v-model="firstSurname_client"    placeholder="introduzca apellido paterno">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Segundo apellido</label>
+                                            <input type="text" class="form-control" v-model='secondSurname_client'   placeholder="introduzca apellido materno">
+                                         </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Cédula</label>
+                                            <input type="text" class="form-control"  v-model="cedula_client"  v-bind:disabled="desactivar==1" >
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Celular</label>
+                                            <input type="text" class="form-control"  v-model=' phone_client '  placeholder="introduzca el celular">
+                                        </div>        
+                                        <div class="col-sm-12 col-md-4">  
+                                            <label for="email-input ">Nacionalidad</label>
+                                            <input type="text" class="form-control"  v-model=' nationality_client '  placeholder="introduzca la nacionalidad">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="email-input ">Correo Electrónico</label>
+                                            <input type="email" class="form-control"  v-model=' email_client '  placeholder="introduzca el correo">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de origen</label>
+                                            <input type="text" class="form-control"    placeholder="introduzca la ciudad">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de destino</label>
+                                            <input type="text" class="form-control"    placeholder="introduzca la ciudad">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Placa Auto</label>
+                                            <input type="text" class="form-control"    placeholder="Ej: MNZ 328">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Placa Moto</label>
+                                            <input type="text" class="form-control"    placeholder="Ej: MNZ 328">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Cantidad de Personas</label>
+                                            <input type="number" class="form-control" v-model="adults_certificate"  placeholder="Ej: 1">
+                                            <input type="number" class="form-control" v-model="children_certificate"  placeholder="Ej: 0">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-4 form-group">
+                                            <label for="text-input ">Fecha de ingreso</label>
+                                            <date-picker v-model="entry_certificate"   :language="es" :lang="lang" valueType="format"></date-picker>
+                                        </div>
+                                        <div class="col-sm-12 col-md-8 form-group">
+                                            <label for="text-input ">Observaciones</label>
+                                            <textarea  class="form-control"    rows="2"></textarea> 
+                                        </div>
+                                    </div>
+                                  </template>
+                                  <template v-else-if="stateRoom=='register'">
+                                    <div class="row">
+                                      <div class="col-lg-4 mb-2">
+                                          <label for="text-input ">Nombre</label>
+                                          <input type="text" class="form-control" placeholder="" v-model="name_client">
+                                      </div>
+                                      <div class="col-lg-4 mb-2">
+                                          <label for="text-input ">Primer Apellido</label>
+                                          <input type="text" class="form-control" placeholder="" v-model="firstSurname_client">
+                                      </div>
+                                      <div class="col-lg-4 mb-2">
+                                          <label for="text-input ">Segundo Apellido</label>
+                                          <input type="text" class="form-control" placeholder="" v-model="secondSurname_client">
+                                      </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Identificación</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="cedula_client">
+                                        </div>
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Edad</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="age_client">
+                                        </div>
+                                        
+                                        <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Fecha de Nacimiento</label>
+                                        <date-picker v-model="birth_date_client"   :language="es" :lang="lang" valueType="format"></date-picker>
+                                        <!-- <Datepicker  v-model='birth_date_client'    :language="es" :value="Date" :format="dateformat(birth_date_client)"  ></Datepicker> -->
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Teléfono</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="phone_client">
+                                        </div>
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Género</label>
+                                            <select class="form-control custom-select " v-model=' gender_client ' >
+                                                    <option value="0">Seleccione una opción</option>
+                                                    <option>Femenino</option>
+                                                    <option>Masculino</option>
+                                                    <option>Otro</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Estado</label>
+                                            <select class="form-control custom-select" v-model='state_client ' >
+                                                    <option value="0">Seleccione una opción</option>
+                                                    <option>Soltero(a)</option>
+                                                    <option>Casado(a)</option>
+                                                    <option>Union Libre</option>
+                                                    <option>Viudo(a)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Dirección</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="address_client">
+                                        </div>
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Ciudad</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="city_client">
+                                        </div>
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Nacionalidad</label>
+                                            <input type="text" class="form-control" placeholder="" v-model="nationality_client">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-4 mb-2">
+                                            <label for="text-input ">Correo electrónico</label>
+                                            <input type="email" class="form-control"  v-model=' email_client '  placeholder="">
+                                        </div>
+                                    </div>
+                                  </template>
                                 </form>
                             </div>
                             <div class="modal-footer">
                                 <a  class="btn btn-danger  text-white" @click="closeModal()">Cerrar</a>
-                                <a  class="btn btn-success  text-white"  @click="registerProduct()" v-if="accion==1">Registrar</a>
-                                <a  class="btn btn-success  text-white" @click="updateProduct()" v-if="accion==2">Actualizar</a>
+                                <a  class="btn btn-success  text-white"  @click="search_client(cc_client)" v-if="accion==1">Ingresar</a>
+                                <a  class="btn btn-success  text-white" @click="stateFree()" v-if="accion==2">Facturar</a>
+                                <a  class="btn btn-success  text-white" @click="registerCustomers()" v-if="accion==3">Registrar</a>
+                                <a  class="btn btn-success  text-white" @click="stateBusy()" v-if="accion==4">Hospedar</a>
                                 <hr>
                                 <template v-if="arrayError">
                                     <div >
@@ -146,22 +312,51 @@
 
 
 <script>
+  import DatePicker from 'vue2-datepicker';
+  import 'vue2-datepicker/index.css';
+  import {es}  from 'vue2-datepicker/locale/es';
 
   export default {
 
     data() {
         return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7,
+                    },
+                    monthBeforeYear: false,
+            },
             name_room : 'Clase de habitación',
             type_id:0,
             type_room : 0,
+            stateRoom : 'Disponible',
+            cc_client: '',
+            arrayUsuarioCliente : [],
+            cedula_client : '',
+            entry_certificate : new Date(),
+            children_certificate : 0,
+            adults_certificate : 0,
+            name_client : '',
+            firstSurname_client : '',
+            secondSurname_client : '',
+            phone_client : '',
+            birth_date_client : new Date(),
+            gender_client : 0,
+            age_client : '',
+            state_client : 0,
+            number_certificate : '032CT',
+            email_client : '',
+            address_client : '',
+            city_client : '',
+            nationality_client : '',
             number : '',
             price : '',
             frozen : '',
             state : '',
             price_air : '',
             arrayroom : [],
+            client : [],
             arrayRoom : [],
-            RActive : [],
             rooms : '',
             opcion : 'Elige una opción',
             modal : 0,
@@ -181,7 +376,8 @@
                 'from' : 0,
                 'to' : 0,
             },
-            offset : 3
+            offset : 3,
+            es : es,
           }
     },
     computed:{
@@ -238,8 +434,103 @@
           //Actualiza la página actual
           me.pagination.current_page = page;
           //Envia la petición para visualizar la data de esa página
-          me.listRooms(page,search,valor);
+          me.listRoomsActive(page,search,valor);
       },
+
+        search_client(cc_client){
+                let me=this;
+                var url = 'customers/searchClient?cc_client=' + cc_client;
+                axios.get(url).then(function (response) {
+                    var respuesta= response.data;
+                    me.arrayUsuarioCliente = respuesta.client;
+                   
+                    // console.log(usuarioCliente);
+                    if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
+                         me.closeModal();
+                         const swalWithBootstrapButtons = Swal.mixin({
+                          customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                          },
+                          buttonsStyling: false
+                          })
+                          swalWithBootstrapButtons.fire({
+                            title: 'El huésped no está registrado!',
+                            text: "Desea registrar el huésped?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Registrar',
+                            cancelButtonText: 'Cancelar!',
+                            reverseButtons: true
+                          }).then((result) => {
+                                if (result.value) { 
+                                  me.openModal('room','register',me.arrayUsuarioCliente);
+                                  // swalWithBootstrapButtons.fire(
+                                  //   'Huésped registrado!',
+                                  //   'Ya puedes ingresarlo.',
+                                  //   'success'
+                                  // )
+                                } else if (result.dismiss === Swal.DismissReason.cancel ){
+                                  swalWithBootstrapButtons.fire(
+                                    'Cancelado',
+                                    'Recuerdad él huésped no está en la base de datos :)',
+                                    'error'
+                                  )
+                                  }
+                              })
+                    }else{
+                        me.closeModal();
+                        me.openModal('room','certificate',me.arrayUsuarioCliente);
+                    }
+                   
+                    
+                    // me.id_client = respuesta.client.id;
+                })
+                  .catch(function (error) {
+                    console.log(error);
+                  });
+      },
+        
+        registerCustomers(page,search,valor){
+
+                let me = this;
+                var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
+                axios.post(url,{
+
+                            'cedula_client' :    this.cedula_client,
+                            'name_client' :    this.name_client,
+                            'firstSurname_client' :   this.firstSurname_client,
+                            'secondSurname_client'    : this.secondSurname_client,
+                            'birth_date_client'    : this.birth_date_client,
+                            'gender_client'    : this.gender_client,
+                            'age_client'    : this.age_client,
+                            'address_client'    : this.address_client,
+                            'city_client'    : this.city_client,
+                            'nationality_client'    : this.nationality_client,
+                            'state_client'    : this.state_client,
+                            'phone_client'    : this.phone_client,
+                            'email_client'    : this.email_client,
+                    
+                           
+
+                }).then(function (response) {
+                    Swal.fire({
+                      position: 'center',
+                      icon: 'success',
+                      title: 'Tu huésped fue registrado con éxito',
+                      showConfirmButton: false,
+                      timer: 1500
+                    });
+                      me.closeModal();
+                      me.search_client(me.cc_client);
+                  })
+                  .catch(function (error) {
+                        var respuesta = error.response.data;
+                        me.arrayError = respuesta.errors;
+                        console.log(error.response.data);
+                  });
+
+            },
 
         openModal(model, accion, data = [] ){
 
@@ -249,17 +540,12 @@
                   switch(accion){
                       case "create" : {
                           this.modal = 1;
+                          this.stateRoom = 'Disponible'
                           this.desactivar = 0;
-                          this.titleModal = 'Ingreso de husped';
+                          this.titleModal = 'Ingreso de huésped';
                           this.accion = 1;
-                          this.type_room = 0;
-                          this.number = '';
-                          this.price = '';
-                          this.price_air = '';
-                          this.frozen = 'Seleccione una opción...';
-                          this.state = 'Seleccione una opción...';
-                          this.type_id=1;
-
+                          this.cc_client = '';
+                          this.rooms_id = data['id'];
 
                         break;       
                       };
@@ -268,10 +554,11 @@
 
                           //console.log(data);
                           this.modal = 1;
+                          this.stateRoom = 'Ocupada'
                           this.desactivar = 0;
                           this.titleModal = 'Información';
                           this.accion = 2;
-                          this.habitacion_id = data['rooms_id'];
+                          this.rooms_id = data['id'];
                           this.type_room =  data['type_room_id'];
                           this.number =  data['number'];
                           this.price =  data['price'];
@@ -285,24 +572,61 @@
 
                       };
 
-                      case "ver" :{
+                      case "certificate" :{
 
                           //console.log(data);
                           this.modal = 1;
                           this.desactivar = 1;
-                          this.titleModal = 'Información completa de la habitación';
-                          this.accion = 3;
-                          this.habitacion_id = data['rooms_id'];
+                          this.stateRoom = 'certificate'
+                          this.titleModal = 'Acta de entrada';
+                          this.accion = 4;
+                          this.rooms_id ;
+                          this.name_client = data['name_client'];
                           this.type_room =  data['type_room'];
                           this.number =  data['number'];
                           this.price =  data['price'];
                           this.price_air =  data['price_air'];
                           this.frozen =  data['frozen'];
                           this.state =  data['state'];
-                          this.type_id= data['type_room_id']
+                          this.type_id= data['type_room_id'];
+                          this.cedula_client=  data['cedula_client'];
+                          this.firstSurname_client =  data['firstSurname_client'];
+                          this.secondSurname_client =  data['secondSurname_client'];
+                          this.birth_date_client =  data['birth_date_client'];
+                          this.gender_client =  data['gender_client'];
+                          this.age_client =  data['age_client'];
+                          this.address_client =  data['address_client'];
+                          this.city_client =  data['city_client'];
+                          this.nationality_client =  data['nationality_client'];
+                          this.state_client =  data['state_client'];
+                          this.phone_client =  data['phone_client'];
+                          this.email_client =  data['email_client'];
 
+                          break;
 
+                      };
 
+                      case "register" :{
+                          //console.log(data);
+                          this.modal = 1;
+                          this.desactivar = 1;
+                          this.stateRoom = 'register'
+                          this.titleModal = 'Registro de nuevo huésped';
+                          this.accion = 3;
+                          this.cedula_client= '';
+                          this.name_client = '';
+                          this.birth_date_client = '';
+                          this.firstSurname_client = '';
+                          this.secondSurname_client = '';
+                          this.gender_client = 0;
+                          this.age_client = '';
+                          this.address_client = '';
+                          this.city_client = '';
+                          this.nationality_client = '';
+                          this.state_client = 0;
+                          this.phone_client = '';
+                          this.email_client = '';
+                         
                           break;
 
                       }
@@ -314,29 +638,24 @@
 
         closeModal(){
           this.modal = 0;
-          this.arrayError = [];
-          this.listRooms(1,this.search,this.valor);
+         // this.arrayError = [];
+          this.listRoomsActive(1,this.search,this.valor);
         },
 
-        registerRoom(page,search,valor){
+        stateBusy(){
 
+                
                 let me = this;
-                var url  = 'room/register?page=' + page + '&search='+ search + "&valor=" + valor;
-                axios.post(url,{
+                var url  = 'room/statebusy';
+                axios.put(url,{
 
-                            'type_room_id' :    this.type_room,
-                            'number' :   this.number,
-                            'price'    : this.price,
-                            'price_air'    : this.price_air,
-                            'frozen'    : this.frozen,
-                            'state'    : this.state,
-                           
+                            'id' :    this.rooms_id,
 
                 }).then(function (response) {
                     Swal.fire({
                       position: 'center',
                       icon: 'success',
-                      title: 'Tu habitación fue Registrada con Éxito',
+                      title: 'Tu habitación queda en estado Ocupada!',
                       showConfirmButton: false,
                       timer: 1500
                     });
@@ -350,8 +669,62 @@
 
             },
 
-        updateRoom(page,search,valor){
+        stateFree(){
 
+                const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                  confirmButton: 'btn btn-success',
+                  cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+                })
+
+                swalWithBootstrapButtons.fire({
+                  title: 'Está seguro?',
+                  text: "Va a facturar ésta habitación!",
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Si, facturars',
+                  cancelButtonText: 'No, Cancelar!',
+                  reverseButtons: true
+                }).then((result) => {
+                  if (result.value) { 
+
+                        let me = this;
+                        var url  = 'room/statefree';
+                        axios.put(url,{
+
+                            'id' :    this.rooms_id,
+
+                          }).then(function (response) {
+                              me.listRoomsActive(1,'','valor');
+                              me.closeModal();
+                           
+                          }).catch(function (error) {
+                              console.log(error);
+                          });
+                      
+
+                    swalWithBootstrapButtons.fire(
+                      'Activado!',
+                      'Tu habitación quedó Disponible.',
+                      'success'
+                    )
+                  } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                  ) {
+                    swalWithBootstrapButtons.fire(
+                      'Cancelado',
+                      'Tu habitacióm sigue Ocupada :)',
+                      'error'
+                    )
+                  }
+                })
+            },
+
+        updateRoom(page,search,valor){
+                
                 let me = this;
                 var url = 'room/update?page=' + page + '&search='+ search + "&valor=" + valor;
                 axios.put(url,{
@@ -565,6 +938,15 @@
 
     .Ocupada:hover i{
       color:#000 ;
+    }
+
+    .certificate label {
+       font-size: 30px;
+       padding-right: 10px;
+    }
+    .certificate h2{
+       color: rgb(235, 23, 23);
+       font-size: 40px;
     }
 
 </style>
