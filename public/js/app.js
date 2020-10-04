@@ -658,80 +658,6 @@ function toComment(sourceMap) {
 
 /***/ }),
 /* 6 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = isValid;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-/**
- * @name isValid
- * @category Common Helpers
- * @summary Is the given date valid?
- *
- * @description
- * Returns false if argument is Invalid Date and true otherwise.
- * Argument is converted to Date using `toDate`. See [toDate]{@link https://date-fns.org/docs/toDate}
- * Invalid Date is a Date, whose time value is NaN.
- *
- * Time value of Date: http://es5.github.io/#x15.9.1.1
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - Now `isValid` doesn't throw an exception
- *   if the first argument is not an instance of Date.
- *   Instead, argument is converted beforehand using `toDate`.
- *
- *   Examples:
- *
- *   | `isValid` argument        | Before v2.0.0 | v2.0.0 onward |
- *   |---------------------------|---------------|---------------|
- *   | `new Date()`              | `true`        | `true`        |
- *   | `new Date('2016-01-01')`  | `true`        | `true`        |
- *   | `new Date('')`            | `false`       | `false`       |
- *   | `new Date(1488370835081)` | `true`        | `true`        |
- *   | `new Date(NaN)`           | `false`       | `false`       |
- *   | `'2016-01-01'`            | `TypeError`   | `false`       |
- *   | `''`                      | `TypeError`   | `false`       |
- *   | `1488370835081`           | `TypeError`   | `true`        |
- *   | `NaN`                     | `TypeError`   | `false`       |
- *
- *   We introduce this change to make *date-fns* consistent with ECMAScript behavior
- *   that try to coerce arguments to the expected type
- *   (which is also the case with other *date-fns* functions).
- *
- * @param {*} date - the date to check
- * @returns {Boolean} the date is valid
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // For the valid date:
- * var result = isValid(new Date(2014, 1, 31))
- * //=> true
- *
- * @example
- * // For the value, convertable into a date:
- * var result = isValid(1393804800000)
- * //=> true
- *
- * @example
- * // For the invalid date:
- * var result = isValid(new Date(''))
- * //=> false
- */
-
-function isValid(dirtyDate) {
-  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
-  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
-  return !isNaN(date);
-}
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -959,6 +885,80 @@ function applyToTag (styleElement, obj) {
 
 
 /***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = isValid;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+/**
+ * @name isValid
+ * @category Common Helpers
+ * @summary Is the given date valid?
+ *
+ * @description
+ * Returns false if argument is Invalid Date and true otherwise.
+ * Argument is converted to Date using `toDate`. See [toDate]{@link https://date-fns.org/docs/toDate}
+ * Invalid Date is a Date, whose time value is NaN.
+ *
+ * Time value of Date: http://es5.github.io/#x15.9.1.1
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - Now `isValid` doesn't throw an exception
+ *   if the first argument is not an instance of Date.
+ *   Instead, argument is converted beforehand using `toDate`.
+ *
+ *   Examples:
+ *
+ *   | `isValid` argument        | Before v2.0.0 | v2.0.0 onward |
+ *   |---------------------------|---------------|---------------|
+ *   | `new Date()`              | `true`        | `true`        |
+ *   | `new Date('2016-01-01')`  | `true`        | `true`        |
+ *   | `new Date('')`            | `false`       | `false`       |
+ *   | `new Date(1488370835081)` | `true`        | `true`        |
+ *   | `new Date(NaN)`           | `false`       | `false`       |
+ *   | `'2016-01-01'`            | `TypeError`   | `false`       |
+ *   | `''`                      | `TypeError`   | `false`       |
+ *   | `1488370835081`           | `TypeError`   | `true`        |
+ *   | `NaN`                     | `TypeError`   | `false`       |
+ *
+ *   We introduce this change to make *date-fns* consistent with ECMAScript behavior
+ *   that try to coerce arguments to the expected type
+ *   (which is also the case with other *date-fns* functions).
+ *
+ * @param {*} date - the date to check
+ * @returns {Boolean} the date is valid
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // For the valid date:
+ * var result = isValid(new Date(2014, 1, 31))
+ * //=> true
+ *
+ * @example
+ * // For the value, convertable into a date:
+ * var result = isValid(1393804800000)
+ * //=> true
+ *
+ * @example
+ * // For the invalid date:
+ * var result = isValid(new Date(''))
+ * //=> false
+ */
+
+function isValid(dirtyDate) {
+  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
+  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
+  return !isNaN(date);
+}
+
+/***/ }),
 /* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1157,7 +1157,7 @@ function startOfISOWeek(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarDays;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -1274,155 +1274,6 @@ function compareAsc(dirtyDateLeft, dirtyDateRight) {
 
 /***/ }),
 /* 14 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name getISOWeekYear
- * @category ISO Week-Numbering Year Helpers
- * @summary Get the ISO week-numbering year of the given date.
- *
- * @description
- * Get the ISO week-numbering year of the given date,
- * which always starts 3 days before the year's first Thursday.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * - The function was renamed from `getISOYear` to `getISOWeekYear`.
- *   "ISO week year" is short for [ISO week-numbering year](https://en.wikipedia.org/wiki/ISO_week_date).
- *   This change makes the name consistent with
- *   locale-dependent week-numbering year helpers, e.g., `getWeekYear`.
- *
- * @param {Date|Number} date - the given date
- * @returns {Number} the ISO week-numbering year
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // Which ISO-week numbering year is 2 January 2005?
- * var result = getISOWeekYear(new Date(2005, 0, 2))
- * //=> 2004
- */
-
-function getISOWeekYear(dirtyDate) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
-  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
-  var year = date.getFullYear();
-  var fourthOfJanuaryOfNextYear = new Date(0);
-  fourthOfJanuaryOfNextYear.setFullYear(year + 1, 0, 4);
-  fourthOfJanuaryOfNextYear.setHours(0, 0, 0, 0);
-  var startOfNextYear = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuaryOfNextYear);
-  var fourthOfJanuaryOfThisYear = new Date(0);
-  fourthOfJanuaryOfThisYear.setFullYear(year, 0, 4);
-  fourthOfJanuaryOfThisYear.setHours(0, 0, 0, 0);
-  var startOfThisYear = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuaryOfThisYear);
-
-  if (date.getTime() >= startOfNextYear.getTime()) {
-    return year + 1;
-  } else if (date.getTime() >= startOfThisYear.getTime()) {
-    return year;
-  } else {
-    return year - 1;
-  }
-}
-
-/***/ }),
-/* 15 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__ = __webpack_require__(190);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__ = __webpack_require__(191);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__ = __webpack_require__(193);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__ = __webpack_require__(194);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__ = __webpack_require__(196);
-
-
-
-
-
-/**
- * @type {Locale}
- * @category Locales
- * @summary English locale (United States).
- * @language English
- * @iso-639-2 eng
- * @author Sasha Koss [@kossnocorp]{@link https://github.com/kossnocorp}
- * @author Lesha Koss [@leshakoss]{@link https://github.com/leshakoss}
- */
-
-var locale = {
-  code: 'en-US',
-  formatDistance: __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__["a" /* default */],
-  formatLong: __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__["a" /* default */],
-  formatRelative: __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__["a" /* default */],
-  localize: __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__["a" /* default */],
-  match: __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__["a" /* default */],
-  options: {
-    weekStartsOn: 0
-    /* Sunday */
-    ,
-    firstWeekContainsDate: 1
-  }
-};
-/* harmony default export */ __webpack_exports__["a"] = (locale);
-
-/***/ }),
-/* 16 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = addLeadingZeros;
-function addLeadingZeros(number, targetLength) {
-  var sign = number < 0 ? '-' : '';
-  var output = Math.abs(number).toString();
-
-  while (output.length < targetLength) {
-    output = '0' + output;
-  }
-
-  return sign + output;
-}
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5723,6 +5574,155 @@ _extends(DatePicker, {
 
 
 /***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeekYear;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name getISOWeekYear
+ * @category ISO Week-Numbering Year Helpers
+ * @summary Get the ISO week-numbering year of the given date.
+ *
+ * @description
+ * Get the ISO week-numbering year of the given date,
+ * which always starts 3 days before the year's first Thursday.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * - The function was renamed from `getISOYear` to `getISOWeekYear`.
+ *   "ISO week year" is short for [ISO week-numbering year](https://en.wikipedia.org/wiki/ISO_week_date).
+ *   This change makes the name consistent with
+ *   locale-dependent week-numbering year helpers, e.g., `getWeekYear`.
+ *
+ * @param {Date|Number} date - the given date
+ * @returns {Number} the ISO week-numbering year
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // Which ISO-week numbering year is 2 January 2005?
+ * var result = getISOWeekYear(new Date(2005, 0, 2))
+ * //=> 2004
+ */
+
+function getISOWeekYear(dirtyDate) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
+  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
+  var year = date.getFullYear();
+  var fourthOfJanuaryOfNextYear = new Date(0);
+  fourthOfJanuaryOfNextYear.setFullYear(year + 1, 0, 4);
+  fourthOfJanuaryOfNextYear.setHours(0, 0, 0, 0);
+  var startOfNextYear = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuaryOfNextYear);
+  var fourthOfJanuaryOfThisYear = new Date(0);
+  fourthOfJanuaryOfThisYear.setFullYear(year, 0, 4);
+  fourthOfJanuaryOfThisYear.setHours(0, 0, 0, 0);
+  var startOfThisYear = Object(__WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__["a" /* default */])(fourthOfJanuaryOfThisYear);
+
+  if (date.getTime() >= startOfNextYear.getTime()) {
+    return year + 1;
+  } else if (date.getTime() >= startOfThisYear.getTime()) {
+    return year;
+  } else {
+    return year - 1;
+  }
+}
+
+/***/ }),
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__ = __webpack_require__(190);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__ = __webpack_require__(191);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__ = __webpack_require__(193);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__ = __webpack_require__(194);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__ = __webpack_require__(196);
+
+
+
+
+
+/**
+ * @type {Locale}
+ * @category Locales
+ * @summary English locale (United States).
+ * @language English
+ * @iso-639-2 eng
+ * @author Sasha Koss [@kossnocorp]{@link https://github.com/kossnocorp}
+ * @author Lesha Koss [@leshakoss]{@link https://github.com/leshakoss}
+ */
+
+var locale = {
+  code: 'en-US',
+  formatDistance: __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__["a" /* default */],
+  formatLong: __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__["a" /* default */],
+  formatRelative: __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__["a" /* default */],
+  localize: __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__["a" /* default */],
+  match: __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__["a" /* default */],
+  options: {
+    weekStartsOn: 0
+    /* Sunday */
+    ,
+    firstWeekContainsDate: 1
+  }
+};
+/* harmony default export */ __webpack_exports__["a"] = (locale);
+
+/***/ }),
+/* 17 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = addLeadingZeros;
+function addLeadingZeros(number, targetLength) {
+  var sign = number < 0 ? '-' : '';
+  var output = Math.abs(number).toString();
+
+  while (output.length < targetLength) {
+    output = '0' + output;
+  }
+
+  return sign + output;
+}
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -5849,7 +5849,7 @@ function addMilliseconds(dirtyDate, dirtyAmount) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -5897,7 +5897,7 @@ function startOfISOWeekYear(dirtyDate) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameDay;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5974,6 +5974,92 @@ function subMilliseconds(dirtyDate, dirtyAmount) {
 
 /***/ }),
 /* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(298);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(299)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
+			var newContent = require("!!../css-loader/index.js!./index.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function (global, factory) {
+	 true ? module.exports = factory(__webpack_require__(14)) :
+	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
+	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
+}(this, (function (DatePicker) { 'use strict';
+
+	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
+
+	function unwrapExports (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var es = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports["default"] = void 0;
+	var locale = {
+	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
+	  firstDayOfWeek: 1,
+	  firstWeekContainsDate: 1
+	};
+	var _default = locale;
+	exports["default"] = _default;
+	module.exports = exports.default;
+	});
+
+	var es$1 = unwrapExports(es);
+
+	var lang = {
+	  formatLocale: es$1,
+	  yearFormat: 'YYYY',
+	  monthFormat: 'MMM',
+	  monthBeforeYear: true
+	};
+	DatePicker.locale('es', lang);
+
+	return lang;
+
+})));
+
+
+/***/ }),
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6012,7 +6098,7 @@ function isWeekend(dirtyDate) {
 }
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6052,7 +6138,7 @@ function startOfDay(dirtyDate) {
 }
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6094,7 +6180,7 @@ function addWeeks(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6138,7 +6224,7 @@ function differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6190,12 +6276,12 @@ function differenceInMonths(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInSeconds;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6233,7 +6319,7 @@ function differenceInSeconds(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6274,7 +6360,7 @@ function startOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6297,7 +6383,7 @@ function startOfUTCISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6329,92 +6415,6 @@ function startOfUTCWeek(dirtyDate, dirtyOptions) {
   date.setUTCHours(0, 0, 0, 0);
   return date;
 }
-
-/***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(298);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(299)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
-			var newContent = require("!!../css-loader/index.js!./index.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-(function (global, factory) {
-	 true ? module.exports = factory(__webpack_require__(18)) :
-	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
-	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
-}(this, (function (DatePicker) { 'use strict';
-
-	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
-
-	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-	}
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var es = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports["default"] = void 0;
-	var locale = {
-	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
-	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
-	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
-	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
-	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
-	  firstDayOfWeek: 1,
-	  firstWeekContainsDate: 1
-	};
-	var _default = locale;
-	exports["default"] = _default;
-	module.exports = exports.default;
-	});
-
-	var es$1 = unwrapExports(es);
-
-	var lang = {
-	  formatLocale: es$1,
-	  yearFormat: 'YYYY',
-	  monthFormat: 'MMM',
-	  monthBeforeYear: true
-	};
-	DatePicker.locale('es', lang);
-
-	return lang;
-
-})));
-
 
 /***/ }),
 /* 35 */
@@ -6789,7 +6789,7 @@ function startOfQuarter(dirtyDate) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = eachWeekendOfInterval;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachDayOfInterval_index_js__ = __webpack_require__(73);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSunday_index_js__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isWeekend_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isWeekend_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6973,7 +6973,7 @@ function endOfDay(dirtyDate) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -9855,7 +9855,7 @@ Popper.Defaults = Defaults;
 /* harmony default export */ __webpack_exports__["default"] = (Popper);
 //# sourceMappingURL=popper.js.map
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(17)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(18)))
 
 /***/ }),
 /* 51 */
@@ -10303,7 +10303,7 @@ module.exports = Cancel;
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addBusinessDays;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isWeekend_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isWeekend_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -10411,7 +10411,7 @@ function isSaturday(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addISOWeekYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setISOWeekYear_index_js__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -10644,7 +10644,7 @@ function addYears(dirtyDate, dirtyAmount) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarISOWeekYears;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10884,7 +10884,7 @@ function differenceInCalendarYears(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInHours;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10975,7 +10975,7 @@ function subISOWeekYears(dirtyDate, dirtyAmount) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInMinutes;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11285,8 +11285,8 @@ function endOfWeek(dirtyDate, dirtyOptions) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = format;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_formatters_index_js__ = __webpack_require__(199);
@@ -11732,7 +11732,7 @@ function cleanEscapedString(input) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addLeadingZeros_index_js__ = __webpack_require__(17);
 
 /*
  * |     | Unit                           |     | Unit                           |
@@ -11823,7 +11823,7 @@ var formatters = {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCISOWeekYear_index_js__ = __webpack_require__(201);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -11850,7 +11850,7 @@ function getUTCISOWeek(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11886,7 +11886,7 @@ function getUTCISOWeekYear(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCWeek_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCWeek_index_js__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeekYear_index_js__ = __webpack_require__(202);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -12043,9 +12043,9 @@ function throwProtectedError(token, format, input) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = formatDistance;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInMonths_index_js__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInSeconds_index_js__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInMonths_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInSeconds_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__locale_en_US_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_cloneObject_index_js__ = __webpack_require__(84);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
@@ -12307,9 +12307,9 @@ function assign(target, dirtyObject) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compareAsc_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInSeconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInSeconds_index_js__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_cloneObject_index_js__ = __webpack_require__(84);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__locale_en_US_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13179,7 +13179,7 @@ function subMonths(dirtyDate, dirtyAmount) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_assign_index_js__ = __webpack_require__(85);
@@ -14219,7 +14219,7 @@ function lastDayOfWeek(dirtyDate, dirtyOptions) {
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(112);
-module.exports = __webpack_require__(332);
+module.exports = __webpack_require__(337);
 
 
 /***/ }),
@@ -14254,6 +14254,7 @@ Vue.component('category', __webpack_require__(312));
 Vue.component('provider', __webpack_require__(317));
 Vue.component('product', __webpack_require__(322));
 Vue.component('reception', __webpack_require__(327));
+Vue.component('certificate', __webpack_require__(332));
 
 var app = new Vue({
   el: '#app',
@@ -31490,7 +31491,7 @@ if (token) {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17), __webpack_require__(115)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(115)(module)))
 
 /***/ }),
 /* 115 */
@@ -59626,7 +59627,7 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17), __webpack_require__(138).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(138).setImmediate))
 
 /***/ }),
 /* 138 */
@@ -59696,7 +59697,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
                          (typeof global !== "undefined" && global.clearImmediate) ||
                          (this && this.clearImmediate);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18)))
 
 /***/ }),
 /* 139 */
@@ -59889,7 +59890,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17), __webpack_require__(52)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(52)))
 
 /***/ }),
 /* 140 */
@@ -60891,7 +60892,7 @@ var content = __webpack_require__(148);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("647c5e6b", content, false, {});
+var update = __webpack_require__(6)("647c5e6b", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -61971,7 +61972,7 @@ var content = __webpack_require__(154);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("4909e19e", content, false, {});
+var update = __webpack_require__(6)("4909e19e", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -63295,7 +63296,7 @@ var content = __webpack_require__(159);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("9f4c16aa", content, false, {});
+var update = __webpack_require__(6)("9f4c16aa", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -63330,10 +63331,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -63810,7 +63811,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport addQuarters */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__addSeconds_index_js__ = __webpack_require__(62);
 /* unused harmony reexport addSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__addWeeks_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__addWeeks_index_js__ = __webpack_require__(28);
 /* unused harmony reexport addWeeks */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__addYears_index_js__ = __webpack_require__(63);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_11__addYears_index_js__["a"]; });
@@ -63846,15 +63847,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport differenceInHours */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__differenceInISOWeekYears_index_js__ = __webpack_require__(170);
 /* unused harmony reexport differenceInISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__differenceInMilliseconds_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__differenceInMilliseconds_index_js__ = __webpack_require__(29);
 /* unused harmony reexport differenceInMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__differenceInMinutes_index_js__ = __webpack_require__(71);
 /* unused harmony reexport differenceInMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__differenceInMonths_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__differenceInMonths_index_js__ = __webpack_require__(30);
 /* unused harmony reexport differenceInMonths */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__differenceInQuarters_index_js__ = __webpack_require__(171);
 /* unused harmony reexport differenceInQuarters */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__differenceInSeconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__differenceInSeconds_index_js__ = __webpack_require__(31);
 /* unused harmony reexport differenceInSeconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_33__differenceInWeeks_index_js__ = __webpack_require__(172);
 /* unused harmony reexport differenceInWeeks */
@@ -63950,7 +63951,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport getISODay */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_79__getISOWeek_index_js__ = __webpack_require__(92);
 /* unused harmony reexport getISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_80__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_80__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* unused harmony reexport getISOWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_81__getISOWeeksInYear_index_js__ = __webpack_require__(217);
 /* unused harmony reexport getISOWeeksInYear */
@@ -64056,11 +64057,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport isTomorrow */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_132__isTuesday_index_js__ = __webpack_require__(257);
 /* unused harmony reexport isTuesday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_133__isValid_index_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_133__isValid_index_js__ = __webpack_require__(7);
 /* unused harmony reexport isValid */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_134__isWednesday_index_js__ = __webpack_require__(258);
 /* unused harmony reexport isWednesday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_135__isWeekend_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_135__isWeekend_index_js__ = __webpack_require__(26);
 /* unused harmony reexport isWeekend */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_136__isWithinInterval_index_js__ = __webpack_require__(259);
 /* unused harmony reexport isWithinInterval */
@@ -64126,7 +64127,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport setWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_167__setYear_index_js__ = __webpack_require__(285);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return __WEBPACK_IMPORTED_MODULE_167__setYear_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__ = __webpack_require__(27);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_169__startOfDecade_index_js__ = __webpack_require__(286);
 /* unused harmony reexport startOfDecade */
@@ -64138,7 +64139,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport startOfISOWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_173__startOfMinute_index_js__ = __webpack_require__(104);
 /* unused harmony reexport startOfMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__ = __webpack_require__(32);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_175__startOfQuarter_index_js__ = __webpack_require__(40);
 /* unused harmony reexport startOfQuarter */
@@ -64813,8 +64814,8 @@ function compareDesc(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isWeekend_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isWeekend_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addDays_index_js__ = __webpack_require__(9);
@@ -65046,7 +65047,7 @@ function differenceInISOWeekYears(dirtyDateLeft, dirtyDateRight) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMonths_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMonths_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65345,7 +65346,7 @@ function eachQuarterOfInterval(dirtyInterval) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addWeeks_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addWeeks_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeek_index_js__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -65430,7 +65431,7 @@ function eachWeekOfInterval(dirtyInterval, options) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfMonth_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfMonth_index_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(42);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65721,7 +65722,7 @@ function endOfISOWeek(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -66565,7 +66566,7 @@ function findIndex(array, predicate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_getUTCISOWeekYear_index_js__ = __webpack_require__(79);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_getUTCWeek_index_js__ = __webpack_require__(80);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getUTCWeekYear_index_js__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addLeadingZeros_index_js__ = __webpack_require__(17);
 
 
 
@@ -67454,7 +67455,7 @@ function getUTCDayOfYear(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfUTCISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getUTCISOWeekYear_index_js__ = __webpack_require__(79);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67479,7 +67480,7 @@ function startOfUTCISOWeekYear(dirtyDate) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfUTCWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getUTCWeekYear_index_js__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67719,7 +67720,7 @@ function formatDistanceToNowStrict(dirtyDate, dirtyOptions) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(16);
 
 var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
 /**
@@ -67814,8 +67815,8 @@ function formatDuration(duration) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
 
 
 
@@ -67931,8 +67932,8 @@ function formatISO(dirtyDate, dirtyOptions) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
 
 
 
@@ -68084,8 +68085,8 @@ function formatISODuration(duration) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 
 
@@ -68179,8 +68180,8 @@ function formatRFC3339(dirtyDate, dirtyOptions) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
 
 
 
@@ -68236,7 +68237,7 @@ function formatRFC7231(dirtyDate) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__format_index_js__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
@@ -68548,7 +68549,7 @@ function getHours(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68892,7 +68893,7 @@ function getUnixTime(dirtyDate) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getDate_index_js__ = __webpack_require__(87);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getDay_index_js__ = __webpack_require__(88);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -68971,7 +68972,7 @@ function getWeekOfMonth(date, dirtyOptions) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarWeeks_index_js__ = __webpack_require__(67);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lastDayOfMonth_index_js__ = __webpack_require__(96);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -69061,12 +69062,12 @@ function getYear(dirtyDate) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInYears_index_js__ = __webpack_require__(72);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__differenceInHours_index_js__ = __webpack_require__(69);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__differenceInMinutes_index_js__ = __webpack_require__(71);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__differenceInSeconds_index_js__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__isValid_index_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__differenceInSeconds_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__sub_index_js__ = __webpack_require__(97);
@@ -69529,7 +69530,7 @@ function isLastDayOfMonth(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parse_index_js__ = __webpack_require__(99);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -69842,8 +69843,8 @@ function isMatch(dateString, formatString, dirtyOptions) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_setUTCISODay_index_js__ = __webpack_require__(240);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_setUTCISOWeek_index_js__ = __webpack_require__(241);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_setUTCWeek_index_js__ = __webpack_require__(242);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_startOfUTCISOWeek_index_js__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_startOfUTCWeek_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_startOfUTCISOWeek_index_js__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_startOfUTCWeek_index_js__ = __webpack_require__(34);
 
 
 
@@ -72360,7 +72361,7 @@ function lastDayOfISOWeek(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -72505,7 +72506,7 @@ function lastDayOfYear(dirtyDate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_format_lightFormatters_index_js__ = __webpack_require__(77);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__isValid_index_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -74010,7 +74011,7 @@ function startOfDecade(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(27);
 
 /**
  * @name startOfToday
@@ -74328,7 +74329,7 @@ function subSeconds(dirtyDate, dirtyAmount) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -75485,7 +75486,7 @@ var render = function() {
                             _vm._v(" "),
                             _c("option", [_vm._v("Masculino")]),
                             _vm._v(" "),
-                            _c("option", [_vm._v("Otro")])
+                            _c("option", [_vm._v("No especifica")])
                           ]
                         )
                       ]),
@@ -75852,7 +75853,7 @@ var content = __webpack_require__(304);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("2b174bf8", content, false, {});
+var update = __webpack_require__(6)("2b174bf8", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -76865,7 +76866,7 @@ var content = __webpack_require__(309);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("9ff39e74", content, false, {});
+var update = __webpack_require__(6)("9ff39e74", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -76900,10 +76901,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -78460,7 +78461,7 @@ var content = __webpack_require__(314);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("403c82aa", content, false, {});
+var update = __webpack_require__(6)("403c82aa", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -78495,10 +78496,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -79493,7 +79494,7 @@ var content = __webpack_require__(319);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("077e5bb9", content, false, {});
+var update = __webpack_require__(6)("077e5bb9", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -80751,7 +80752,7 @@ var content = __webpack_require__(324);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("69ec7384", content, false, {});
+var update = __webpack_require__(6)("69ec7384", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -82189,7 +82190,7 @@ var content = __webpack_require__(329);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(7)("50474f52", content, false, {});
+var update = __webpack_require__(6)("50474f52", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -82213,7 +82214,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.Disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.Disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n.certificate label {\n       font-size: 30px;\n       padding-right: 10px;\n}\n.certificate h2{\n       color: rgb(235, 23, 23);\n       font-size: 40px;\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.Disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.Disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n.certificate label {\n       font-size: 30px;\n       padding-right: 10px;\n}\n.certificate h2{\n       color: rgb(235, 23, 23);\n       font-size: 40px;\n}\n.form_certificate{\n      overflow: auto;\n}\n\n", ""]);
 
 // exports
 
@@ -82224,11 +82225,130 @@ exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    pos
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -82562,10 +82682,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       stateRoom: 'Disponible',
       cc_client: '',
       arrayUsuarioCliente: [],
+      client_id: 0,
       cedula_client: '',
       entry_certificate: new Date(),
-      children_certificate: 0,
-      adults_certificate: 0,
+      cityOrigin_certificate: '',
+      cityDestination_certificate: '',
+      children_certificate: '',
+      adults_certificate: '',
       observation_certificate: '',
       placaCar_certificate: '',
       placabike_certificate: '',
@@ -82587,6 +82710,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       frozen: '',
       state: '',
       price_air: '',
+      name_acomp: '',
+      firstSurname_acomp: '',
+      secondSurname_acomp: '',
+      cedula_acomp: '',
+      birth_date_acomp: new Date(),
+      listAcomp: [],
       arrayroom: [],
       client: [],
       arrayRoom: [],
@@ -82596,6 +82725,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       titleModal: '',
       accion: 0,
       rooms_id: 0,
+      add: 0,
       desactivar: 0,
       condition: 1,
       search: '',
@@ -82670,8 +82800,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       axios.get(url).then(function (response) {
         var respuesta = response.data;
         me.arrayUsuarioCliente = respuesta.client;
-
-        // console.log(usuarioCliente);
+        // console.log(me.arrayUsuarioCliente);
         if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
           me.closeModal();
           var swalWithBootstrapButtons = Swal.mixin({
@@ -82698,7 +82827,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
               //   'success'
               // )
             } else if (result.dismiss === Swal.DismissReason.cancel) {
-              swalWithBootstrapButtons.fire('Cancelado', 'Recuerdad él huésped no está en la base de datos :)', 'error');
+              swalWithBootstrapButtons.fire('Cancelado', 'Recuerda él huésped no está en la base de datos :)', 'error');
             }
           });
         } else {
@@ -82753,6 +82882,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       var url = 'certificate/register';
       axios.post(url, {
 
+        'client_id': this.client_id,
         'number_certificate': this.number_certificate,
         'cityOrigin_certificate': this.cityOrigin_certificate,
         'cityDestination_certificate': this.cityDestination_certificate,
@@ -82771,8 +82901,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           showConfirmButton: false,
           timer: 1500
         });
-        me.closeModal();
-        me.listRoomsActive(1, this.search, this.valor);
       }).catch(function (error) {
         var respuesta = error.response.data;
         me.arrayError = respuesta.errors;
@@ -82804,7 +82932,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
               case "edit":
                 {
 
-                  //console.log(data);
+                  // console.log(data);
                   this.modal = 1;
                   this.stateRoom = 'Ocupada';
                   this.desactivar = 0;
@@ -82818,6 +82946,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.frozen = data['frozen'];
                   this.state = data['state'];
                   this.type_id = data['type_room_id'];
+                  this.name_client = data['name_client'];
+                  this.cedula_client = data['cedula_client'];
+                  this.phone_client = data['phone_client'];
+                  this.firstSurname_client = data['firstSurname_client'];
+                  this.secondSurname_client = data['secondSurname_client'];
 
                   break;
                 };
@@ -82832,6 +82965,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.titleModal = 'Acta de entrada';
                   this.accion = 4;
                   this.rooms_id;
+                  this.children_certificate = '';
+                  this.adults_certificate = '';
+                  this.cityOrigin_certificate = '';
+                  this.cityDestination_certificate = '';
                   this.name_client = data['name_client'];
                   this.type_room = data['type_room'];
                   this.number = data['number'];
@@ -82839,6 +82976,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.price_air = data['price_air'];
                   this.frozen = data['frozen'];
                   this.state = data['state'];
+                  this.client_id = data['id'];
                   this.type_id = data['type_room_id'];
                   this.cedula_client = data['cedula_client'];
                   this.firstSurname_client = data['firstSurname_client'];
@@ -82879,7 +83017,16 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.email_client = '';
 
                   break;
-                }
+                };
+
+              case "agregar":
+                {
+                  this.add = 1;
+                  this.modal = 0;
+                  this.titleModal = 'Listado de Acompañantes';
+
+                  break;
+                };
             }
           }
       }
@@ -82889,6 +83036,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       // this.arrayError = [];
       this.listRoomsActive(1, this.search, this.valor);
     },
+    closeModalAcomp: function closeModalAcomp() {
+      this.add = 0;
+      this.modal = 1;
+    },
     stateBusy: function stateBusy() {
 
       var me = this;
@@ -82896,7 +83047,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       var url = 'room/statebusy';
       axios.put(url, {
 
-        'id': this.rooms_id
+        'id': this.rooms_id,
+        'client_id': this.client_id
 
       }).then(function (response) {
         Swal.fire({
@@ -82907,10 +83059,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           timer: 1500
         });
         me.closeModal();
+        me.listRoomsActive(1, this.search, this.valor);
       }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
+        // var respuesta = error.response.data;
+        // me.arrayError = respuesta.errors;
+        // console.log(error.response.data);
       });
     },
     stateFree: function stateFree() {
@@ -82929,7 +83082,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         text: "Va a facturar ésta habitación!",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Si, facturars',
+        confirmButtonText: 'Si, facturar',
         cancelButtonText: 'No, Cancelar!',
         reverseButtons: true
       }).then(function (result) {
@@ -82940,6 +83093,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           axios.put(url, {
 
             'id': _this.rooms_id
+            // 'client_id' : 1,
 
           }).then(function (response) {
             me.listRoomsActive(1, '', 'valor');
@@ -82955,6 +83109,26 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           swalWithBootstrapButtons.fire('Cancelado', 'Tu habitacióm sigue Ocupada :)', 'error');
         }
       });
+    },
+    addAcomp: function addAcomp() {
+
+      if (this.name_acomp != "" && this.firstSurname_acomp != "" && this.secondSurname_acomp != "" && this.cedula_acomp != "" && this.birth_date_acomp != "") {
+
+        this.listAcomp.push({ name_acomp: this.name_acomp, firstSurname_acomp: this.firstSurname_acomp, secondSurname_acomp: this.secondSurname_acomp,
+          cedula_acomp: this.cedula_acomp, birth_date_acomp: this.birth_date_acomp });
+        this.name_acomp = '';
+        this.firstSurname_acomp = '';
+        this.secondSurname_acomp = '';
+        this.cedula_acomp = '';
+        this.birth_date_acomp = '';
+      } else {
+        alert("Por favor ingrese todos los campos del formulario gracias.");
+      }
+    },
+    deleteAcomp: function deleteAcomp(acomp) {
+
+      var index = this.listAcomp.indexOf(acomp);
+      this.listAcomp.splice(index, 1);
     },
     updateRoom: function updateRoom(page, search, valor) {
 
@@ -83350,6 +83524,135 @@ var render = function() {
       "div",
       {
         staticClass: "modal fade",
+        class: { mostrar: _vm.add },
+        attrs: { tabindex: "-1" }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-dialog-centered modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c(
+              "div",
+              { staticClass: "modal-content container bg-container-modal" },
+              [
+                _c("div", { staticClass: "text-center" }, [
+                  _c("h3", {
+                    staticClass: "modal-title degraded-orange",
+                    domProps: { textContent: _vm._s(_vm.titleModal) }
+                  })
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", { staticClass: "col" }, [
+                      _c(
+                        "table",
+                        { staticClass: "table table-hover  table-sm" },
+                        [
+                          _vm._m(2),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            { staticClass: "bg-white text-center" },
+                            _vm._l(_vm.listAcomp, function(acomp) {
+                              return _c("tr", { key: acomp.id }, [
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.name_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.firstSurname_acomp
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.secondSurname_acomp
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.cedula_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.birth_date_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _c(
+                                    "a",
+                                    {
+                                      staticClass: "btn btn-danger ",
+                                      attrs: { href: "#", title: "Eliminar" },
+                                      on: {
+                                        click: function($event) {
+                                          return _vm.deleteAcomp(acomp)
+                                        }
+                                      }
+                                    },
+                                    [
+                                      _c("i", {
+                                        staticClass: "fas fa-trash-alt"
+                                      }),
+                                      _vm._v(
+                                        " Eliminar\n                                "
+                                      )
+                                    ]
+                                  )
+                                ])
+                              ])
+                            }),
+                            0
+                          )
+                        ]
+                      )
+                    ])
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row modal-footer" }, [
+                  _c("div", { staticClass: "col-lg-2" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-danger  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.closeModalAcomp()
+                          }
+                        }
+                      },
+                      [_vm._v("Cerrar")]
+                    )
+                  ])
+                ])
+              ]
+            )
+          ]
+        )
+      ]
+    ),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
         class: { mostrar: _vm.modal },
         staticStyle: { display: "none" },
         attrs: {
@@ -83363,7 +83666,8 @@ var render = function() {
         _c(
           "div",
           {
-            staticClass: "modal-dialog modal-primary modal-lg",
+            staticClass:
+              "modal-dialog modal-dialog-scrollable modal-primary modal-lg",
             attrs: { role: "document" }
           },
           [
@@ -83443,22 +83747,46 @@ var render = function() {
                             ])
                           ])
                         ]
-                      : _vm.stateRoom == "ocupada"
+                      : _vm.stateRoom == "Ocupada"
                       ? [
                           _c("div", { staticClass: "row" }, [
-                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                            _c("div", { staticClass: "col-lg-3 mb-2" }, [
                               _c("label", { attrs: { for: "text-input " } }, [
-                                _vm._v("Stock")
-                              ]),
-                              _vm._v(" "),
-                              _c("input", {
-                                staticClass: "form-control",
-                                attrs: {
-                                  type: "text",
-                                  placeholder: "",
-                                  disabled: _vm.desactivar == 1
-                                }
-                              })
+                                _vm._v("Cliente : "),
+                                _c("span", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      _vm.name_client +
+                                        " " +
+                                        _vm.firstSurname_client +
+                                        " " +
+                                        _vm.secondSurname_client
+                                    )
+                                  }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-3 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Documento "),
+                                _c("span", {
+                                  domProps: {
+                                    textContent: _vm._s(_vm.cedula_client)
+                                  }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-3 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Celular "),
+                                _c("span", {
+                                  domProps: {
+                                    textContent: _vm._s(_vm.phone_client)
+                                  }
+                                })
+                              ])
                             ])
                           ])
                         ]
@@ -83488,6 +83816,8 @@ var render = function() {
                               ]
                             )
                           ]),
+                          _vm._v(" "),
+                          _vm._m(3),
                           _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
                             _c("div", { staticClass: "col-md-4 mb-2" }, [
@@ -83777,6 +84107,8 @@ var render = function() {
                             ])
                           ]),
                           _vm._v(" "),
+                          _vm._m(4),
+                          _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
                             _c("div", { staticClass: "col-sm-12 col-md-4" }, [
                               _c("label", { attrs: { for: "text-input " } }, [
@@ -83840,64 +84172,93 @@ var render = function() {
                                   }
                                 }
                               })
-                            ]),
-                            _vm._v(" "),
-                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _vm._m(5),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-sm-12 col-md-6" }, [
                               _c("label", { attrs: { for: "text-input " } }, [
                                 _vm._v("Cantidad de Personas")
                               ]),
                               _vm._v(" "),
-                              _c("input", {
-                                directives: [
-                                  {
-                                    name: "model",
-                                    rawName: "v-model",
-                                    value: _vm.adults_certificate,
-                                    expression: "adults_certificate"
-                                  }
-                                ],
-                                staticClass: "form-control",
-                                attrs: { type: "number", placeholder: "Ej: 1" },
-                                domProps: { value: _vm.adults_certificate },
-                                on: {
-                                  input: function($event) {
-                                    if ($event.target.composing) {
-                                      return
+                              _c("div", { staticClass: "row" }, [
+                                _c("div", { staticClass: "col" }, [
+                                  _c(
+                                    "label",
+                                    { attrs: { for: "text-input " } },
+                                    [_vm._v("Adultos")]
+                                  ),
+                                  _vm._v(" "),
+                                  _c("input", {
+                                    directives: [
+                                      {
+                                        name: "model",
+                                        rawName: "v-model",
+                                        value: _vm.adults_certificate,
+                                        expression: "adults_certificate"
+                                      }
+                                    ],
+                                    staticClass: "form-control",
+                                    attrs: {
+                                      type: "number",
+                                      placeholder: "Ej: 1"
+                                    },
+                                    domProps: { value: _vm.adults_certificate },
+                                    on: {
+                                      input: function($event) {
+                                        if ($event.target.composing) {
+                                          return
+                                        }
+                                        _vm.adults_certificate =
+                                          $event.target.value
+                                      }
                                     }
-                                    _vm.adults_certificate = $event.target.value
-                                  }
-                                }
-                              }),
-                              _vm._v(" "),
-                              _c("input", {
-                                directives: [
-                                  {
-                                    name: "model",
-                                    rawName: "v-model",
-                                    value: _vm.children_certificate,
-                                    expression: "children_certificate"
-                                  }
-                                ],
-                                staticClass: "form-control",
-                                attrs: { type: "number", placeholder: "Ej: 0" },
-                                domProps: { value: _vm.children_certificate },
-                                on: {
-                                  input: function($event) {
-                                    if ($event.target.composing) {
-                                      return
+                                  })
+                                ]),
+                                _vm._v(" "),
+                                _c("div", { staticClass: "col" }, [
+                                  _c(
+                                    "label",
+                                    { attrs: { for: "text-input " } },
+                                    [_vm._v("Niños")]
+                                  ),
+                                  _vm._v(" "),
+                                  _c("input", {
+                                    directives: [
+                                      {
+                                        name: "model",
+                                        rawName: "v-model",
+                                        value: _vm.children_certificate,
+                                        expression: "children_certificate"
+                                      }
+                                    ],
+                                    staticClass: "form-control",
+                                    attrs: {
+                                      type: "number",
+                                      placeholder: "Ej: 0"
+                                    },
+                                    domProps: {
+                                      value: _vm.children_certificate
+                                    },
+                                    on: {
+                                      input: function($event) {
+                                        if ($event.target.composing) {
+                                          return
+                                        }
+                                        _vm.children_certificate =
+                                          $event.target.value
+                                      }
                                     }
-                                    _vm.children_certificate =
-                                      $event.target.value
-                                  }
-                                }
-                              })
-                            ])
-                          ]),
-                          _vm._v(" "),
-                          _c("div", { staticClass: "row" }, [
+                                  })
+                                ])
+                              ])
+                            ]),
+                            _vm._v(" "),
                             _c(
                               "div",
-                              { staticClass: "col-sm-12 col-md-4 form-group" },
+                              { staticClass: "col-sm-12 col-md-6 form-group" },
                               [
                                 _c("label", { attrs: { for: "text-input " } }, [
                                   _vm._v("Fecha de ingreso")
@@ -83923,7 +84284,7 @@ var render = function() {
                             _vm._v(" "),
                             _c(
                               "div",
-                              { staticClass: "col-sm-12 col-md-8 form-group" },
+                              { staticClass: "col-sm-12 col-md-12 form-group" },
                               [
                                 _c("label", { attrs: { for: "text-input " } }, [
                                   _vm._v("Observaciones")
@@ -83955,6 +84316,335 @@ var render = function() {
                                 })
                               ]
                             )
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Nombre")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.name_acomp,
+                                    expression: "name_acomp"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder:
+                                    "introduzca el nombre sin apellidos"
+                                },
+                                domProps: { value: _vm.name_acomp },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.name_acomp = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Primer apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.firstSurname_acomp,
+                                    expression: "firstSurname_acomp"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca apellido paterno"
+                                },
+                                domProps: { value: _vm.firstSurname_acomp },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.firstSurname_acomp = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Segundo apellido")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.secondSurname_acomp,
+                                    expression: "secondSurname_acomp"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca apellido materno"
+                                },
+                                domProps: { value: _vm.secondSurname_acomp },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.secondSurname_acomp =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Cédula")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cedula_acomp,
+                                    expression: "cedula_acomp"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca número de cédula"
+                                },
+                                domProps: { value: _vm.cedula_acomp },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cedula_acomp = $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "col-lg-4 mb-2" },
+                              [
+                                _c("label", { attrs: { for: "text-input " } }, [
+                                  _vm._v("Fecha de Nacimiento")
+                                ]),
+                                _vm._v(" "),
+                                _c("date-picker", {
+                                  attrs: {
+                                    language: _vm.es,
+                                    lang: _vm.lang,
+                                    valueType: "format"
+                                  },
+                                  model: {
+                                    value: _vm.birth_date_acomp,
+                                    callback: function($$v) {
+                                      _vm.birth_date_acomp = $$v
+                                    },
+                                    expression: "birth_date_acomp"
+                                  }
+                                })
+                              ],
+                              1
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-md-10" }, [
+                              _c(
+                                "a",
+                                {
+                                  staticClass: "btn  btn-success",
+                                  attrs: { href: "#", title: "agregar" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.addAcomp()
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("i", {
+                                    staticClass: "fas fa-plus-circle"
+                                  }),
+                                  _vm._v(
+                                    " agregar\n                                    "
+                                  )
+                                ]
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-md-2" }, [
+                              _c(
+                                "a",
+                                {
+                                  staticClass: "btn  btn-info",
+                                  attrs: { href: "#" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.openModal("room", "agregar")
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("i", { staticClass: "fas fa-list" }),
+                                  _vm._v(
+                                    " Ver Lista\n                                    "
+                                  )
+                                ]
+                              )
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _vm._m(6),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "row" }, [
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "email-input " } }, [
+                                _vm._v("Tipo de ventilación")
+                              ]),
+                              _vm._v(" "),
+                              _c("div", { staticClass: "form-check" }, [
+                                _c("input", {
+                                  staticClass: "form-check-input",
+                                  attrs: {
+                                    type: "radio",
+                                    name: "exampleRadios",
+                                    id: "exampleRadios1",
+                                    checked: ""
+                                  },
+                                  domProps: { value: _vm.price }
+                                }),
+                                _vm._v(" "),
+                                _c(
+                                  "label",
+                                  {
+                                    staticClass: "form-check-label",
+                                    attrs: { for: "exampleRadios1" }
+                                  },
+                                  [
+                                    _vm._v(
+                                      "\n                                            Ventilador\n                                          "
+                                    )
+                                  ]
+                                )
+                              ]),
+                              _vm._v(" "),
+                              _c("div", { staticClass: "form-check" }, [
+                                _c("input", {
+                                  staticClass: "form-check-input",
+                                  attrs: {
+                                    type: "radio",
+                                    name: "exampleRadios",
+                                    id: "exampleRadios2"
+                                  },
+                                  domProps: { value: _vm.price_air }
+                                }),
+                                _vm._v(" "),
+                                _c(
+                                  "label",
+                                  {
+                                    staticClass: "form-check-label",
+                                    attrs: { for: "exampleRadios2" }
+                                  },
+                                  [
+                                    _vm._v(
+                                      "\n                                            Aire Acondicionado\n                                          "
+                                    )
+                                  ]
+                                )
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ciudad de origen")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cityOrigin_certificate,
+                                    expression: "cityOrigin_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca la ciudad"
+                                },
+                                domProps: { value: _vm.cityOrigin_certificate },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cityOrigin_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ]),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                              _c("label", { attrs: { for: "text-input " } }, [
+                                _vm._v("Ciudad de destino")
+                              ]),
+                              _vm._v(" "),
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.cityDestination_certificate,
+                                    expression: "cityDestination_certificate"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: "introduzca la ciudad"
+                                },
+                                domProps: {
+                                  value: _vm.cityDestination_certificate
+                                },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.cityDestination_certificate =
+                                      $event.target.value
+                                  }
+                                }
+                              })
+                            ])
                           ])
                         ]
                       : _vm.stateRoom == "register"
@@ -84205,7 +84895,7 @@ var render = function() {
                                   _vm._v(" "),
                                   _c("option", [_vm._v("Masculino")]),
                                   _vm._v(" "),
-                                  _c("option", [_vm._v("Otro")])
+                                  _c("option", [_vm._v("No especifica")])
                                 ]
                               )
                             ]),
@@ -84385,6 +85075,1516 @@ var render = function() {
                 )
               ]),
               _vm._v(" "),
+              _c("div", { staticClass: "modal-footer" }, [
+                _c(
+                  "a",
+                  {
+                    staticClass: "btn btn-danger  text-white",
+                    on: {
+                      click: function($event) {
+                        return _vm.closeModal()
+                      }
+                    }
+                  },
+                  [_vm._v("Cerrar")]
+                ),
+                _vm._v(" "),
+                _vm.accion == 1
+                  ? _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-success  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.search_client(_vm.cc_client)
+                          }
+                        }
+                      },
+                      [_vm._v("Ingresar")]
+                    )
+                  : _vm._e(),
+                _vm._v(" "),
+                _vm.accion == 2
+                  ? _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-success  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.stateFree()
+                          }
+                        }
+                      },
+                      [_vm._v("Facturar")]
+                    )
+                  : _vm._e(),
+                _vm._v(" "),
+                _vm.accion == 3
+                  ? _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-success  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.registerCustomers()
+                          }
+                        }
+                      },
+                      [_vm._v("Registrar")]
+                    )
+                  : _vm._e(),
+                _vm._v(" "),
+                _vm.accion == 4
+                  ? _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-success  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.stateBusy()
+                          }
+                        }
+                      },
+                      [_vm._v("Hospedar")]
+                    )
+                  : _vm._e(),
+                _vm._v(" "),
+                _c("hr")
+              ])
+            ])
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "card-header" }, [
+      _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
+      _vm._v(" Reception\n                    ")
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", { staticClass: "bg-material-orange" }, [
+        _c("th", [_vm._v("Nombre")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Primer Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("segundo Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Cédula")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Fecha de Nacimiento")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Opciones")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-md-12 mb-2 text-center certificate" }, [
+        _c("h3", [_vm._v("Información del huéped")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c(
+        "div",
+        { staticClass: "col-md-12 mb-2 mt-4 certificate text-center " },
+        [_c("h3", [_vm._v("Información del vehículo")])]
+      )
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c(
+        "div",
+        { staticClass: "col-md-12 mb-2 mt-4 certificate text-center " },
+        [_c("h3", [_vm._v("Información de los acompañantes")])]
+      )
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c(
+        "div",
+        { staticClass: "col-md-12 mb-2 mt-4 certificate text-center " },
+        [_c("h3", [_vm._v("Información de la habitación")])]
+      )
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-381a41b0", module.exports)
+  }
+}
+
+/***/ }),
+/* 332 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(333)
+}
+var normalizeComponent = __webpack_require__(4)
+/* script */
+var __vue_script__ = __webpack_require__(335)
+/* template */
+var __vue_template__ = __webpack_require__(336)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/assets/js/components/Certificate.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-55d211b0", Component.options)
+  } else {
+    hotAPI.reload("data-v-55d211b0", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 333 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(334);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(6)("73f69eb3", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-55d211b0\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Certificate.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-55d211b0\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Certificate.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 334 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(5)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n.number{\n   font-size: 30px;\n   padding-right: 10px;\n}\n.certificate h2{\n   color: rgb(235, 23, 23);\n   font-size: 40px;\n}\n\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 335 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+//    import moment from 'moment';
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7
+                },
+                monthBeforeYear: false
+            },
+            entry_certificate: new Date(),
+            cityOrigin_certificate: '',
+            cityDestination_certificate: '',
+            children_certificate: '',
+            adults_certificate: '',
+            observation_certificate: '',
+            placaCar_certificate: '',
+            placabike_certificate: '',
+            number_certificate: '032CT',
+            cedula_client: '',
+            name_client: '',
+            firstSurname_client: '',
+            secondSurname_client: '',
+            phone_client: '',
+            birth_date_client: '',
+            gender_client: 0,
+            age_client: '',
+            state_client: 0,
+            email_client: '',
+            address_client: '',
+            city_client: '',
+            nationality_client: '',
+            desactivar: 0,
+            arrayCertificate: [],
+            client: '',
+            modal: 0,
+            titleModal: '',
+            accion: 0,
+            client_id: 0,
+            search: '',
+            valor: 'number_certificate',
+            arrayError: [],
+            error: [],
+            pagination: {
+                'total': 0,
+                'current_page': 0,
+                'per_page': 0,
+                'last_page': 0,
+                'from': 0,
+                'to': 0
+            },
+            offset: 3,
+            es: __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__["es"]
+        };
+    },
+
+    computed: {
+        //muestra la pagina activa
+        isActived: function isActived() {
+            return this.pagination.current_page;
+        },
+        //Calcula las paginas
+        pagesNumber: function pagesNumber() {
+            if (!this.pagination.to) {
+                return [];
+            }
+
+            var from = this.pagination.current_page - this.offset;
+            if (from < 1) {
+                from = 1;
+            }
+
+            var to = from + this.offset * 2;
+            if (to >= this.pagination.last_page) {
+                to = this.pagination.last_page;
+            }
+
+            var pagesArray = [];
+            while (from <= to) {
+                pagesArray.push(from);
+                from++;
+            }
+            return pagesArray;
+        }
+    },
+
+    methods: {
+        listCertificate: function listCertificate(page, search, valor) {
+            var me = this;
+            var url = 'certificate?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayCertificate = respuesta.certificates.data;
+                me.pagination = respuesta.pagination;
+                //   console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        cambiarPagina: function cambiarPagina(page, search, valor) {
+            var me = this;
+            //Actualiza la página actual
+            me.pagination.current_page = page;
+            //Envia la petición para visualizar la data de esa página
+            me.listCertificates(page, search, valor);
+        },
+        openModal: function openModal(model, accion) {
+            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+            switch (model) {
+                case "certificate":
+                    {
+
+                        switch (accion) {
+                            case "create":
+                                {
+                                    this.modal = 1;
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Registrar un nuevo cliente';
+                                    this.accion = 1;
+                                    this.cedula_client = '';
+                                    this.name_client = '';
+                                    this.firstSurname_client = '';
+                                    this.secondSurname_client = '';
+                                    this.birth_date_client = '2018-12-12';
+                                    this.gender_client = 'Seleccione una opción...';
+                                    this.age_client = '';
+                                    this.address_client = '';
+                                    this.city_client = '';
+                                    this.nationality_client = '';
+                                    this.state_client = 'Seleccione una opción...';
+                                    this.phone_client = '';
+                                    this.email_client = '';
+
+                                    break;
+                                };
+
+                            case "editar":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Editar cliente';
+                                    this.accion = 2;
+                                    this.client_id = data['id'];
+                                    this.cedula_client = data['cedula_client'];
+                                    this.name_client = data['name_client'];
+                                    this.firstSurname_client = data['firstSurname_client'];
+                                    this.secondSurname_client = data['secondSurname_client'];
+                                    this.birth_date_client = data['birth_date_client'];
+                                    this.gender_client = data['gender_client'];
+                                    this.age_client = data['age_client'];
+                                    this.address_client = data['address_client'];
+                                    this.city_client = data['city_client'];
+                                    this.nationality_client = data['nationality_client'];
+                                    this.state_client = data['state_client'];
+                                    this.phone_client = data['phone_client'];
+                                    this.email_client = data['email_client'];
+
+                                    break;
+                                };
+
+                            case "ver":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.titleModal = 'Informacion completa del cliente';
+                                    this.accion = 3;
+                                    this.client_id = data['id'];
+                                    this.cedula_client = data['cedula_client'];
+                                    this.name_client = data['name_client'];
+                                    this.firstSurname_client = data['firstSurname_client'];
+                                    this.secondSurname_client = data['secondSurname_client'];
+                                    this.birth_date_client = data['birth_date_client'];
+                                    this.gender_client = data['gender_client'];
+                                    this.age_client = data['age_client'];
+                                    this.address_client = data['address_client'];
+                                    this.city_client = data['city_client'];
+                                    this.nationality_client = data['nationality_client'];
+                                    this.state_client = data['state_client'];
+                                    this.phone_client = data['phone_client'];
+                                    this.email_client = data['email_client'];
+                                    this.children_certificate = data['children_certificate'];
+                                    this.adults_certificate = data['adults_certificate'];
+                                    this.cityOrigin_certificate = data['cityOrigin_certificate'];
+                                    this.cityDestination_certificate = data['cityDestination_certificate'];
+                                    this.number_certificate = data['number_certificate'];
+                                    this.observation_certificate = data['observation_certificate'];
+                                    this.placaCar_certificate = data['placaCar_certificate'];
+                                    this.placabike_certificate = data['placabike_certificate'];
+                                    this.entry_certificate = data['entry_certificate'];
+
+                                    break;
+                                }
+                        }
+                    }
+            }
+        },
+        closeModal: function closeModal() {
+            this.modal = 0;
+            this.arrayError = [];
+            this.listCertificate(1, this.search, this.valor);
+        },
+        updatecertificate: function updatecertificate(page, search, valor) {
+
+            var me = this;
+            var url = 'certificate/update?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.put(url, {
+
+                'id': this.client_id,
+                'cedula_client': this.cedula_client,
+                'name_client': this.name_client,
+                'firstSurname_client': this.firstSurname_client,
+                'secondSurname_client': this.secondSurname_client,
+                'birth_date_client': this.birth_date_client,
+                'gender_client': this.gender_client,
+                'age_client': this.age_client,
+                'address_client': this.address_client,
+                'city_client': this.city_client,
+                'nationality_client': this.nationality_client,
+                'state_client': this.state_client,
+                'phone_client': this.phone_client,
+                'email_client': this.email_client
+
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Cliente Actualizado con Éxito',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                me.closeModal();
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        }
+    },
+
+    mounted: function mounted() {
+
+        this.listCertificate(1, this.search, this.valor);
+    }
+});
+
+/***/ }),
+/* 336 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container-fluid" }, [
+    _c("div", { staticClass: "card" }, [
+      _vm._m(0),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c("div", { staticClass: "form-group row" }, [
+          _c("div", { staticClass: "col-md-6" }, [
+            _c("div", { staticClass: "input-group" }, [
+              _c(
+                "select",
+                {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.valor,
+                      expression: "valor"
+                    }
+                  ],
+                  staticClass: "form-control col-md-3",
+                  on: {
+                    change: function($event) {
+                      var $$selectedVal = Array.prototype.filter
+                        .call($event.target.options, function(o) {
+                          return o.selected
+                        })
+                        .map(function(o) {
+                          var val = "_value" in o ? o._value : o.value
+                          return val
+                        })
+                      _vm.valor = $event.target.multiple
+                        ? $$selectedVal
+                        : $$selectedVal[0]
+                    }
+                  }
+                },
+                [
+                  _c("option", { attrs: { value: "number_certificate" } }, [
+                    _vm._v("Nombre")
+                  ]),
+                  _vm._v(" "),
+                  _c("option", { attrs: { value: "cedula_client" } }, [
+                    _vm._v("Cédula")
+                  ]),
+                  _vm._v(" "),
+                  _c("option", { attrs: { value: "firstSurname_client" } }, [
+                    _vm._v("Apellido")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.search,
+                    expression: "search"
+                  }
+                ],
+                staticClass: "form-control",
+                attrs: { type: "text", placeholder: "Texto a buscar" },
+                domProps: { value: _vm.search },
+                on: {
+                  keyup: function($event) {
+                    return _vm.listCertificate(1, _vm.search, _vm.valor)
+                  },
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.search = $event.target.value
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _vm._m(1)
+            ])
+          ])
+        ]),
+        _vm._v(" "),
+        _c(
+          "table",
+          { staticClass: "table table-bordered table-striped table-sm" },
+          [
+            _vm._m(2),
+            _vm._v(" "),
+            _c(
+              "tbody",
+              _vm._l(_vm.arrayCertificate, function(certificate) {
+                return _c(
+                  "tr",
+                  {
+                    staticClass: "text-center",
+                    attrs: { Key: certificate.id }
+                  },
+                  [
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(certificate.number_certificate)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(certificate.cedula_client)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: { textContent: _vm._s(certificate.name_client) }
+                    }),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(certificate.firstSurname_client)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn  btn-info btn-sm p-1",
+                          attrs: { href: "#", title: "Ver" },
+                          on: {
+                            click: function($event) {
+                              return _vm.openModal(
+                                "certificate",
+                                "ver",
+                                certificate
+                              )
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "fas fa-user-edit" }),
+                          _vm._v(
+                            " Editar\n                                    "
+                          )
+                        ]
+                      )
+                    ])
+                  ]
+                )
+              }),
+              0
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c("nav", [
+          _c(
+            "ul",
+            { staticClass: "pagination" },
+            [
+              _vm.pagination.current_page > 1
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page - 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Anterior")]
+                    )
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm._l(_vm.pagesNumber, function(page) {
+                return _c(
+                  "li",
+                  {
+                    key: page,
+                    staticClass: "page-item",
+                    class: [page == _vm.isActived ? "active" : ""]
+                  },
+                  [
+                    _c("a", {
+                      staticClass: "page-link",
+                      attrs: { href: "#" },
+                      domProps: { textContent: _vm._s(page) },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.cambiarPagina(page, _vm.search, _vm.valor)
+                        }
+                      }
+                    })
+                  ]
+                )
+              }),
+              _vm._v(" "),
+              _vm.pagination.current_page < _vm.pagination.last_page
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page + 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Siguiente")]
+                    )
+                  ])
+                : _vm._e()
+            ],
+            2
+          )
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        class: { mostrar: _vm.modal },
+        staticStyle: { display: "none" },
+        attrs: {
+          tabindex: "-1",
+          role: "dialog",
+          "aria-labelledby": "myModalLabel",
+          "aria-hidden": "true"
+        }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-primary modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c("div", { staticClass: "modal-content" }, [
+              _c("div", { staticClass: "modal-header" }, [
+                _c("h4", {
+                  staticClass: "modal-title",
+                  domProps: { textContent: _vm._s(_vm.titleModal) }
+                }),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    staticClass: "close",
+                    attrs: { type: "button" },
+                    on: {
+                      click: function($event) {
+                        return _vm.closeModal()
+                      }
+                    }
+                  },
+                  [
+                    _c("span", { attrs: { "aria-hidden": "true" } }, [
+                      _vm._v("×")
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "modal-body" }, [
+                _c(
+                  "form",
+                  {
+                    staticClass: "form-horizontal certificate",
+                    attrs: {
+                      action: "",
+                      method: "post",
+                      enctype: "multipart/form-data"
+                    }
+                  },
+                  [
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-md-8 mb-2 certificate" }),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        {
+                          staticClass: "col-md-4 mb-2 certificate  input-group"
+                        },
+                        [
+                          _c(
+                            "label",
+                            {
+                              staticClass: "number",
+                              attrs: { for: "text-input " }
+                            },
+                            [_vm._v("Acta")]
+                          ),
+                          _vm._v(" "),
+                          _c("h2", {
+                            domProps: {
+                              textContent: _vm._s(_vm.number_certificate)
+                            }
+                          })
+                        ]
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-md-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Cliente")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.name_client,
+                              expression: "name_client"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.name_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.name_client = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Primer apellido")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.firstSurname_client,
+                              expression: "firstSurname_client"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1,
+                            placeholder: "introduzca apellido paterno"
+                          },
+                          domProps: { value: _vm.firstSurname_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.firstSurname_client = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Segundo apellido")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.secondSurname_client,
+                              expression: "secondSurname_client"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "introduzca apellido materno"
+                          },
+                          domProps: { value: _vm.secondSurname_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.secondSurname_client = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Cédula")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.cedula_client,
+                              expression: "cedula_client"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.cedula_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.cedula_client = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Celular")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.phone_client,
+                              expression: " phone_client "
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "introduzca el celular"
+                          },
+                          domProps: { value: _vm.phone_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.phone_client = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "email-input " } }, [
+                          _vm._v("Nacionalidad")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.nationality_client,
+                              expression: " nationality_client "
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "introduzca la nacionalidad"
+                          },
+                          domProps: { value: _vm.nationality_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.nationality_client = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "email-input " } }, [
+                          _vm._v("Correo Electrónico")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.email_client,
+                              expression: " email_client "
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "email",
+                            placeholder: "introduzca el correo"
+                          },
+                          domProps: { value: _vm.email_client },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.email_client = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Ciudad de origen")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.cityOrigin_certificate,
+                              expression: "cityOrigin_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1,
+                            placeholder: "introduzca la ciudad"
+                          },
+                          domProps: { value: _vm.cityOrigin_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.cityOrigin_certificate = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Ciudad de destino")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.cityDestination_certificate,
+                              expression: "cityDestination_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1,
+                            placeholder: "introduzca la ciudad"
+                          },
+                          domProps: { value: _vm.cityDestination_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.cityDestination_certificate =
+                                $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Placa Auto")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.placaCar_certificate,
+                              expression: "placaCar_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1,
+                            placeholder: "Ej: MNZ 328"
+                          },
+                          domProps: { value: _vm.placaCar_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.placaCar_certificate = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Placa Moto")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.placabike_certificate,
+                              expression: "placabike_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            disabled: _vm.desactivar == 1,
+                            placeholder: "Ej: MNZ 328"
+                          },
+                          domProps: { value: _vm.placabike_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.placabike_certificate = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-12 col-md-4" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Cantidad de Personas")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.adults_certificate,
+                              expression: "adults_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: { type: "number", placeholder: "Ej: 1" },
+                          domProps: { value: _vm.adults_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.adults_certificate = $event.target.value
+                            }
+                          }
+                        }),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.children_certificate,
+                              expression: "children_certificate"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: { type: "number", placeholder: "Ej: 0" },
+                          domProps: { value: _vm.children_certificate },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.children_certificate = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c(
+                        "div",
+                        { staticClass: "col-sm-12 col-md-4 form-group" },
+                        [
+                          _c("label", { attrs: { for: "text-input " } }, [
+                            _vm._v("Fecha de ingreso")
+                          ]),
+                          _vm._v(" "),
+                          _c("date-picker", {
+                            attrs: {
+                              language: _vm.es,
+                              lang: _vm.lang,
+                              disabled: _vm.desactivar == 1,
+                              valueType: "format"
+                            },
+                            model: {
+                              value: _vm.entry_certificate,
+                              callback: function($$v) {
+                                _vm.entry_certificate = $$v
+                              },
+                              expression: "entry_certificate"
+                            }
+                          })
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "col-sm-12 col-md-8 form-group" },
+                        [
+                          _c("label", { attrs: { for: "text-input " } }, [
+                            _vm._v("Observaciones")
+                          ]),
+                          _vm._v(" "),
+                          _c("textarea", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: _vm.observation_certificate,
+                                expression: "observation_certificate"
+                              }
+                            ],
+                            staticClass: "form-control",
+                            attrs: { rows: "2" },
+                            domProps: { value: _vm.observation_certificate },
+                            on: {
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.observation_certificate =
+                                  $event.target.value
+                              }
+                            }
+                          })
+                        ]
+                      )
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
               _c(
                 "div",
                 { staticClass: "modal-footer" },
@@ -84409,11 +86609,11 @@ var render = function() {
                           staticClass: "btn btn-success  text-white",
                           on: {
                             click: function($event) {
-                              return _vm.search_client(_vm.cc_client)
+                              return _vm.registercertificate()
                             }
                           }
                         },
-                        [_vm._v("Ingresar")]
+                        [_vm._v("Registrar")]
                       )
                     : _vm._e(),
                   _vm._v(" "),
@@ -84424,41 +86624,11 @@ var render = function() {
                           staticClass: "btn btn-success  text-white",
                           on: {
                             click: function($event) {
-                              return _vm.stateFree()
+                              return _vm.updatecertificate()
                             }
                           }
                         },
-                        [_vm._v("Facturar")]
-                      )
-                    : _vm._e(),
-                  _vm._v(" "),
-                  _vm.accion == 3
-                    ? _c(
-                        "a",
-                        {
-                          staticClass: "btn btn-success  text-white",
-                          on: {
-                            click: function($event) {
-                              return _vm.registerCustomers()
-                            }
-                          }
-                        },
-                        [_vm._v("Registrar")]
-                      )
-                    : _vm._e(),
-                  _vm._v(" "),
-                  _vm.accion == 4
-                    ? _c(
-                        "a",
-                        {
-                          staticClass: "btn btn-success  text-white",
-                          on: {
-                            click: function($event) {
-                              return _vm.stateBusy()
-                            }
-                          }
-                        },
-                        [_vm._v("Hospedar")]
+                        [_vm._v("Actualizar")]
                       )
                     : _vm._e(),
                   _vm._v(" "),
@@ -84499,7 +86669,7 @@ var staticRenderFns = [
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "card-header" }, [
       _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
-      _vm._v(" Reception\n                    ")
+      _vm._v(" Actas\n                ")
     ])
   },
   function() {
@@ -84511,6 +86681,24 @@ var staticRenderFns = [
       { staticClass: "btn btn-primary", attrs: { type: "submit" } },
       [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
     )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Número de acta")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Número de identificación")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Nombre")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Opciones")])
+      ])
+    ])
   }
 ]
 render._withStripped = true
@@ -84518,12 +86706,12 @@ module.exports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-381a41b0", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-55d211b0", module.exports)
   }
 }
 
 /***/ }),
-/* 332 */
+/* 337 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin

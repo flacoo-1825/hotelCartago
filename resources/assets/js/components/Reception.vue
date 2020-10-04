@@ -50,37 +50,6 @@
                             </a>
                           </div>
                         </div>
-                        <!-- <table class="table table-bordered table-striped table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>imagen</th>
-                                    <th>Stock</th>
-                                    <th>Opciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="text-center" v-for="product in arrayProduct" :Key="product.id">
-                                   <td  v-text="product.room.state"></td>
-                                   <td class="img_products">
-                                     <img :src="ruta+product.img_product" alt="image_proucto">
-                                   </td>
-                                   <td  v-text="product.stock_product"></td>
-                                   <td>
-                                        <a href="#" class="btn  btn-outline-info btn-sm p-1" title="Ver" @click="openModal('product','ver',product)" ><i class="far fa-eye"></i></a>
-                                        <span>&nbsp</span> 
-                                        <a href="#" class="btn btn-outline-warning btn-sm p-1"  title="Editar" @click="openModal('product','editar',product)" ><i class="fas fa-user-edit"></i></a>
-                                        <span>&nbsp</span>
-                                        <template v-if="product.condition_product">
-                                                <button class="btn btn-outline-success btn-sm p-1" title="Activo"   @click="desactivarProduct(product.id)"><i class="fas fa-check p-1"></i></button>
-                                        </template>
-                                        <template v-else>
-                                                <a href="#" class="btn btn-outline-danger btn-sm" title="Inactivo"  @click="activarProduct(product.id)"><i class="fas fa-times"></i></a>
-                                        </template>
-                                   </td>
-                                </tr>
-                            </tbody>
-                        </table> -->
                         <nav>
                             <ul class="pagination">
                               <li class="page-item" v-if="pagination.current_page > 1">
@@ -96,9 +65,62 @@
                         </nav>
                     </div>
                 </div>
+                <!--open modal acomp -->
+                <div class="modal fade" tabindex="-1" :class="{'mostrar' : add}" >
+                  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                    <div class="modal-content container bg-container-modal">
+                      <div class="text-center">
+                        <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col">
+                            <table class="table table-hover  table-sm" >
+                              <thead >
+                                <tr class="bg-material-orange">
+                                  <th>Nombre</th>
+                                  <th>Primer Apellido</th>
+                                  <th>segundo Apellido</th>
+                                  <th>Cédula</th>
+                                  <th>Fecha de Nacimiento</th>
+                                  <th>Opciones</th>
+                                </tr>
+                              </thead>
+                              <tbody class="bg-white text-center">
+                                <tr v-for="acomp in listAcomp " :key="acomp.id">
+                                  <td v-text="acomp.name_acomp" ></td>
+                                  <td v-text="acomp.firstSurname_acomp" ></td>
+                                  <td v-text="acomp.secondSurname_acomp" ></td>
+                                  <td v-text="acomp.cedula_acomp" ></td>
+                                  <td v-text="acomp.birth_date_acomp" ></td>
+                                  <!-- <td v-text:format="dateformat(acomp.birth_date_acomp)"></td> -->
+                                  <td>
+                                    <a href="#" class="btn btn-danger "  title="Eliminar" @click="deleteAcomp(acomp)" >
+                                      <i class="fas fa-trash-alt"></i> Eliminar
+                                    </a>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                                  
+                              </div>
+                          </div>
+                      
+                      </div>
+                      <div class="row modal-footer">
+                        <div class="col-lg-2">
+                          <a class="btn btn-danger  text-white" @click="closeModalAcomp()">Cerrar</a>
+                        </div>       
+                      </div>
+                      <!-- /.modal-content -->
+                    </div>
+                  <!-- /.modal-dialog -->
+                  </div>
+                </div>
+                <!-- closed modal acomp -->
                 <!-- Fin ejemplo de tabla Listado -->
                 <div class="modal fade" :class="{'mostrar' : modal }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
-                    <div class="modal-dialog modal-primary modal-lg" role="document">
+                    <div class="modal-dialog modal-dialog-scrollable modal-primary modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title" v-text="titleModal"></h4>
@@ -113,15 +135,20 @@
                                         <div class="col-md-3 mb-2"></div>
                                         <div class="col-md-6 mb-2">
                                             <label for="text-input ">Ingrese la cédula del huésped</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cc_client">
+                                            <input type="text"  class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cc_client">
                                         </div>
                                     </div>
                                   </template>
-                                  <template v-else-if="stateRoom=='ocupada'">
+                                  <template v-else-if="stateRoom=='Ocupada'">
                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Stock</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1">
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="text-input ">Cliente : <span v-text="name_client+' '+firstSurname_client + ' ' +secondSurname_client"></span></label>
+                                        </div>
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="text-input ">Documento <span v-text="cedula_client"></span></label>
+                                        </div>
+                                        <div class="col-lg-3 mb-2">
+                                            <label for="text-input ">Celular <span v-text="phone_client"></span></label>
                                         </div>
                                     </div>
                                   </template>
@@ -133,6 +160,11 @@
                                         <div class="col-md-4 mb-2 certificate  input-group">
                                             <label for="text-input ">Acta</label>
                                             <h2 v-text="number_certificate"></h2>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-2 text-center certificate">
+                                            <h3>Información del huéped</h3>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -178,6 +210,11 @@
                                         </div>
                                     </div>
                                     <div class="row">
+                                        <div class="col-md-12 mb-2 mt-4 certificate text-center ">
+                                            <h3>Información del vehículo</h3>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Placa Auto</label>
                                             <input type="text" class="form-control"  v-model="placaCar_certificate"  placeholder="Ej: MNZ 328">
@@ -186,20 +223,102 @@
                                             <label for="text-input ">Placa Moto</label>
                                             <input type="text" class="form-control"  v-model="placabike_certificate"  placeholder="Ej: MNZ 328">
                                         </div>
-                                        <div class="col-sm-12 col-md-4">
-                                            <label for="text-input ">Cantidad de Personas</label>
-                                            <input type="number" class="form-control" v-model="adults_certificate"  placeholder="Ej: 1">
-                                            <input type="number" class="form-control" v-model="children_certificate"  placeholder="Ej: 0">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-2 mt-4 certificate text-center ">
+                                            <h3>Información de los acompañantes</h3>
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-sm-12 col-md-4 form-group">
+                                        <div class="col-sm-12 col-md-6">
+                                            <label for="text-input ">Cantidad de Personas</label>
+                                            <div class="row">
+                                              <div class="col">
+                                                <label for="text-input ">Adultos</label>
+                                                <input type="number" class="form-control" v-model="adults_certificate"  placeholder="Ej: 1">
+                                              </div>
+                                              <div class="col">
+                                                <label for="text-input ">Niños</label>
+                                                <input type="number" class="form-control" v-model="children_certificate"  placeholder="Ej: 0">
+                                               </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-6 form-group">
                                             <label for="text-input ">Fecha de ingreso</label>
                                             <date-picker v-model="entry_certificate"   :language="es" :lang="lang" valueType="format"></date-picker>
                                         </div>
-                                        <div class="col-sm-12 col-md-8 form-group">
+                                        <div class="col-sm-12 col-md-12 form-group">
                                             <label for="text-input ">Observaciones</label>
                                             <textarea  class="form-control"   v-model="observation_certificate" rows="2"></textarea> 
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                      <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Nombre</label>
+                                        <input type="text" v-model="name_acomp" class="form-control"  placeholder="introduzca el nombre sin apellidos">
+                                      </div>
+
+                                      <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Primer apellido</label>
+                                        <input type="text" v-model="firstSurname_acomp" class="form-control" placeholder="introduzca apellido paterno">
+                                      </div>
+
+                                      <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Segundo apellido</label>
+                                        <input type="text" v-model="secondSurname_acomp" class="form-control" placeholder="introduzca apellido materno">
+                                      </div>
+                                    </div>
+                                    <div class="row">
+                                      <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Cédula</label>
+                                        <input type="text" v-model="cedula_acomp" class="form-control" placeholder="introduzca número de cédula">
+                                      </div>
+
+                                      <div class="col-lg-4 mb-2">
+                                        <label for="text-input ">Fecha de Nacimiento</label>
+                                        <date-picker v-model="birth_date_acomp"   :language="es" :lang="lang" valueType="format"></date-picker>
+                                      </div>
+                                    </div>
+                                    <div class="row">   
+                                      <div class="col-md-10">
+                                        <a @click="addAcomp()" href="#" class="btn  btn-success" title="agregar" >
+                                           <i class="fas fa-plus-circle"></i> agregar
+                                        </a>
+                                      </div>
+                                      <div class="col-md-2">
+                                        <a @click="openModal('room','agregar')" href="#" class="btn  btn-info">
+                                          <i class="fas fa-list"></i> Ver Lista
+                                        </a>
+                                      </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-2 mt-4 certificate text-center ">
+                                            <h3>Información de la habitación</h3>
+                                        </div>
+                                    </div>
+                                     <div class="row">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="email-input ">Tipo de ventilación</label>
+                                            <div class="form-check">
+                                              <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" :value="price" checked>
+                                              <label class="form-check-label" for="exampleRadios1">
+                                                Ventilador
+                                              </label>
+                                            </div>
+                                            <div class="form-check">
+                                              <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" :value="price_air">
+                                              <label class="form-check-label" for="exampleRadios2">
+                                                Aire Acondicionado
+                                              </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de origen</label>
+                                            <input type="text" class="form-control"  v-model="cityOrigin_certificate"  placeholder="introduzca la ciudad">
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de destino</label>
+                                            <input type="text" class="form-control" v-model="cityDestination_certificate"   placeholder="introduzca la ciudad">
                                         </div>
                                     </div>
                                   </template>
@@ -245,7 +364,7 @@
                                                     <option value="0">Seleccione una opción</option>
                                                     <option>Femenino</option>
                                                     <option>Masculino</option>
-                                                    <option>Otro</option>
+                                                    <option>No especifica</option>
                                             </select>
                                         </div>
                                         <div class="col-lg-4 mb-2">
@@ -289,13 +408,13 @@
                                 <a  class="btn btn-success  text-white" @click="registerCustomers()" v-if="accion==3">Registrar</a>
                                 <a  class="btn btn-success  text-white" @click="stateBusy()" v-if="accion==4">Hospedar</a>
                                 <hr>
-                                <template v-if="arrayError">
+                                <!-- <template v-if="arrayError">
                                     <div >
                                         <ul class="list-unstyled  alert-danger  row">
                                                 <li v-text="error[0]" class="col-sm-12 col-md-6 col-lg-6 pull-left"    v-for="error in arrayError "></li>
                                         </ul>
                                     </div>
-                                </template>
+                                </template> -->
                             </div>
                         </div>
                         <!-- /.modal-content -->
@@ -332,10 +451,13 @@
             stateRoom : 'Disponible',
             cc_client: '',
             arrayUsuarioCliente : [],
+            client_id : 0,
             cedula_client : '',
             entry_certificate : new Date(),
-            children_certificate : 0,
-            adults_certificate : 0,
+            cityOrigin_certificate : '',
+            cityDestination_certificate : '',
+            children_certificate : '',
+            adults_certificate : '',
             observation_certificate : '',
             placaCar_certificate : '',
             placabike_certificate : '',
@@ -357,6 +479,12 @@
             frozen : '',
             state : '',
             price_air : '',
+            name_acomp : '',
+            firstSurname_acomp : '',
+            secondSurname_acomp : '',
+            cedula_acomp : '',
+            birth_date_acomp : new Date(),
+            listAcomp : [],
             arrayroom : [],
             client : [],
             arrayRoom : [],
@@ -366,6 +494,7 @@
             titleModal : '',
             accion : 0,
             rooms_id : 0,
+            add : 0,
             desactivar : 0,
             condition : 1,
             search:'',
@@ -446,8 +575,7 @@
                 axios.get(url).then(function (response) {
                     var respuesta= response.data;
                     me.arrayUsuarioCliente = respuesta.client;
-                   
-                    // console.log(usuarioCliente);
+                    // console.log(me.arrayUsuarioCliente);
                     if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
                          me.closeModal();
                          const swalWithBootstrapButtons = Swal.mixin({
@@ -476,7 +604,7 @@
                                 } else if (result.dismiss === Swal.DismissReason.cancel ){
                                   swalWithBootstrapButtons.fire(
                                     'Cancelado',
-                                    'Recuerdad él huésped no está en la base de datos :)',
+                                    'Recuerda él huésped no está en la base de datos :)',
                                     'error'
                                   )
                                   }
@@ -541,6 +669,7 @@
                 var url  = 'certificate/register';
                 axios.post(url,{
 
+                            'client_id'                   :    this.client_id,
                             'number_certificate'          :    this.number_certificate,
                             'cityOrigin_certificate'      :    this.cityOrigin_certificate,
                             'cityDestination_certificate' :    this.cityDestination_certificate,
@@ -561,8 +690,7 @@
                       showConfirmButton: false,
                       timer: 1500
                     });
-                      me.closeModal();
-                      me.listRoomsActive(1,this.search,this.valor);
+                     
 
                   })
                   .catch(function (error) {
@@ -594,7 +722,7 @@
 
                       case "edit" :{
 
-                          //console.log(data);
+                          // console.log(data);
                           this.modal = 1;
                           this.stateRoom = 'Ocupada'
                           this.desactivar = 0;
@@ -608,6 +736,11 @@
                           this.frozen =  data['frozen'];
                           this.state =  data['state'];
                           this.type_id= data['type_room_id'];
+                          this.name_client=  data['name_client'];
+                          this.cedula_client=  data['cedula_client'];
+                          this.phone_client=  data['phone_client'];
+                          this.firstSurname_client =  data['firstSurname_client'];
+                          this.secondSurname_client =  data['secondSurname_client'];
 
 
                           break;
@@ -623,6 +756,10 @@
                           this.titleModal = 'Acta de entrada';
                           this.accion = 4;
                           this.rooms_id ;
+                          this.children_certificate = '';
+                          this.adults_certificate = '';
+                          this.cityOrigin_certificate = '';
+                          this.cityDestination_certificate = '';
                           this.name_client = data['name_client'];
                           this.type_room =  data['type_room'];
                           this.number =  data['number'];
@@ -630,6 +767,7 @@
                           this.price_air =  data['price_air'];
                           this.frozen =  data['frozen'];
                           this.state =  data['state'];
+                          this.client_id = data['id'];
                           this.type_id= data['type_room_id'];
                           this.cedula_client=  data['cedula_client'];
                           this.firstSurname_client =  data['firstSurname_client'];
@@ -671,7 +809,15 @@
                          
                           break;
 
-                      }
+                      };
+
+                      case "agregar" :{
+                        this.add = 1;
+                        this.modal = 0;
+                        this.titleModal = 'Listado de Acompañantes';
+
+                        break;
+                      };
                   }
               }
           }
@@ -683,6 +829,10 @@
          // this.arrayError = [];
           this.listRoomsActive(1,this.search,this.valor);
         },
+        closeModalAcomp(){
+          this.add = 0;
+          this.modal = 1; 
+        },
 
         stateBusy(){
 
@@ -692,6 +842,7 @@
                 axios.put(url,{
 
                             'id' :    this.rooms_id,
+                            'client_id' : this.client_id,
 
                 }).then(function (response) {
                     Swal.fire({
@@ -702,11 +853,12 @@
                       timer: 1500
                     });
                       me.closeModal();
+                       me.listRoomsActive(1,this.search,this.valor);
                   })
                   .catch(function (error) {
-                        var respuesta = error.response.data;
-                        me.arrayError = respuesta.errors;
-                        console.log(error.response.data);
+                        // var respuesta = error.response.data;
+                        // me.arrayError = respuesta.errors;
+                        // console.log(error.response.data);
                   });
 
             },
@@ -726,7 +878,7 @@
                   text: "Va a facturar ésta habitación!",
                   icon: 'warning',
                   showCancelButton: true,
-                  confirmButtonText: 'Si, facturars',
+                  confirmButtonText: 'Si, facturar',
                   cancelButtonText: 'No, Cancelar!',
                   reverseButtons: true
                 }).then((result) => {
@@ -737,6 +889,7 @@
                         axios.put(url,{
 
                             'id' :    this.rooms_id,
+                            // 'client_id' : 1,
 
                           }).then(function (response) {
                               me.listRoomsActive(1,'','valor');
@@ -748,6 +901,7 @@
                       
 
                     swalWithBootstrapButtons.fire(
+                      
                       'Activado!',
                       'Tu habitación quedó Disponible.',
                       'success'
@@ -764,6 +918,30 @@
                   }
                 })
             },
+
+        addAcomp(){
+
+            if(this.name_acomp!="" && this.firstSurname_acomp!="" && this.secondSurname_acomp!="" && this.cedula_acomp!="" && this.birth_date_acomp!=""){
+
+                this.listAcomp.push({name_acomp:this.name_acomp, firstSurname_acomp:this.firstSurname_acomp, secondSurname_acomp:this.secondSurname_acomp,
+                                                        cedula_acomp:this.cedula_acomp, birth_date_acomp:this.birth_date_acomp});
+                this.name_acomp = '';
+                this.firstSurname_acomp = '';
+                this.secondSurname_acomp = '';
+                this.cedula_acomp = '';
+                this.birth_date_acomp = '';
+            }
+            else{
+                alert("Por favor ingrese todos los campos del formulario gracias.")
+            }
+
+        },
+        deleteAcomp(acomp){
+
+           var index =  this.listAcomp.indexOf(acomp);
+           this.listAcomp.splice(index,1);
+
+        },
 
         updateRoom(page,search,valor){
                 
@@ -989,6 +1167,10 @@
     .certificate h2{
        color: rgb(235, 23, 23);
        font-size: 40px;
+    }
+
+    .form_certificate{
+      overflow: auto;
     }
 
 </style>

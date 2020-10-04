@@ -13,12 +13,31 @@ class CertificateController extends Controller
        	if (!$request->ajax()) return redirect('/');
          $search = $request->search;
          $valor = $request->valor;
-         
+       
         if ($search==''){
-            $certificates = Certificate::orderBy('id', 'desc')->paginate(10);
+            $certificates = Certificate::join('customers','certificates.client_id','=','customers.id')
+                                ->select('certificates.id', 'certificates.cityOrigin_certificate',
+                                'certificates.number_certificate','certificates.cityDestination_certificate',
+                                    'certificates.placabike_certificate','certificates.placaCar_certificate',
+                                    'certificates.adults_certificate','certificates.children_certificate', 
+                                    'certificates.entry_certificate','certificates.exit_certificate',
+                                    'certificates.observation_certificate','customers.firstSurname_client',
+                                    'customers.cedula_client','customers.email_client','customers.name_client',
+                                    'customers.nationality_client','customers.phone_client', 'customers.secondSurname_client')
+                                ->where($valor, 'like', '%'. $search . '%')
+                                ->orderBy('certificates.id', 'desc')->paginate(9);
         }
         else{
-            $certificates = Certificate::where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(10);
+            $certificates = Certificate::join('customers','certificates.client_id','=','customers.id')
+                                        ->select('certificates.id', 'certificates.cityOrigin_certificate',
+                                        'certificates.number_certificate','certificates.cityDestination_certificate',
+                                        'certificates.placabike_certificate','certificates.placaCar_certificate',
+                                        'certificates.adults_certificate','certificates.children_certificate', 
+                                        'certificates.entry_certificate','certificates.exit_certificate',
+                                        'certificates.observation_certificate','customers.firstSurname_client',
+                                        'customers.cedula_client','customers.email_client','customers.name_client',
+                                        'customers.nationality_client','customers.phone_client','customers.secondSurname_client')
+                                        ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(10);
         }
  
         return [
@@ -32,8 +51,6 @@ class CertificateController extends Controller
             ],
             'certificates' => $certificates
         ];
-        // $rooms = certificates::get();
-        // return $rooms;
       
     }
 
@@ -54,6 +71,7 @@ class CertificateController extends Controller
 
             $certificates =  Certificate::findOrFail($request->id) ;
 
+            $certificates->client_id = $request->client_id;
             $certificates->cityOrigin_certificate = $request->cityOrigin_certificate;
             $certificates->number_certificate = $request->number_certificate;
             $certificates->cityDestination_certificate = $request->cityDestination_certificate;

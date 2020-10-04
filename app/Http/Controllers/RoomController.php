@@ -89,6 +89,7 @@ class RoomController extends Controller
 
         $room =  Room::findOrFail($request->id);
         $room->state = 'Ocupada';
+        $room->client_id = $request->client_id;
         $room->save();
     }
 
@@ -98,6 +99,7 @@ class RoomController extends Controller
 
         $room =  Room::findOrFail($request->id);
         $room->state = 'Disponible';
+        $room->client_id = NULL;
         $room->save();
     }
 
@@ -110,8 +112,15 @@ class RoomController extends Controller
          $valor = $request->valor;
          
         if ($search==''){
-            $room = Room::where('condition','=','1')
-                          ->orderBy('id', 'desc')->paginate(18);
+            $room = Room::leftJoin('customers','rooms.client_id' ,'=', 'customers.id')
+                        ->select('rooms.id', 'rooms.state',
+                        'rooms.number','rooms.price','rooms.client_id','rooms.condition',
+                        'rooms.price_air','rooms.frozen','rooms.number_facture',
+                        'rooms.state','customers.firstSurname_client','customers.cedula_client',
+                        'customers.name_client','customers.nationality_client','customers.phone_client', 
+                        'customers.secondSurname_client')
+                        ->where('condition','=','1')
+                        ->orderBy('id', 'desc')->paginate(9);
         }
         else{
             $room = Room::where('condition','=','1')

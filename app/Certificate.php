@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Certificate extends Model
 {
     protected $fillable = [
-
+        'client_id',
         'cityOrigin_certificate',
         'number_certificate',
         'cityDestination_certificate', 
@@ -20,4 +20,9 @@ class Certificate extends Model
         'observation_certificate'
 
     ];
+
+    public function customer()
+    {
+    	return $this->hasOne(App\Customers::class);
+    }
 }

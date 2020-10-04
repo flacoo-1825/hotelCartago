@@ -26,6 +26,7 @@ Vue.component('category', require('./components/Category.vue'));
 Vue.component('provider', require('./components/Provider.vue'));
 Vue.component('product', require('./components/Product.vue'));
 Vue.component('reception', require('./components/Reception.vue'));
+Vue.component('certificate', require('./components/Certificate.vue'));
 
 const app = new Vue({
     el: '#app',

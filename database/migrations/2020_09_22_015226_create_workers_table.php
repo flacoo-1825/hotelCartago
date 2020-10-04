@@ -21,7 +21,7 @@ class CreateWorkersTable extends Migration
             $table->string('firstSurname_worker');
             $table->string('secondSurname_worker')->nullable();
             $table->date('birth_date_worker')->nullable();
-            $table->enum('gender_worker',['Femenino','Masculino','Otro']);
+            $table->enum('gender_worker',['Femenino','Masculino','No especifica']);
             $table->integer('age_worker')->nullable();
             $table->enum('scholarship_worker',['Primaria','Secundaria','Técnico','Profesional','Otro'])->nullable();
             $table->integer('number_children_worker');

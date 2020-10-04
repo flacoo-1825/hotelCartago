@@ -24,4 +24,9 @@ class Customers extends Model
         'email_client'
 
     ];
+
+    public function cerfificates()
+    {
+    	return $this->hasMany(App\Certificate::class);
+    }
 }

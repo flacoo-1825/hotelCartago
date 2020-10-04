@@ -3,21 +3,18 @@
                 <!-- Ejemplo de tabla Listado -->
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-chevron-right fa5x"></i> Cliente
-                        <button type="button" class="btn btn-success"  @click="openModal('customers','create')">
-                            <i class="fas fa-plus-circle"></i>&nbsp;Nuevo cliente
-                        </button>
+                        <i class="fas fa-chevron-right fa5x"></i> Actas
                     </div>
                     <div class="card-body">
                         <div class="form-group row">
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <select class="form-control col-md-3" v-model="valor">
-                                      <option value="name_client">Nombre</option>
+                                      <option value="number_certificate">Nombre</option>
                                       <option value="cedula_client">Cédula</option>
                                       <option value="firstSurname_client">Apellido</option>
                                     </select>
-                                    <input type="text" v-model="search" @keyup="listCustomers(1,search,valor)"  class="form-control" placeholder="Texto a buscar">
+                                    <input type="text" v-model="search" @keyup="listCertificate(1,search,valor)"  class="form-control" placeholder="Texto a buscar">
                                     <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
                                 </div>
                             </div>
@@ -25,22 +22,24 @@
                         <table class="table table-bordered table-striped table-sm">
                             <thead>
                                 <tr>
-                                    <th>Cédula</th>
+                                    <th>Número de acta</th>
+                                    <th>Número de identificación</th>
                                     <th>Nombre</th>
                                     <th>Apellido</th>
                                     <th>Opciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="text-center" v-for="customers in arrayCustomers" :Key="customers.id">
-                                   <td  v-text="customers.cedula_client"></td>
-                                   <td  v-text="customers.name_client"></td>
-                                   <td  v-text="customers.firstSurname_client"></td>
+                                <tr class="text-center" v-for="certificate in arrayCertificate" :Key="certificate.id">
+                                   <td  v-text="certificate.number_certificate"></td>
+                                   <td  v-text="certificate.cedula_client"></td>
+                                   <td  v-text="certificate.name_client"></td>
+                                   <td  v-text="certificate.firstSurname_client"></td>
                                    <td>
-                                      <a href="#" class="btn  btn-outline-info btn-sm p-1" title="Ver" @click="openModal('customers','ver',customers)" ><i class="far fa-eye"></i></a>
-                                       <span>&nbsp</span> 
-                                      <a href="#" class="btn btn-outline-warning btn-sm p-1"  title="Editar" @click="openModal('customers','editar',customers)" ><i class="fas fa-user-edit"></i></a>
-                                      <span>&nbsp</span>
+                                        <a href="#" class="btn  btn-info btn-sm p-1" title="Ver" @click="openModal('certificate','ver',certificate)" >
+                                          <i class="fas fa-user-edit"></i> Editar
+                                        </a>
+                                      
                                    </td>
                                 </tr>
                             </tbody>
@@ -71,88 +70,89 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal customers">
+                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal certificate">
                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Nombre</label>
+                                      <div class="col-md-8 mb-2 certificate">
+                                            
+                                        </div>
+                                        <div class="col-md-4 mb-2 certificate  input-group">
+                                            <label class="number" for="text-input ">Acta</label>
+                                            <h2 v-text="number_certificate"></h2>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <label for="text-input ">Cliente</label>
                                             <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="name_client">
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Primer Apellido</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="firstSurname_client">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Primer apellido</label>
+                                            <input type="text" class="form-control" v-model="firstSurname_client" v-bind:disabled="desactivar==1"   placeholder="introduzca apellido paterno">
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Segundo Apellido</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="secondSurname_client">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Segundo apellido</label>
+                                            <input type="text" class="form-control" v-model='secondSurname_client'   placeholder="introduzca apellido materno">
+                                         </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Cédula</label>
+                                            <input type="text" class="form-control"  v-model="cedula_client"  v-bind:disabled="desactivar==1" >
+                                        </div>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Celular</label>
+                                            <input type="text" class="form-control"  v-model=' phone_client '  placeholder="introduzca el celular">
+                                        </div>        
+                                        <div class="col-sm-12 col-md-4">  
+                                            <label for="email-input ">Nacionalidad</label>
+                                            <input type="text" class="form-control"  v-model=' nationality_client '  placeholder="introduzca la nacionalidad">
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Identificación</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cedula_client">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="email-input ">Correo Electrónico</label>
+                                            <input type="email" class="form-control"  v-model=' email_client '  placeholder="introduzca el correo">
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Edad</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="age_client">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de origen</label>
+                                            <input type="text" class="form-control"  v-model="cityOrigin_certificate" v-bind:disabled="desactivar==1" placeholder="introduzca la ciudad">
                                         </div>
-                                        
-                                        <div class="col-lg-4 mb-2">
-                                        <label for="text-input ">Fecha de Nacimiento</label>
-                                        <date-picker v-model="birth_date_client" v-bind:disabled="desactivar==1"   :language="es" :lang="lang" valueType="format"></date-picker>
-                                        <!-- <Datepicker  v-model='birth_date_client'  v-bind:disabled="desactivar==1"   :language="es" :value="Date" :format="dateformat(birth_date_client)"  ></Datepicker> -->
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Ciudad de destino</label>
+                                            <input type="text" class="form-control" v-model="cityDestination_certificate" v-bind:disabled="desactivar==1"  placeholder="introduzca la ciudad">
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Teléfono</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="phone_client">
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Placa Auto</label>
+                                            <input type="text" class="form-control"  v-model="placaCar_certificate" v-bind:disabled="desactivar==1" placeholder="Ej: MNZ 328">
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Género</label>
-                                            <select class="form-control custom-select " v-model=' gender_client ' v-bind:disabled="desactivar==1" >
-                                                    <option value="0">Seleccione una opción</option>
-                                                    <option>Femenino</option>
-                                                    <option>Masculino</option>
-                                                    <option>No especifica</option>
-                                            </select>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Placa Moto</label>
+                                            <input type="text" class="form-control"  v-model="placabike_certificate" v-bind:disabled="desactivar==1" placeholder="Ej: MNZ 328">
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Estado</label>
-                                            <select class="form-control custom-select" v-model='state_client ' v-bind:disabled="desactivar==1" >
-                                                    <option value="0">Seleccione una opción</option>
-                                                    <option>Soltero(a)</option>
-                                                    <option>Casado(a)</option>
-                                                    <option>Union Libre</option>
-                                                    <option>Viudo(a)</option>
-                                            </select>
+                                        <div class="col-sm-12 col-md-4">
+                                            <label for="text-input ">Cantidad de Personas</label>
+                                            <input type="number" class="form-control" v-model="adults_certificate"  placeholder="Ej: 1">
+                                            <input type="number" class="form-control" v-model="children_certificate"  placeholder="Ej: 0">
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Dirección</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="address_client">
+                                        <div class="col-sm-12 col-md-4 form-group">
+                                            <label for="text-input ">Fecha de ingreso</label>
+                                            <date-picker v-model="entry_certificate"   :language="es" :lang="lang" v-bind:disabled="desactivar==1" valueType="format"></date-picker>
                                         </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Ciudad</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="city_client">
-                                        </div>
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Nacionalidad</label>
-                                            <input type="text" class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="nationality_client">
-                                        </div>
-                                    </div>
-                                     <div class="row">
-                                        <div class="col-lg-4 mb-2">
-                                            <label for="text-input ">Correo electrónico</label>
-                                            <input type="email" class="form-control"  v-model=' email_client ' v-bind:disabled="desactivar==1"  placeholder="">
+                                        <div class="col-sm-12 col-md-8 form-group">
+                                            <label for="text-input ">Observaciones</label>
+                                            <textarea  class="form-control"   v-model="observation_certificate" rows="2"></textarea> 
                                         </div>
                                     </div>
                                 </form>
                             </div>
                             <div class="modal-footer">
                                 <a  class="btn btn-danger  text-white" @click="closeModal()">Cerrar</a>
-                                <a  class="btn btn-success  text-white"  @click="registerCustomers()" v-if="accion==1">Registrar</a>
-                                <a  class="btn btn-success  text-white" @click="updateCustomers()" v-if="accion==2">Actualizar</a>
+                                <a  class="btn btn-success  text-white"  @click="registercertificate()" v-if="accion==1">Registrar</a>
+                                <a  class="btn btn-success  text-white" @click="updatecertificate()" v-if="accion==2">Actualizar</a>
                                 <hr>
                                 <template v-if="arrayError">
                                     <div >
@@ -190,6 +190,15 @@
                     },
                     monthBeforeYear: false,
             },
+            entry_certificate : new Date(),
+            cityOrigin_certificate : '',
+            cityDestination_certificate : '',
+            children_certificate : '',
+            adults_certificate : '',
+            observation_certificate : '',
+            placaCar_certificate : '',
+            placabike_certificate : '',
+            number_certificate : '032CT',
             cedula_client : '',
             name_client : '',
             firstSurname_client : '',
@@ -204,14 +213,14 @@
             city_client : '',
             nationality_client : '',
             desactivar : 0,
-            arrayCustomers: [],
+            arrayCertificate: [],
             client : '',
             modal : 0,
             titleModal : '',
             accion : 0,
             client_id : 0,
             search:'',
-            valor : 'name_client',
+            valor : 'number_certificate',
             arrayError : [],
             error : [],
             pagination : {
@@ -260,14 +269,14 @@
 
     methods : {
 
-        listCustomers(page,search,valor){
+        listCertificate(page,search,valor){
           let me=this;
-          var url = 'customers?page=' + page + '&search='+ search + "&valor=" + valor;
+          var url = 'certificate?page=' + page + '&search='+ search + "&valor=" + valor;
           axios.get(url).then(function (response) {
               var respuesta= response.data;
-              me.arrayCustomers = respuesta.customers.data;
+              me.arrayCertificate = respuesta.certificates.data;
               me.pagination= respuesta.pagination;
-            // console.log(response);
+            //   console.log(response);
 
           })
             .catch(function (error) {
@@ -280,13 +289,13 @@
           //Actualiza la página actual
           me.pagination.current_page = page;
           //Envia la petición para visualizar la data de esa página
-          me.listcustomerss(page,search,valor);
+          me.listCertificates(page,search,valor);
         },
 
         openModal(model, accion, data = [] ){
 
           switch(model){
-              case  "customers" : {
+              case  "certificate" : {
 
                   switch(accion){
                       case "create" : {
@@ -360,7 +369,15 @@
                             this.state_client =  data['state_client'];
                             this.phone_client =  data['phone_client'];
                             this.email_client =  data['email_client'];
-
+                            this.children_certificate =  data['children_certificate'];
+                            this.adults_certificate =  data['adults_certificate'];
+                            this.cityOrigin_certificate =  data['cityOrigin_certificate'];
+                            this.cityDestination_certificate =  data['cityDestination_certificate'];
+                            this.number_certificate = data['number_certificate'];
+                            this.observation_certificate = data['observation_certificate'];
+                            this.placaCar_certificate = data['placaCar_certificate'];
+                            this.placabike_certificate = data['placabike_certificate'];
+                            this.entry_certificate = data['entry_certificate'];
 
 
                           break;
@@ -375,53 +392,13 @@
         closeModal(){
           this.modal = 0;
           this.arrayError = [];
-          this.listCustomers(1,this.search,this.valor);
+          this.listCertificate(1,this.search,this.valor);
         },
 
-        registerCustomers(page,search,valor){
+        updatecertificate(page,search,valor){
 
                 let me = this;
-                var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
-                axios.post(url,{
-
-                            'cedula_client' :    this.cedula_client,
-                            'name_client' :    this.name_client,
-                            'firstSurname_client' :   this.firstSurname_client,
-                            'secondSurname_client'    : this.secondSurname_client,
-                            // 'birth_date_client'    : this.dateformat(this.birth_date_client),
-                            'birth_date_client'    : this.birth_date_client,
-                            'gender_client'    : this.gender_client,
-                            'age_client'    : this.age_client,
-                            'address_client'    : this.address_client,
-                            'city_client'    : this.city_client,
-                            'nationality_client'    : this.nationality_client,
-                            'state_client'    : this.state_client,
-                            'phone_client'    : this.phone_client,
-                            'email_client'    : this.email_client
-                           
-
-                }).then(function (response) {
-                    Swal.fire({
-                      position: 'center',
-                      icon: 'success',
-                      title: 'Tu cliente fue Registrado con Éxito',
-                      showConfirmButton: false,
-                      timer: 1500
-                    });
-                      me.closeModal();
-                  })
-                  .catch(function (error) {
-                        var respuesta = error.response.data;
-                        me.arrayError = respuesta.errors;
-                        console.log(error.response.data);
-                  });
-
-            },
-
-        updateCustomers(page,search,valor){
-
-                let me = this;
-                var url = 'customers/update?page=' + page + '&search='+ search + "&valor=" + valor;
+                var url = 'certificate/update?page=' + page + '&search='+ search + "&valor=" + valor;
                 axios.put(url,{
 
                             'id' : this.client_id,
@@ -466,7 +443,7 @@
 
     mounted() {
 
-        this.listCustomers(1,this.search,this.valor);
+        this.listCertificate(1,this.search,this.valor);
 
     }
   }
@@ -485,5 +462,13 @@
     background-color: #3c29297a !important;
     }
 
+    .number{
+       font-size: 30px;
+       padding-right: 10px;
+    }
+    .certificate h2{
+       color: rgb(235, 23, 23);
+       font-size: 40px;
+    }
 
 </style>

@@ -15,6 +15,9 @@ class CreateCertificatesTable extends Migration
     {
         Schema::create('certificates', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('client_id')->nullable()->unsigned();
+            $table->string('temperature_entry_client')->nullable();
+            $table->string('temperature_exit_client')->nullable();
             $table->string('cityOrigin_certificate');
             $table->string('number_certificate')->nullable();
             $table->string('cityDestination_certificate');
@@ -26,6 +29,8 @@ class CreateCertificatesTable extends Migration
             $table->date('exit_certificate')->nullable();
             $table->text('observation_certificate')->nullable();
             $table->timestamps();
+
+            $table->foreign('client_id')->references('id')->on('customers');
             
         });
     }
