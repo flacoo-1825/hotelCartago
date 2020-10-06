@@ -22,9 +22,9 @@
                         </div>
                         <div class="container-fluid mb-5">
                           <div class="row row_rooms">
-                            <a href="#"  v-for="room in arrayRoom" :key="room.id">
+                            <a href="#" class="col-sm-4 col-md-4"  v-for="room in arrayRoom" :key="room.id">
                               <template v-if="room.state=='Disponible'">
-                                <div class="col-ms-4 m-1" @click="openModal('room','create',room)">
+                                <div class=" m-1 disponible" @click="openModal('room','create',room)">
                                   <div class="card-body p-3 d-flex align-items-center " :class='room.state'>
                                     <i class="fas fa-bed  p-3  mr-3"></i>
                                     <div class="text-center">
@@ -36,8 +36,8 @@
                                 </div>
                               </template>
                               <template v-else>
-                                <div class="col-ms-4 m-1" @click="openModal('room','edit',room)">
-                                  <div class="card-body p-3 d-flex align-items-center " :class='room.state'>
+                                <div @click="openModal('room','edit',room)">
+                                  <div class=" m-1 card-body p-3 d-flex align-items-center " :class='room.state'>
                                     <i class="fas fa-bed  p-3  mr-3"></i>
                                     <div class="text-center">
                                       <h3 v-text="room.state"></h3>
@@ -679,6 +679,8 @@
                             'children_certificate'        :    this.children_certificate,
                             'entry_certificate'           :    this.entry_certificate,
                             'observation_certificate'     :    this.observation_certificate,
+                            'listAcomp'                   :    this.listAcomp,
+            
                     
                            
 
@@ -853,7 +855,8 @@
                       timer: 1500
                     });
                       me.closeModal();
-                       me.listRoomsActive(1,this.search,this.valor);
+                      me.updateCustomers();
+                      me.listRoomsActive(1,this.search,this.valor);
                   })
                   .catch(function (error) {
                         // var respuesta = error.response.data;
@@ -942,6 +945,40 @@
            this.listAcomp.splice(index,1);
 
         },
+
+        updateCustomers(page,search,valor){
+
+                let me = this;
+                var url = 'customers/update?page=' + page + '&search='+ search + "&valor=" + valor;
+                axios.put(url,{
+
+                            'id' : this.client_id,
+                            'cedula_client' :    this.cedula_client,
+                            'name_client' :    this.name_client,
+                            'firstSurname_client' :   this.firstSurname_client,
+                            'secondSurname_client'    : this.secondSurname_client,
+                            'birth_date_client'    : this.birth_date_client,
+                            'gender_client'    : this.gender_client,
+                            'age_client'    : this.age_client,
+                            'address_client'    : this.address_client,
+                            'city_client'    : this.city_client,
+                            'nationality_client'    : this.nationality_client,
+                            'state_client'    : this.state_client,
+                            'phone_client'    : this.phone_client,
+                            'email_client'    : this.email_client,
+
+
+                })
+                  .catch(function (error) {
+                       var respuesta = error.response.data;
+                       me.arrayError = respuesta.errors;
+                       console.log(error.response.data);
+                  });
+
+            },
+
+
+
 
         updateRoom(page,search,valor){
                 
@@ -1099,7 +1136,8 @@
     background-color: #3c29297a !important;
     }
 
-    .Disponible{
+    
+    .disponible{
       border: 1px solid rgb(33, 136, 56);
       /* border: 1px solid #e0e5ec;  */
       border-radius: 5%;
@@ -1113,23 +1151,34 @@
       transition: all .3s ease;
     }
 
-    .Disponible i{
+
+    .disponible i{
       font-size: 45px;
       color:rgb(33, 136, 56) ;
     }
 
-    .Disponible:hover{
-      background-color: rgba(15, 225, 61, 0.4) ;
-      color: #000;
-      transform: scaleY(1.1);
+    .disponible h3{
+      font-size: 24px;
+      color:rgb(33, 136, 56) ;
     }
 
-    .Disponible:hover i{
+    .disponible:hover{
+      background-color: rgba(15, 225, 61, 0.4) ;
+      color: #000;
+      transform: scaleY(1.05);
+    }
+
+    .disponible:hover h3{
+      color: #000;
+    }
+
+    .disponible:hover i{
       color:#000 ;
     }
     .row_rooms a{
       text-decoration: none;
     }
+
 
     .Ocupada{
       border: 1px solid rgba(177, 32, 32, 0.859) ;
@@ -1150,6 +1199,11 @@
       color:rgba(177, 32, 32, 0.859);
     }
 
+    .Ocupada h3{
+      font-size: 24px;
+      color:rgba(177, 32, 32, 0.859);
+    }
+
      .Ocupada:hover{
       background-color:rgba(177, 32, 32, 0.571) ;
       color: #000;
@@ -1158,6 +1212,10 @@
 
     .Ocupada:hover i{
       color:#000 ;
+    }
+
+    .Ocupada:hover h3{
+      color: #000;
     }
 
     .certificate label {

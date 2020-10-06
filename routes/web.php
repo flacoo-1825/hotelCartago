@@ -79,3 +79,8 @@ Route::get('certificate','CertificateController@index')->name('certificate.index
 Route::post('certificate/register','CertificateController@store')->name('certificate.store');
 Route::put('certificate/update','CertificateController@update')->name('certificate.update');
 Route::get('certificate/searchcertificate','CertificateController@searchClient')->name('certificate.searchClient');
+
+Route::get('companion','CompanionController@index')->name('companion.index');
+Route::post('companion/register','CompanionController@store')->name('companion.store');
+Route::put('companion/update','CompanionController@update')->name('companion.update');
+Route::get('companion/searchCompanions','CompanionController@searchCompanions')->name('companion.searchCompanions');

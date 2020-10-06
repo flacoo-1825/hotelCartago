@@ -15,6 +15,8 @@
     <category v-if="indice==20"></category>
     <product v-if="indice==21"></product>
     <provider v-if="indice==22"></provider>
+    <companion v-if="indice==23"></companion>
+
 
         <!--Inicio del modal agregar/actualizar-->
     

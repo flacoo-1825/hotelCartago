@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Certificate;
+use App\Companion;
 use Illuminate\Http\Request;
 
 class CertificateController extends Controller
@@ -59,6 +60,23 @@ class CertificateController extends Controller
     {     
             if (!$request->ajax()) return redirect('/');
             $certificates=Certificate::create($request->all());
+            $ojo  = $request->listAcomp;
+
+            // $certificate = Certificate::find(1);
+            // $certificate = Certificate::last(1);
+            $certificate=Certificate::all()->last();
+            
+            // $certificate = Certificate::find(1)->companions($ojo);
+            $certificate->companions()->createMany($ojo);
+            // $companions  = $request->listAcomp;
+            // $ojo = Certificate::find(1);
+            // $certificates = $ojo->companions()->save($companions);
+            // $comment = $post->comments()->save($comment);
+                // return $companions;
+            // $ojo->companions()->save($companions);
+
+            // return $ojo;
+            
 
     }
 

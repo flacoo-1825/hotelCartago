@@ -33,16 +33,16 @@
                                 <tr class="text-center" v-for="room in arrayRoom" :Key="room.id">
                                    <td  v-text="room.number"></td>
                                    <td  v-text="room.price"></td>
-                                   <td>
-                                      <a href="#" class="btn  btn-outline-info btn-sm p-1" title="Ver" @click="openModal('room','ver',room)" ><i class="far fa-eye"></i></a>
-                                       <span>&nbsp</span> 
-                                      <a href="#" class="btn btn-outline-warning btn-sm p-1"  title="Editar" @click="openModal('room','editar',room)" ><i class="fas fa-user-edit"></i></a>
-                                      <span>&nbsp</span>
+                                   <td class="d-flex justify-content-between">
+                                      <a href="#" class="btn  btn-info btn-sm p-1" title="Ver" @click="openModal('room','ver',room)" ><i class="far fa-eye"></i> Ver</a>
+                                        
+                                      <a href="#" class="btn btn-warning btn-sm p-1"  title="Editar" @click="openModal('room','editar',room)" ><i class="fas fa-user-edit"></i> Editar</a>
+                                      
                                       <template v-if="room.condition">
-                                           <button class="btn btn-outline-success btn-sm p-1" title="Activo"   @click="desactivarRoom(room.id)"><i class="fas fa-check p-1"></i></button>
+                                           <button class="btn btn-success btn-sm p-1" title="Activo"   @click="desactivarRoom(room.id)"><i class="fas fa-check p-1"></i> Activar</button>
                                       </template>
                                       <template v-else>
-                                           <a href="#" class="btn btn-outline-danger btn-sm" title="Inactivo"  @click="activarRoom(room.id)"><i class="fas fa-times"></i></a>
+                                           <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="activarRoom(room.id)"><i class="fas fa-times"></i> Desactivar</a>
                                       </template>
                                    </td>
                                 </tr>

@@ -19,6 +19,6 @@ $factory->define(App\Worker::class, function (Faker $faker) {
         'address_worker'=> $faker->address,
         'email_worker' => $faker->unique()->safeEmail,
         'password_worker' => '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
-    	'condition' => $faker->randomElement($array = array ('0','1')),
+    	'condition_worker' => $faker->randomElement($array = array ('0','1')),
     ];
 });

@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Seeder;
 
-class TypeRoomsTableSeeder extends Seeder
+class CompanionsTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -11,6 +11,6 @@ class TypeRoomsTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\TypeRoom::class, 5)->create();
+        factory(App\Companion::class, 50)->create();
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Certificate extends Model
 {
     protected $fillable = [
+
         'client_id',
         'cityOrigin_certificate',
         'number_certificate',
@@ -24,5 +25,10 @@ class Certificate extends Model
     public function customer()
     {
     	return $this->hasOne(App\Customers::class);
+    }
+
+    public function companions()
+    {
+    	return $this->hasMany('App\Companion');
     }
 }

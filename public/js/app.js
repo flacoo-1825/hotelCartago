@@ -157,6 +157,115 @@ function toInteger(dirtyNumber) {
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file.
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+module.exports = function normalizeComponent (
+  rawScriptExports,
+  compiledTemplate,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier /* server only */
+) {
+  var esModule
+  var scriptExports = rawScriptExports = rawScriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof rawScriptExports.default
+  if (type === 'object' || type === 'function') {
+    esModule = rawScriptExports
+    scriptExports = rawScriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (compiledTemplate) {
+    options.render = compiledTemplate.render
+    options.staticRenderFns = compiledTemplate.staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = injectStyles
+  }
+
+  if (hook) {
+    var functional = options.functional
+    var existing = functional
+      ? options.render
+      : options.beforeCreate
+
+    if (!functional) {
+      // inject component registration as beforeCreate hook
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    } else {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return existing(h, context)
+      }
+    }
+  }
+
+  return {
+    esModule: esModule,
+    exports: scriptExports,
+    options: options
+  }
+}
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -463,115 +572,6 @@ module.exports = {
   extend: extend,
   trim: trim
 };
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file.
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier /* server only */
-) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof rawScriptExports.default
-  if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = injectStyles
-  }
-
-  if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return existing(h, context)
-      }
-    }
-  }
-
-  return {
-    esModule: esModule,
-    exports: scriptExports,
-    options: options
-  }
-}
 
 
 /***/ }),
@@ -1110,170 +1110,6 @@ function startOfWeek(dirtyDate, dirtyOptions) {
 
 /***/ }),
 /* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-/**
- * @name startOfISOWeek
- * @category ISO Week Helpers
- * @summary Return the start of an ISO week for the given date.
- *
- * @description
- * Return the start of an ISO week for the given date.
- * The result will be in the local timezone.
- *
- * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @returns {Date} the start of an ISO week
- * @throws {TypeError} 1 argument required
- *
- * @example
- * // The start of an ISO week for 2 September 2014 11:55:00:
- * var result = startOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Mon Sep 01 2014 00:00:00
- */
-
-function startOfISOWeek(dirtyDate) {
-  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
-  return Object(__WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__["a" /* default */])(dirtyDate, {
-    weekStartsOn: 1
-  });
-}
-
-/***/ }),
-/* 12 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarDays;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(27);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-var MILLISECONDS_IN_DAY = 86400000;
-/**
- * @name differenceInCalendarDays
- * @category Day Helpers
- * @summary Get the number of calendar days between the given dates.
- *
- * @description
- * Get the number of calendar days between the given dates. This means that the times are removed
- * from the dates and then the difference in days is calculated.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} dateLeft - the later date
- * @param {Date|Number} dateRight - the earlier date
- * @returns {Number} the number of calendar days
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // How many calendar days are between
- * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
- * var result = differenceInCalendarDays(
- *   new Date(2012, 6, 2, 0, 0),
- *   new Date(2011, 6, 2, 23, 0)
- * )
- * //=> 366
- * // How many calendar days are between
- * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
- * var result = differenceInCalendarDays(
- *   new Date(2011, 6, 3, 0, 1),
- *   new Date(2011, 6, 2, 23, 59)
- * )
- * //=> 1
- */
-
-function differenceInCalendarDays(dirtyDateLeft, dirtyDateRight) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var startOfDayLeft = Object(__WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__["a" /* default */])(dirtyDateLeft);
-  var startOfDayRight = Object(__WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__["a" /* default */])(dirtyDateRight);
-  var timestampLeft = startOfDayLeft.getTime() - Object(__WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__["a" /* default */])(startOfDayLeft);
-  var timestampRight = startOfDayRight.getTime() - Object(__WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__["a" /* default */])(startOfDayRight); // Round the number of days to the nearest integer
-  // because the number of milliseconds in a day is not constant
-  // (e.g. it's different in the day of the daylight saving time clock shift)
-
-  return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY);
-}
-
-/***/ }),
-/* 13 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = compareAsc;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-/**
- * @name compareAsc
- * @category Common Helpers
- * @summary Compare the two dates and return -1, 0 or 1.
- *
- * @description
- * Compare the two dates and return 1 if the first date is after the second,
- * -1 if the first date is before the second or 0 if dates are equal.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} dateLeft - the first date to compare
- * @param {Date|Number} dateRight - the second date to compare
- * @returns {Number} the result of the comparison
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Compare 11 February 1987 and 10 July 1989:
- * var result = compareAsc(new Date(1987, 1, 11), new Date(1989, 6, 10))
- * //=> -1
- *
- * @example
- * // Sort the array of dates:
- * var result = [
- *   new Date(1995, 6, 2),
- *   new Date(1987, 1, 11),
- *   new Date(1989, 6, 10)
- * ].sort(compareAsc)
- * //=> [
- * //   Wed Feb 11 1987 00:00:00,
- * //   Mon Jul 10 1989 00:00:00,
- * //   Sun Jul 02 1995 00:00:00
- * // ]
- */
-
-function compareAsc(dirtyDateLeft, dirtyDateRight) {
-  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var dateLeft = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDateLeft);
-  var dateRight = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDateRight);
-  var diff = dateLeft.getTime() - dateRight.getTime();
-
-  if (diff < 0) {
-    return -1;
-  } else if (diff > 0) {
-    return 1; // Return 0 if diff is 0; return NaN if diff is NaN
-  } else {
-    return diff;
-  }
-}
-
-/***/ }),
-/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5574,13 +5410,177 @@ _extends(DatePicker, {
 
 
 /***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeek;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+/**
+ * @name startOfISOWeek
+ * @category ISO Week Helpers
+ * @summary Return the start of an ISO week for the given date.
+ *
+ * @description
+ * Return the start of an ISO week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ISO week-numbering year: http://en.wikipedia.org/wiki/ISO_week_date
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @returns {Date} the start of an ISO week
+ * @throws {TypeError} 1 argument required
+ *
+ * @example
+ * // The start of an ISO week for 2 September 2014 11:55:00:
+ * var result = startOfISOWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+
+function startOfISOWeek(dirtyDate) {
+  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
+  return Object(__WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__["a" /* default */])(dirtyDate, {
+    weekStartsOn: 1
+  });
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarDays;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+var MILLISECONDS_IN_DAY = 86400000;
+/**
+ * @name differenceInCalendarDays
+ * @category Day Helpers
+ * @summary Get the number of calendar days between the given dates.
+ *
+ * @description
+ * Get the number of calendar days between the given dates. This means that the times are removed
+ * from the dates and then the difference in days is calculated.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} dateLeft - the later date
+ * @param {Date|Number} dateRight - the earlier date
+ * @returns {Number} the number of calendar days
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // How many calendar days are between
+ * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
+ * var result = differenceInCalendarDays(
+ *   new Date(2012, 6, 2, 0, 0),
+ *   new Date(2011, 6, 2, 23, 0)
+ * )
+ * //=> 366
+ * // How many calendar days are between
+ * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
+ * var result = differenceInCalendarDays(
+ *   new Date(2011, 6, 3, 0, 1),
+ *   new Date(2011, 6, 2, 23, 59)
+ * )
+ * //=> 1
+ */
+
+function differenceInCalendarDays(dirtyDateLeft, dirtyDateRight) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var startOfDayLeft = Object(__WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__["a" /* default */])(dirtyDateLeft);
+  var startOfDayRight = Object(__WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__["a" /* default */])(dirtyDateRight);
+  var timestampLeft = startOfDayLeft.getTime() - Object(__WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__["a" /* default */])(startOfDayLeft);
+  var timestampRight = startOfDayRight.getTime() - Object(__WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__["a" /* default */])(startOfDayRight); // Round the number of days to the nearest integer
+  // because the number of milliseconds in a day is not constant
+  // (e.g. it's different in the day of the daylight saving time clock shift)
+
+  return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY);
+}
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = compareAsc;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+/**
+ * @name compareAsc
+ * @category Common Helpers
+ * @summary Compare the two dates and return -1, 0 or 1.
+ *
+ * @description
+ * Compare the two dates and return 1 if the first date is after the second,
+ * -1 if the first date is before the second or 0 if dates are equal.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} dateLeft - the first date to compare
+ * @param {Date|Number} dateRight - the second date to compare
+ * @returns {Number} the result of the comparison
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Compare 11 February 1987 and 10 July 1989:
+ * var result = compareAsc(new Date(1987, 1, 11), new Date(1989, 6, 10))
+ * //=> -1
+ *
+ * @example
+ * // Sort the array of dates:
+ * var result = [
+ *   new Date(1995, 6, 2),
+ *   new Date(1987, 1, 11),
+ *   new Date(1989, 6, 10)
+ * ].sort(compareAsc)
+ * //=> [
+ * //   Wed Feb 11 1987 00:00:00,
+ * //   Mon Jul 10 1989 00:00:00,
+ * //   Sun Jul 02 1995 00:00:00
+ * // ]
+ */
+
+function compareAsc(dirtyDateLeft, dirtyDateRight) {
+  Object(__WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var dateLeft = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDateLeft);
+  var dateRight = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDateRight);
+  var diff = dateLeft.getTime() - dateRight.getTime();
+
+  if (diff < 0) {
+    return -1;
+  } else if (diff > 0) {
+    return 1; // Return 0 if diff is 0; return NaN if diff is NaN
+  } else {
+    return diff;
+  }
+}
+
+/***/ }),
 /* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5697,6 +5697,92 @@ function addLeadingZeros(number, targetLength) {
 
 /***/ }),
 /* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(298);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(299)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
+			var newContent = require("!!../css-loader/index.js!./index.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function (global, factory) {
+	 true ? module.exports = factory(__webpack_require__(11)) :
+	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
+	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
+}(this, (function (DatePicker) { 'use strict';
+
+	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
+
+	function unwrapExports (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var es = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports["default"] = void 0;
+	var locale = {
+	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
+	  firstDayOfWeek: 1,
+	  firstWeekContainsDate: 1
+	};
+	var _default = locale;
+	exports["default"] = _default;
+	module.exports = exports.default;
+	});
+
+	var es$1 = unwrapExports(es);
+
+	var lang = {
+	  formatLocale: es$1,
+	  yearFormat: 'YYYY',
+	  monthFormat: 'MMM',
+	  monthBeforeYear: true
+	};
+	DatePicker.locale('es', lang);
+
+	return lang;
+
+})));
+
+
+/***/ }),
+/* 20 */
 /***/ (function(module, exports) {
 
 var g;
@@ -5723,7 +5809,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5802,7 +5888,7 @@ function addMonths(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5844,13 +5930,13 @@ function addMilliseconds(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5892,7 +5978,7 @@ function startOfISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5932,13 +6018,13 @@ function isSameDay(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subMilliseconds;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5971,92 +6057,6 @@ function subMilliseconds(dirtyDate, dirtyAmount) {
   var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
   return Object(__WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__["a" /* default */])(dirtyDate, -amount);
 }
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(298);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(299)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
-			var newContent = require("!!../css-loader/index.js!./index.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-(function (global, factory) {
-	 true ? module.exports = factory(__webpack_require__(14)) :
-	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
-	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
-}(this, (function (DatePicker) { 'use strict';
-
-	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
-
-	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-	}
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var es = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports["default"] = void 0;
-	var locale = {
-	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
-	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
-	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
-	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
-	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
-	  firstDayOfWeek: 1,
-	  firstWeekContainsDate: 1
-	};
-	var _default = locale;
-	exports["default"] = _default;
-	module.exports = exports.default;
-	});
-
-	var es$1 = unwrapExports(es);
-
-	var lang = {
-	  formatLocale: es$1,
-	  yearFormat: 'YYYY',
-	  monthFormat: 'MMM',
-	  monthBeforeYear: true
-	};
-	DatePicker.locale('es', lang);
-
-	return lang;
-
-})));
-
 
 /***/ }),
 /* 26 */
@@ -6231,7 +6231,7 @@ function differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInMonths;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarMonths_index_js__ = __webpack_require__(65);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6423,7 +6423,7 @@ function startOfUTCWeek(dirtyDate, dirtyOptions) {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 var normalizeHeaderName = __webpack_require__(122);
 
 var DEFAULT_CONTENT_TYPE = {
@@ -6564,7 +6564,7 @@ function isSunday(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addHours;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6606,7 +6606,7 @@ function addHours(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addQuarters;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6648,7 +6648,7 @@ function addQuarters(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInDays;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -9855,7 +9855,7 @@ Popper.Defaults = Defaults;
 /* harmony default export */ __webpack_exports__["default"] = (Popper);
 //# sourceMappingURL=popper.js.map
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(18)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(20)))
 
 /***/ }),
 /* 51 */
@@ -10072,7 +10072,7 @@ process.umask = function() { return 0; };
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 var settle = __webpack_require__(123);
 var buildURL = __webpack_require__(125);
 var parseHeaders = __webpack_require__(126);
@@ -10462,8 +10462,8 @@ function addISOWeekYears(dirtyDate, dirtyAmount) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = setISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10521,7 +10521,7 @@ function setISOWeekYear(dirtyDate, dirtyISOWeekYear) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addMinutes;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10563,7 +10563,7 @@ function addMinutes(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addSeconds;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10604,7 +10604,7 @@ function addSeconds(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11028,7 +11028,7 @@ function differenceInMinutes(dirtyDateLeft, dirtyDateRight) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarYears_index_js__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11287,7 +11287,7 @@ function endOfWeek(dirtyDate, dirtyOptions) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = format;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_formatters_index_js__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_format_longFormatters_index_js__ = __webpack_require__(81);
@@ -12042,7 +12042,7 @@ function throwProtectedError(token, format, input) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = formatDistance;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInMonths_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInSeconds_index_js__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__locale_en_US_index_js__ = __webpack_require__(16);
@@ -12305,7 +12305,7 @@ function assign(target, dirtyObject) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = formatDistanceStrict;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInSeconds_index_js__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_cloneObject_index_js__ = __webpack_require__(84);
@@ -12773,8 +12773,8 @@ function getISODay(dirtyDate) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13139,7 +13139,7 @@ function sub(dirtyDate, duration) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subMonths;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13180,7 +13180,7 @@ function subMonths(dirtyDate, dirtyAmount) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_assign_index_js__ = __webpack_require__(85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_longFormatters_index_js__ = __webpack_require__(81);
@@ -14219,7 +14219,7 @@ function lastDayOfWeek(dirtyDate, dirtyOptions) {
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(112);
-module.exports = __webpack_require__(337);
+module.exports = __webpack_require__(342);
 
 
 /***/ }),
@@ -14255,6 +14255,7 @@ Vue.component('provider', __webpack_require__(317));
 Vue.component('product', __webpack_require__(322));
 Vue.component('reception', __webpack_require__(327));
 Vue.component('certificate', __webpack_require__(332));
+Vue.component('companion', __webpack_require__(337));
 
 var app = new Vue({
   el: '#app',
@@ -31491,7 +31492,7 @@ if (token) {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(115)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(115)(module)))
 
 /***/ }),
 /* 115 */
@@ -46829,7 +46830,7 @@ module.exports = __webpack_require__(119);
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 var bind = __webpack_require__(51);
 var Axios = __webpack_require__(121);
 var defaults = __webpack_require__(35);
@@ -46906,7 +46907,7 @@ module.exports = function isBuffer (obj) {
 
 
 var defaults = __webpack_require__(35);
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 var InterceptorManager = __webpack_require__(129);
 var dispatchRequest = __webpack_require__(130);
 
@@ -46991,7 +46992,7 @@ module.exports = Axios;
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -47071,7 +47072,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -47144,7 +47145,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -47204,7 +47205,7 @@ module.exports = function parseHeaders(headers) {
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -47279,7 +47280,7 @@ module.exports = (
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -47339,7 +47340,7 @@ module.exports = (
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 function InterceptorManager() {
   this.handlers = [];
@@ -47398,7 +47399,7 @@ module.exports = InterceptorManager;
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 var transformData = __webpack_require__(131);
 var isCancel = __webpack_require__(55);
 var defaults = __webpack_require__(35);
@@ -47491,7 +47492,7 @@ module.exports = function dispatchRequest(config) {
 "use strict";
 
 
-var utils = __webpack_require__(3);
+var utils = __webpack_require__(4);
 
 /**
  * Transform the data for a request or a response
@@ -59627,7 +59628,7 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(138).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(138).setImmediate))
 
 /***/ }),
 /* 138 */
@@ -59697,7 +59698,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
                          (typeof global !== "undefined" && global.clearImmediate) ||
                          (this && this.clearImmediate);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)))
 
 /***/ }),
 /* 139 */
@@ -59890,14 +59891,14 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18), __webpack_require__(52)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(52)))
 
 /***/ }),
 /* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(141)
 /* template */
@@ -60017,7 +60018,7 @@ if (false) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(144)
 /* template */
@@ -60839,7 +60840,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(147)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(150)
 /* template */
@@ -61919,7 +61920,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(153)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(155)
 /* template */
@@ -62609,11 +62610,12 @@ var render = function() {
                     _vm._v(" "),
                     _c(
                       "td",
+                      { staticClass: "d-flex justify-content-between" },
                       [
                         _c(
                           "a",
                           {
-                            staticClass: "btn  btn-outline-info btn-sm p-1",
+                            staticClass: "btn  btn-info btn-sm p-1",
                             attrs: { href: "#", title: "Ver" },
                             on: {
                               click: function($event) {
@@ -62621,15 +62623,16 @@ var render = function() {
                               }
                             }
                           },
-                          [_c("i", { staticClass: "far fa-eye" })]
+                          [
+                            _c("i", { staticClass: "far fa-eye" }),
+                            _vm._v(" Ver")
+                          ]
                         ),
-                        _vm._v(" "),
-                        _c("span", [_vm._v(" ")]),
                         _vm._v(" "),
                         _c(
                           "a",
                           {
-                            staticClass: "btn btn-outline-warning btn-sm p-1",
+                            staticClass: "btn btn-warning btn-sm p-1",
                             attrs: { href: "#", title: "Editar" },
                             on: {
                               click: function($event) {
@@ -62637,18 +62640,18 @@ var render = function() {
                               }
                             }
                           },
-                          [_c("i", { staticClass: "fas fa-user-edit" })]
+                          [
+                            _c("i", { staticClass: "fas fa-user-edit" }),
+                            _vm._v(" Editar")
+                          ]
                         ),
-                        _vm._v(" "),
-                        _c("span", [_vm._v(" ")]),
                         _vm._v(" "),
                         room.condition
                           ? [
                               _c(
                                 "button",
                                 {
-                                  staticClass:
-                                    "btn btn-outline-success btn-sm p-1",
+                                  staticClass: "btn btn-success btn-sm p-1",
                                   attrs: { title: "Activo" },
                                   on: {
                                     click: function($event) {
@@ -62656,14 +62659,17 @@ var render = function() {
                                     }
                                   }
                                 },
-                                [_c("i", { staticClass: "fas fa-check p-1" })]
+                                [
+                                  _c("i", { staticClass: "fas fa-check p-1" }),
+                                  _vm._v(" Activar")
+                                ]
                               )
                             ]
                           : [
                               _c(
                                 "a",
                                 {
-                                  staticClass: "btn btn-outline-danger btn-sm",
+                                  staticClass: "btn btn-danger btn-sm",
                                   attrs: { href: "#", title: "Inactivo" },
                                   on: {
                                     click: function($event) {
@@ -62671,7 +62677,10 @@ var render = function() {
                                     }
                                   }
                                 },
-                                [_c("i", { staticClass: "fas fa-times" })]
+                                [
+                                  _c("i", { staticClass: "fas fa-times" }),
+                                  _vm._v(" Desactivar")
+                                ]
                               )
                             ]
                       ],
@@ -63243,7 +63252,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(158)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(160)
 /* template */
@@ -63331,10 +63340,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -63801,11 +63810,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport addHours */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addISOWeekYears_index_js__ = __webpack_require__(59);
 /* unused harmony reexport addISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(22);
 /* unused harmony reexport addMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addMinutes_index_js__ = __webpack_require__(61);
 /* unused harmony reexport addMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(21);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__addQuarters_index_js__ = __webpack_require__(38);
 /* unused harmony reexport addQuarters */
@@ -63821,13 +63830,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport closestIndexTo */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__closestTo_index_js__ = __webpack_require__(165);
 /* unused harmony reexport closestTo */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__compareAsc_index_js__ = __webpack_require__(14);
 /* unused harmony reexport compareAsc */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__compareDesc_index_js__ = __webpack_require__(166);
 /* unused harmony reexport compareDesc */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__differenceInBusinessDays_index_js__ = __webpack_require__(167);
 /* unused harmony reexport differenceInBusinessDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* unused harmony reexport differenceInCalendarDays */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(64);
 /* unused harmony reexport differenceInCalendarISOWeekYears */
@@ -64009,7 +64018,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport isMonday */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_108__isPast_index_js__ = __webpack_require__(244);
 /* unused harmony reexport isPast */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(24);
 /* unused harmony reexport isSameDay */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_110__isSameHour_index_js__ = __webpack_require__(100);
 /* unused harmony reexport isSameHour */
@@ -64133,9 +64142,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport startOfDecade */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_170__startOfHour_index_js__ = __webpack_require__(101);
 /* unused harmony reexport startOfHour */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_171__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_171__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* unused harmony reexport startOfISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(23);
 /* unused harmony reexport startOfISOWeekYear */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_173__startOfMinute_index_js__ = __webpack_require__(104);
 /* unused harmony reexport startOfMinute */
@@ -64167,7 +64176,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* unused harmony reexport subHours */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_187__subISOWeekYears_index_js__ = __webpack_require__(70);
 /* unused harmony reexport subISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(25);
 /* unused harmony reexport subMilliseconds */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_189__subMinutes_index_js__ = __webpack_require__(292);
 /* unused harmony reexport subMinutes */
@@ -64391,7 +64400,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_toInteger_index_js__ = __webpack_require__(2);
@@ -64817,9 +64826,9 @@ function compareDesc(dirtyDateLeft, dirtyDateRight) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isWeekend_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -64883,7 +64892,7 @@ function differenceInBusinessDays(dirtyDateLeft, dirtyDateRight) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -64984,7 +64993,7 @@ function differenceInCalendarQuarters(dirtyDateLeft, dirtyDateRight) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(64);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subISOWeekYears_index_js__ = __webpack_require__(70);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65723,7 +65732,7 @@ function endOfISOWeek(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68235,10 +68244,10 @@ function formatRFC7231(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__format_index_js__ = __webpack_require__(76);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -68382,7 +68391,7 @@ function fromUnixTime(dirtyUnixTime) {
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(43);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68548,7 +68557,7 @@ function getHours(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -69060,7 +69069,7 @@ function getYear(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInYears_index_js__ = __webpack_require__(72);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(39);
@@ -71551,7 +71560,7 @@ function isPast(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71978,7 +71987,7 @@ function isThursday(dirtyDate) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72020,7 +72029,7 @@ function isToday(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72234,7 +72243,7 @@ function isWithinInterval(dirtyDate, dirtyInterval) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subDays_index_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -72362,7 +72371,7 @@ function lastDayOfISOWeek(dirtyDate) {
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72507,7 +72516,7 @@ function lastDayOfYear(dirtyDate) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_format_lightFormatters_index_js__ = __webpack_require__(77);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73841,7 +73850,7 @@ function setWeek(dirtyDate, dirtyWeek, dirtyOptions) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
@@ -75800,7 +75809,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(303)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(305)
 /* template */
@@ -76813,7 +76822,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(308)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(310)
 /* template */
@@ -76901,10 +76910,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -78408,7 +78417,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(313)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(315)
 /* template */
@@ -78496,10 +78505,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -79441,7 +79450,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(318)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(320)
 /* template */
@@ -80699,7 +80708,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(323)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(325)
 /* template */
@@ -82137,7 +82146,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(328)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(330)
 /* template */
@@ -82214,7 +82223,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.Disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.Disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n.certificate label {\n       font-size: 30px;\n       padding-right: 10px;\n}\n.certificate h2{\n       color: rgb(235, 23, 23);\n       font-size: 40px;\n}\n.form_certificate{\n      overflow: auto;\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    position:  absolute ! important;\n}\n.mostrar{\n    display:  list-item ! important;  \n    opacity:  1 ! important;\n    position:  absolute ! important;\n    background-color: #3c29297a !important;\n}\n.disponible{\n      border: 1px solid rgb(33, 136, 56);\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgb(33, 136, 56) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.disponible i{\n      font-size: 45px;\n      color:rgb(33, 136, 56) ;\n}\n.disponible h3{\n      font-size: 24px;\n      color:rgb(33, 136, 56) ;\n}\n.disponible:hover{\n      background-color: rgba(15, 225, 61, 0.4) ;\n      color: #000;\n      -webkit-transform: scaleY(1.05);\n              transform: scaleY(1.05);\n}\n.disponible:hover h3{\n      color: #000;\n}\n.disponible:hover i{\n      color:#000 ;\n}\n.row_rooms a{\n      text-decoration: none;\n}\n.Ocupada{\n      border: 1px solid rgba(177, 32, 32, 0.859) ;\n      /* border: 1px solid #e0e5ec;  */\n      border-radius: 5%;\n      color:rgba(177, 32, 32, 0.859) ;\n      -webkit-box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n              box-shadow: 8px 8px 16px rgba(165,177,198, 0.8),\n\t    -8px -8px 16px rgba(255,255,255,0.8);\n      -webkit-transition: all .3s ease;\n      transition: all .3s ease;\n}\n.Ocupada i{\n      font-size: 45px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada h3{\n      font-size: 24px;\n      color:rgba(177, 32, 32, 0.859);\n}\n.Ocupada:hover{\n      background-color:rgba(177, 32, 32, 0.571) ;\n      color: #000;\n      -webkit-transform: scaleY(1.1);\n              transform: scaleY(1.1);\n}\n.Ocupada:hover i{\n      color:#000 ;\n}\n.Ocupada:hover h3{\n      color: #000;\n}\n.certificate label {\n       font-size: 30px;\n       padding-right: 10px;\n}\n.certificate h2{\n       color: rgb(235, 23, 23);\n       font-size: 40px;\n}\n.form_certificate{\n      overflow: auto;\n}\n\n", ""]);
 
 // exports
 
@@ -82225,10 +82234,10 @@ exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    pos
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -82891,7 +82900,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         'adults_certificate': this.adults_certificate,
         'children_certificate': this.children_certificate,
         'entry_certificate': this.entry_certificate,
-        'observation_certificate': this.observation_certificate
+        'observation_certificate': this.observation_certificate,
+        'listAcomp': this.listAcomp
 
       }).then(function (response) {
         Swal.fire({
@@ -83059,6 +83069,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           timer: 1500
         });
         me.closeModal();
+        me.updateCustomers();
         me.listRoomsActive(1, this.search, this.valor);
       }).catch(function (error) {
         // var respuesta = error.response.data;
@@ -83129,6 +83140,33 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
       var index = this.listAcomp.indexOf(acomp);
       this.listAcomp.splice(index, 1);
+    },
+    updateCustomers: function updateCustomers(page, search, valor) {
+
+      var me = this;
+      var url = 'customers/update?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.put(url, {
+
+        'id': this.client_id,
+        'cedula_client': this.cedula_client,
+        'name_client': this.name_client,
+        'firstSurname_client': this.firstSurname_client,
+        'secondSurname_client': this.secondSurname_client,
+        'birth_date_client': this.birth_date_client,
+        'gender_client': this.gender_client,
+        'age_client': this.age_client,
+        'address_client': this.address_client,
+        'city_client': this.city_client,
+        'nationality_client': this.nationality_client,
+        'state_client': this.state_client,
+        'phone_client': this.phone_client,
+        'email_client': this.email_client
+
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
     },
     updateRoom: function updateRoom(page, search, valor) {
 
@@ -83334,14 +83372,18 @@ var render = function() {
             _vm._l(_vm.arrayRoom, function(room) {
               return _c(
                 "a",
-                { key: room.id, attrs: { href: "#" } },
+                {
+                  key: room.id,
+                  staticClass: "col-sm-4 col-md-4",
+                  attrs: { href: "#" }
+                },
                 [
                   room.state == "Disponible"
                     ? [
                         _c(
                           "div",
                           {
-                            staticClass: "col-ms-4 m-1",
+                            staticClass: " m-1 disponible",
                             on: {
                               click: function($event) {
                                 return _vm.openModal("room", "create", room)
@@ -83388,7 +83430,6 @@ var render = function() {
                         _c(
                           "div",
                           {
-                            staticClass: "col-ms-4 m-1",
                             on: {
                               click: function($event) {
                                 return _vm.openModal("room", "edit", room)
@@ -83400,7 +83441,7 @@ var render = function() {
                               "div",
                               {
                                 staticClass:
-                                  "card-body p-3 d-flex align-items-center ",
+                                  " m-1 card-body p-3 d-flex align-items-center ",
                                 class: room.state
                               },
                               [
@@ -85263,7 +85304,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(333)
 }
-var normalizeComponent = __webpack_require__(4)
+var normalizeComponent = __webpack_require__(3)
 /* script */
 var __vue_script__ = __webpack_require__(335)
 /* template */
@@ -85340,7 +85381,7 @@ exports = module.exports = __webpack_require__(5)(false);
 
 
 // module
-exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n.number{\n   font-size: 30px;\n   padding-right: 10px;\n}\n.certificate h2{\n   color: rgb(235, 23, 23);\n   font-size: 40px;\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n.number{\n   font-size: 30px;\n   padding-right: 10px;\n}\n.acta h2{\n   color: rgb(235, 23, 23);\n   font-size: 40px;\n}\n\n", ""]);
 
 // exports
 
@@ -85351,11 +85392,64 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -85547,6 +85641,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 },
                 monthBeforeYear: false
             },
+            listAcomp: [],
+            add: 0,
             entry_certificate: new Date(),
             cityOrigin_certificate: '',
             cityDestination_certificate: '',
@@ -85631,7 +85727,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 var respuesta = response.data;
                 me.arrayCertificate = respuesta.certificates.data;
                 me.pagination = respuesta.pagination;
-                //   console.log(response);
+                //  console.log(respuesta);
             }).catch(function (error) {
                 console.log(error);
             });
@@ -85641,7 +85737,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             //Actualiza la página actual
             me.pagination.current_page = page;
             //Envia la petición para visualizar la data de esa página
-            me.listCertificates(page, search, valor);
+            me.listCertificate(page, search, valor);
+        },
+        listCompanions: function listCompanions(search) {
+            var me = this;
+            var url = 'companion/searchCompanions?&search=' + search;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.listAcomp = respuesta.companions;
+                me.openModal('certificate', 'companions', me.listAcomp);
+                // console.log(me.listAcomp);
+            }).catch(function (error) {
+                console.log(error);
+            });
         },
         openModal: function openModal(model, accion) {
             var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
@@ -85735,6 +85843,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                                     break;
                                 }
+
+                            case "companions":
+                                {
+
+                                    //console.log(data);
+                                    this.add = 1;
+                                    this.modal = 0;
+                                    this.desactivar = 1;
+                                    this.titleModal = 'Listado de Acompañantes';
+
+                                    break;
+                                }
                         }
                     }
             }
@@ -85743,6 +85863,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             this.modal = 0;
             this.arrayError = [];
             this.listCertificate(1, this.search, this.valor);
+        },
+        closeModalAcomp: function closeModalAcomp() {
+            this.add = 0;
         },
         updatecertificate: function updatecertificate(page, search, valor) {
 
@@ -85834,6 +85957,10 @@ var render = function() {
                 },
                 [
                   _c("option", { attrs: { value: "number_certificate" } }, [
+                    _vm._v("Acta")
+                  ]),
+                  _vm._v(" "),
+                  _c("option", { attrs: { value: "name_client" } }, [
                     _vm._v("Nombre")
                   ]),
                   _vm._v(" "),
@@ -85919,7 +86046,7 @@ var render = function() {
                       _c(
                         "a",
                         {
-                          staticClass: "btn  btn-info btn-sm p-1",
+                          staticClass: "btn  btn-info btn-sm p-1 text-dark",
                           attrs: { href: "#", title: "Ver" },
                           on: {
                             click: function($event) {
@@ -85935,6 +86062,25 @@ var render = function() {
                           _c("i", { staticClass: "fas fa-user-edit" }),
                           _vm._v(
                             " Editar\n                                    "
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn  btn-success btn-sm p-1 text-dark",
+                          attrs: { href: "#", title: "Ver" },
+                          on: {
+                            click: function($event) {
+                              return _vm.listCompanions(certificate.id)
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "fas fa-street-view" }),
+                          _vm._v(
+                            " Acompañantes\n                                    "
                           )
                         ]
                       )
@@ -86032,6 +86178,128 @@ var render = function() {
       "div",
       {
         staticClass: "modal fade",
+        class: { mostrar: _vm.add },
+        attrs: { tabindex: "-1" }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-dialog-scrollable  modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c(
+              "div",
+              { staticClass: "modal-content container bg-container-modal" },
+              [
+                _c("div", { staticClass: "text-center" }, [
+                  _c("h3", {
+                    staticClass: "modal-title degraded-orange",
+                    domProps: { textContent: _vm._s(_vm.titleModal) }
+                  })
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", { staticClass: "col" }, [
+                      _c(
+                        "table",
+                        { staticClass: "table table-hover  table-sm" },
+                        [
+                          _vm._m(3),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            { staticClass: "bg-white text-center" },
+                            _vm._l(_vm.listAcomp, function(acomp) {
+                              return _c("tr", { key: acomp.id }, [
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.name_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.firstSurname_acomp
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.secondSurname_acomp
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.cedula_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(acomp.birth_date_acomp)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.temperature_entry_acomp
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      acomp.temperature_exit_acomp
+                                    )
+                                  }
+                                })
+                              ])
+                            }),
+                            0
+                          )
+                        ]
+                      )
+                    ])
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row modal-footer" }, [
+                  _c("div", { staticClass: "col-lg-2" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-danger  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.closeModalAcomp()
+                          }
+                        }
+                      },
+                      [_vm._v("Cerrar")]
+                    )
+                  ])
+                ])
+              ]
+            )
+          ]
+        )
+      ]
+    ),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
         class: { mostrar: _vm.modal },
         staticStyle: { display: "none" },
         attrs: {
@@ -86045,7 +86313,8 @@ var render = function() {
         _c(
           "div",
           {
-            staticClass: "modal-dialog modal-primary modal-lg",
+            staticClass:
+              "modal-dialog modal-dialog-scrollable modal-primary modal-lg",
             attrs: { role: "document" }
           },
           [
@@ -86079,7 +86348,7 @@ var render = function() {
                 _c(
                   "form",
                   {
-                    staticClass: "form-horizontal certificate",
+                    staticClass: "form-horizontal",
                     attrs: {
                       action: "",
                       method: "post",
@@ -86088,13 +86357,11 @@ var render = function() {
                   },
                   [
                     _c("div", { staticClass: "row" }, [
-                      _c("div", { staticClass: "col-md-8 mb-2 certificate" }),
+                      _c("div", { staticClass: "col-md-8 mb-2 " }),
                       _vm._v(" "),
                       _c(
                         "div",
-                        {
-                          staticClass: "col-md-4 mb-2 certificate  input-group"
-                        },
+                        { staticClass: "col-md-4 mb-2 input-group acta" },
                         [
                           _c(
                             "label",
@@ -86690,13 +86957,35 @@ var staticRenderFns = [
       _c("tr", [
         _c("th", [_vm._v("Número de acta")]),
         _vm._v(" "),
-        _c("th", [_vm._v("Número de identificación")]),
+        _c("th", [_vm._v("Identificación")]),
         _vm._v(" "),
         _c("th", [_vm._v("Nombre")]),
         _vm._v(" "),
         _c("th", [_vm._v("Apellido")]),
         _vm._v(" "),
         _c("th", [_vm._v("Opciones")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", { staticClass: "bg-material-orange" }, [
+        _c("th", [_vm._v("Nombre")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Primer Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("segundo Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Cédula")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Fecha de Nacimiento")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Temperatura de entrada")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Temperatura de salida")])
       ])
     ])
   }
@@ -86712,6 +87001,1103 @@ if (false) {
 
 /***/ }),
 /* 337 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(338)
+}
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(340)
+/* template */
+var __vue_template__ = __webpack_require__(341)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/assets/js/components/Companion.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-68033ce5", Component.options)
+  } else {
+    hotAPI.reload("data-v-68033ce5", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 338 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(339);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(6)("7f694abc", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-68033ce5\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Companion.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-68033ce5\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Companion.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 339 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(5)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n\n\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 340 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+//    import moment from 'moment';
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7
+                },
+                monthBeforeYear: false
+            },
+            cedula_acomp: '',
+            name_acomp: '',
+            firstSurname_acomp: '',
+            secondSurname_acomp: '',
+            phone_acomp: '',
+            birth_date_acomp: '',
+            gender_acomp: 0,
+            age_acomp: '',
+            state_acomp: 0,
+            email_acomp: '',
+            temperature_entry_acomp: '',
+            temperature_exit_acomp: '',
+            nationality_acomp: '',
+            desactivar: 0,
+            arrayCompanion: [],
+            client: '',
+            modal: 0,
+            titleModal: '',
+            accion: 0,
+            client_id: 0,
+            search: '',
+            valor: 'name_acomp',
+            arrayError: [],
+            error: [],
+            pagination: {
+                'total': 0,
+                'current_page': 0,
+                'per_page': 0,
+                'last_page': 0,
+                'from': 0,
+                'to': 0
+            },
+            offset: 3,
+            es: __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__["es"]
+        };
+    },
+
+    computed: {
+        //muestra la pagina activa
+        isActived: function isActived() {
+            return this.pagination.current_page;
+        },
+        //Calcula las paginas
+        pagesNumber: function pagesNumber() {
+            if (!this.pagination.to) {
+                return [];
+            }
+
+            var from = this.pagination.current_page - this.offset;
+            if (from < 1) {
+                from = 1;
+            }
+
+            var to = from + this.offset * 2;
+            if (to >= this.pagination.last_page) {
+                to = this.pagination.last_page;
+            }
+
+            var pagesArray = [];
+            while (from <= to) {
+                pagesArray.push(from);
+                from++;
+            }
+            return pagesArray;
+        }
+    },
+
+    methods: {
+        listCompanions: function listCompanions(page, search, valor) {
+            var me = this;
+            var url = 'companion?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayCompanion = respuesta.companions.data;
+                me.pagination = respuesta.pagination;
+                // console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        cambiarPagina: function cambiarPagina(page, search, valor) {
+            var me = this;
+            //Actualiza la página actual
+            me.pagination.current_page = page;
+            //Envia la petición para visualizar la data de esa página
+            me.listCompanions(page, search, valor);
+        },
+        openModal: function openModal(model, accion) {
+            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+            switch (model) {
+                case "companions":
+                    {
+
+                        switch (accion) {
+                            case "create":
+                                {
+                                    this.modal = 1;
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Registrar un nuevo cliente';
+                                    this.accion = 1;
+                                    this.cedula_acomp = '';
+                                    this.name_acomp = '';
+                                    this.firstSurname_acomp = '';
+                                    this.secondSurname_acomp = '';
+                                    this.birth_date_acomp = '2018-12-12';
+                                    this.gender_acomp = 'Seleccione una opción...';
+                                    this.age_acomp = '';
+                                    this.temperature_entry_acomp = '';
+                                    this.temperature_exit_acomp = '';
+                                    this.nationality_acomp = '';
+                                    this.state_acomp = 'Seleccione una opción...';
+                                    this.phone_acomp = '';
+                                    this.email_acomp = '';
+
+                                    break;
+                                };
+
+                            case "editar":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Editar cliente';
+                                    this.accion = 2;
+                                    this.client_id = data['id'];
+                                    this.cedula_acomp = data['cedula_acomp'];
+                                    this.name_acomp = data['name_acomp'];
+                                    this.firstSurname_acomp = data['firstSurname_acomp'];
+                                    this.secondSurname_acomp = data['secondSurname_acomp'];
+                                    this.birth_date_acomp = data['birth_date_acomp'];
+                                    this.gender_acomp = data['gender_acomp'];
+                                    this.age_acomp = data['age_acomp'];
+                                    this.temperature_entry_acomp = data['temperature_entry_acomp'];
+                                    this.temperature_exit_acomp = data['temperature_exit_acomp'];
+                                    this.nationality_acomp = data['nationality_acomp'];
+                                    this.state_acomp = data['state_acomp'];
+                                    this.phone_acomp = data['phone_acomp'];
+                                    this.email_acomp = data['email_acomp'];
+
+                                    break;
+                                };
+
+                            case "ver":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.titleModal = 'Informacion completa del cliente';
+                                    this.accion = 3;
+                                    this.client_id = data['id'];
+                                    this.cedula_acomp = data['cedula_acomp'];
+                                    this.name_acomp = data['name_acomp'];
+                                    this.firstSurname_acomp = data['firstSurname_acomp'];
+                                    this.secondSurname_acomp = data['secondSurname_acomp'];
+                                    this.birth_date_acomp = data['birth_date_acomp'];
+                                    this.gender_acomp = data['gender_acomp'];
+                                    this.age_acomp = data['age_acomp'];
+                                    this.temperature_entry_acomp = data['temperature_entry_acomp'];
+                                    this.temperature_exit_acomp = data['temperature_exit_acomp'];
+                                    this.nationality_acomp = data['nationality_acomp'];
+                                    this.state_acomp = data['state_acomp'];
+                                    this.phone_acomp = data['phone_acomp'];
+                                    this.email_acomp = data['email_acomp'];
+
+                                    break;
+                                }
+                        }
+                    }
+            }
+        },
+        closeModal: function closeModal() {
+            this.modal = 0;
+            this.arrayError = [];
+            this.listCompanions(1, this.search, this.valor);
+        },
+        updateCompanions: function updateCompanions(page, search, valor) {
+
+            var me = this;
+            var url = 'companions/update?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.put(url, {
+
+                'id': this.client_id,
+                'cedula_acomp': this.cedula_acomp,
+                'name_acomp': this.name_acomp,
+                'firstSurname_acomp': this.firstSurname_acomp,
+                'secondSurname_acomp': this.secondSurname_acomp,
+                'birth_date_acomp': this.birth_date_acomp,
+                'gender_acomp': this.gender_acomp,
+                'age_acomp': this.age_acomp,
+                'temperature_entry_acomp': this.temperature_entry_acomp,
+                'temperature_exit_acomp': this.temperature_exit_acomp,
+                'nationality_acomp': this.nationality_acomp,
+                'state_acomp': this.state_acomp,
+                'phone_acomp': this.phone_acomp,
+                'email_acomp': this.email_acomp
+
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Cliente Actualizado con Éxito',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                me.closeModal();
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        }
+    },
+
+    mounted: function mounted() {
+
+        this.listCompanions(1, this.search, this.valor);
+    }
+});
+
+/***/ }),
+/* 341 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container-fluid" }, [
+    _c("div", { staticClass: "card" }, [
+      _vm._m(0),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c("div", { staticClass: "form-group row" }, [
+          _c("div", { staticClass: "col-md-6" }, [
+            _c("div", { staticClass: "input-group" }, [
+              _c(
+                "select",
+                {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.valor,
+                      expression: "valor"
+                    }
+                  ],
+                  staticClass: "form-control col-md-3",
+                  on: {
+                    change: function($event) {
+                      var $$selectedVal = Array.prototype.filter
+                        .call($event.target.options, function(o) {
+                          return o.selected
+                        })
+                        .map(function(o) {
+                          var val = "_value" in o ? o._value : o.value
+                          return val
+                        })
+                      _vm.valor = $event.target.multiple
+                        ? $$selectedVal
+                        : $$selectedVal[0]
+                    }
+                  }
+                },
+                [
+                  _c("option", { attrs: { value: "name_acomp" } }, [
+                    _vm._v("Nombre")
+                  ]),
+                  _vm._v(" "),
+                  _c("option", { attrs: { value: "cedula_acomp" } }, [
+                    _vm._v("Cédula")
+                  ]),
+                  _vm._v(" "),
+                  _c("option", { attrs: { value: "firstSurname_acomp" } }, [
+                    _vm._v("Apellido")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.search,
+                    expression: "search"
+                  }
+                ],
+                staticClass: "form-control",
+                attrs: { type: "text", placeholder: "Texto a buscar" },
+                domProps: { value: _vm.search },
+                on: {
+                  keyup: function($event) {
+                    return _vm.listCompanions(1, _vm.search, _vm.valor)
+                  },
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.search = $event.target.value
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _vm._m(1)
+            ])
+          ])
+        ]),
+        _vm._v(" "),
+        _c(
+          "table",
+          { staticClass: "table table-bordered table-striped table-sm" },
+          [
+            _vm._m(2),
+            _vm._v(" "),
+            _c(
+              "tbody",
+              _vm._l(_vm.arrayCompanion, function(companion) {
+                return _c(
+                  "tr",
+                  { staticClass: "text-center", attrs: { Key: companion.id } },
+                  [
+                    _c("td", {
+                      domProps: { textContent: _vm._s(companion.cedula_acomp) }
+                    }),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: { textContent: _vm._s(companion.name_acomp) }
+                    }),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(companion.firstSurname_acomp)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-info btn-sm p-1",
+                          attrs: { href: "#", title: "Ver" },
+                          on: {
+                            click: function($event) {
+                              return _vm.openModal(
+                                "companions",
+                                "ver",
+                                companion
+                              )
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "far fa-eye" }),
+                          _vm._v(" Ver\n                                    ")
+                        ]
+                      )
+                    ])
+                  ]
+                )
+              }),
+              0
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c("nav", [
+          _c(
+            "ul",
+            { staticClass: "pagination" },
+            [
+              _vm.pagination.current_page > 1
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page - 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Anterior")]
+                    )
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm._l(_vm.pagesNumber, function(page) {
+                return _c(
+                  "li",
+                  {
+                    key: page,
+                    staticClass: "page-item",
+                    class: [page == _vm.isActived ? "active" : ""]
+                  },
+                  [
+                    _c("a", {
+                      staticClass: "page-link",
+                      attrs: { href: "#" },
+                      domProps: { textContent: _vm._s(page) },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.cambiarPagina(page, _vm.search, _vm.valor)
+                        }
+                      }
+                    })
+                  ]
+                )
+              }),
+              _vm._v(" "),
+              _vm.pagination.current_page < _vm.pagination.last_page
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page + 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Siguiente")]
+                    )
+                  ])
+                : _vm._e()
+            ],
+            2
+          )
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        class: { mostrar: _vm.modal },
+        staticStyle: { display: "none" },
+        attrs: {
+          tabindex: "-1",
+          role: "dialog",
+          "aria-labelledby": "myModalLabel",
+          "aria-hidden": "true"
+        }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-primary modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c("div", { staticClass: "modal-content" }, [
+              _c("div", { staticClass: "modal-header" }, [
+                _c("h4", {
+                  staticClass: "modal-title",
+                  domProps: { textContent: _vm._s(_vm.titleModal) }
+                }),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    staticClass: "close",
+                    attrs: { type: "button" },
+                    on: {
+                      click: function($event) {
+                        return _vm.closeModal()
+                      }
+                    }
+                  },
+                  [
+                    _c("span", { attrs: { "aria-hidden": "true" } }, [
+                      _vm._v("×")
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "modal-body" }, [
+                _c(
+                  "form",
+                  {
+                    staticClass: "form-horizontal companions",
+                    attrs: {
+                      action: "",
+                      method: "post",
+                      enctype: "multipart/form-data"
+                    }
+                  },
+                  [
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Nombre")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.name_acomp,
+                              expression: "name_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.name_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.name_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Primer Apellido")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.firstSurname_acomp,
+                              expression: "firstSurname_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.firstSurname_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.firstSurname_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Segundo Apellido")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.secondSurname_acomp,
+                              expression: "secondSurname_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.secondSurname_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.secondSurname_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Identificación")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.cedula_acomp,
+                              expression: "cedula_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.cedula_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.cedula_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Edad")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.age_acomp,
+                              expression: "age_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.age_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.age_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "col-lg-4 mb-2" },
+                        [
+                          _c("label", { attrs: { for: "text-input " } }, [
+                            _vm._v("Fecha de Nacimiento")
+                          ]),
+                          _vm._v(" "),
+                          _c("date-picker", {
+                            attrs: {
+                              disabled: _vm.desactivar == 1,
+                              language: _vm.es,
+                              lang: _vm.lang,
+                              valueType: "format"
+                            },
+                            model: {
+                              value: _vm.birth_date_acomp,
+                              callback: function($$v) {
+                                _vm.birth_date_acomp = $$v
+                              },
+                              expression: "birth_date_acomp"
+                            }
+                          })
+                        ],
+                        1
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Temperatura de ingreso")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.temperature_entry_acomp,
+                              expression: "temperature_entry_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.temperature_entry_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.temperature_entry_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-4 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Temperatura de salida")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.temperature_exit_acomp,
+                              expression: "temperature_exit_acomp"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.temperature_exit_acomp },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.temperature_exit_acomp = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "modal-footer" }, [
+                _c(
+                  "a",
+                  {
+                    staticClass: "btn btn-danger  text-white",
+                    on: {
+                      click: function($event) {
+                        return _vm.closeModal()
+                      }
+                    }
+                  },
+                  [_vm._v("Cerrar")]
+                ),
+                _vm._v(" "),
+                _vm.accion == 2
+                  ? _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-success  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.updateCompanions()
+                          }
+                        }
+                      },
+                      [_vm._v("Actualizar")]
+                    )
+                  : _vm._e()
+              ])
+            ])
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "card-header" }, [
+      _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
+      _vm._v(" Acompañantes\n                ")
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Cédula")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Nombre")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Apellido")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Opciones")])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-68033ce5", module.exports)
+  }
+}
+
+/***/ }),
+/* 342 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin

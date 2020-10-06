@@ -10,7 +10,8 @@
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <select class="form-control col-md-3" v-model="valor">
-                                      <option value="number_certificate">Nombre</option>
+                                      <option value="number_certificate">Acta</option>
+                                      <option value="name_client">Nombre</option>
                                       <option value="cedula_client">Cédula</option>
                                       <option value="firstSurname_client">Apellido</option>
                                     </select>
@@ -23,7 +24,7 @@
                             <thead>
                                 <tr>
                                     <th>Número de acta</th>
-                                    <th>Número de identificación</th>
+                                    <th>Identificación</th>
                                     <th>Nombre</th>
                                     <th>Apellido</th>
                                     <th>Opciones</th>
@@ -31,16 +32,18 @@
                             </thead>
                             <tbody>
                                 <tr class="text-center" v-for="certificate in arrayCertificate" :Key="certificate.id">
-                                   <td  v-text="certificate.number_certificate"></td>
-                                   <td  v-text="certificate.cedula_client"></td>
-                                   <td  v-text="certificate.name_client"></td>
-                                   <td  v-text="certificate.firstSurname_client"></td>
-                                   <td>
-                                        <a href="#" class="btn  btn-info btn-sm p-1" title="Ver" @click="openModal('certificate','ver',certificate)" >
-                                          <i class="fas fa-user-edit"></i> Editar
+                                    <td  v-text="certificate.number_certificate"></td>
+                                    <td  v-text="certificate.cedula_client"></td>
+                                    <td  v-text="certificate.name_client"></td>
+                                    <td  v-text="certificate.firstSurname_client"></td>
+                                    <td>
+                                        <a href="#" class="btn  btn-info btn-sm p-1 text-dark" title="Ver" @click="openModal('certificate','ver',certificate)" >
+                                            <i class="fas fa-user-edit"></i> Editar
                                         </a>
-                                      
-                                   </td>
+                                        <a href="#" class="btn  btn-success btn-sm p-1 text-dark" title="Ver" @click="listCompanions(certificate.id)" >
+                                            <i class="fas fa-street-view"></i> Acompañantes
+                                        </a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -59,9 +62,60 @@
                         </nav>
                     </div>
                 </div>
+
+                <!--open modal acomp -->
+                <div class="modal fade" tabindex="-1" :class="{'mostrar' : add}" >
+                  <div class="modal-dialog modal-dialog-scrollable  modal-lg" role="document">
+                    <div class="modal-content container bg-container-modal">
+                      <div class="text-center">
+                        <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col">
+                            <table class="table table-hover  table-sm" >
+                              <thead >
+                                <tr class="bg-material-orange">
+                                  <th>Nombre</th>
+                                  <th>Primer Apellido</th>
+                                  <th>segundo Apellido</th>
+                                  <th>Cédula</th>
+                                  <th>Fecha de Nacimiento</th>
+                                  <th>Temperatura de entrada</th>
+                                  <th>Temperatura de salida</th>
+                                </tr>
+                              </thead>
+                              <tbody class="bg-white text-center">
+                                <tr v-for="acomp in listAcomp " :key="acomp.id">
+                                  <td v-text="acomp.name_acomp"></td>
+                                  <td v-text="acomp.firstSurname_acomp"></td>
+                                  <td v-text="acomp.secondSurname_acomp"></td>
+                                  <td v-text="acomp.cedula_acomp"></td>
+                                  <td v-text="acomp.birth_date_acomp"></td>
+                                  <td v-text="acomp.temperature_entry_acomp"></td>
+                                  <td v-text="acomp.temperature_exit_acomp"></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                                  
+                              </div>
+                          </div>
+                      
+                      </div>
+                      <div class="row modal-footer">
+                        <div class="col-lg-2">
+                          <a class="btn btn-danger  text-white" @click="closeModalAcomp()">Cerrar</a>
+                        </div>       
+                      </div>
+                      <!-- /.modal-content -->
+                    </div>
+                  <!-- /.modal-dialog -->
+                  </div>
+                </div>
+                <!-- closed modal acomp -->
                 <!-- Fin ejemplo de tabla Listado -->
                 <div class="modal fade" :class="{'mostrar' : modal }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
-                    <div class="modal-dialog modal-primary modal-lg" role="document">
+                    <div class="modal-dialog modal-dialog-scrollable modal-primary modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title" v-text="titleModal"></h4>
@@ -70,12 +124,11 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal certificate">
+                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal">
                                     <div class="row">
-                                      <div class="col-md-8 mb-2 certificate">
-                                            
+                                      <div class="col-md-8 mb-2 "> 
                                         </div>
-                                        <div class="col-md-4 mb-2 certificate  input-group">
+                                        <div class="col-md-4 mb-2 input-group acta">
                                             <label class="number" for="text-input ">Acta</label>
                                             <h2 v-text="number_certificate"></h2>
                                         </div>
@@ -190,6 +243,8 @@
                     },
                     monthBeforeYear: false,
             },
+            listAcomp : [],
+            add : 0,
             entry_certificate : new Date(),
             cityOrigin_certificate : '',
             cityDestination_certificate : '',
@@ -273,10 +328,10 @@
           let me=this;
           var url = 'certificate?page=' + page + '&search='+ search + "&valor=" + valor;
           axios.get(url).then(function (response) {
-              var respuesta= response.data;
-              me.arrayCertificate = respuesta.certificates.data;
-              me.pagination= respuesta.pagination;
-            //   console.log(response);
+                var respuesta= response.data;
+                me.arrayCertificate = respuesta.certificates.data;
+                me.pagination= respuesta.pagination;
+            //  console.log(respuesta);
 
           })
             .catch(function (error) {
@@ -289,7 +344,22 @@
           //Actualiza la página actual
           me.pagination.current_page = page;
           //Envia la petición para visualizar la data de esa página
-          me.listCertificates(page,search,valor);
+          me.listCertificate(page,search,valor);
+        },
+
+        listCompanions(search){
+          let me=this;
+          var url = 'companion/searchCompanions?&search='+ search;
+          axios.get(url).then(function (response) {
+                var respuesta= response.data;
+                me.listAcomp = respuesta.companions;
+                me.openModal('certificate','companions',me.listAcomp)
+            // console.log(me.listAcomp);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+            });
         },
 
         openModal(model, accion, data = [] ){
@@ -347,7 +417,7 @@
                           break;
 
                       };
-
+                        
                       case "ver" :{
 
                           //console.log(data);
@@ -383,6 +453,18 @@
                           break;
 
                       }
+
+                       case "companions" :{
+
+                          //console.log(data);
+                            this.add = 1;
+                            this.modal = 0;
+                            this.desactivar = 1;
+                            this.titleModal = 'Listado de Acompañantes';
+
+                          break;
+
+                      }
                   }
               }
           }
@@ -393,6 +475,10 @@
           this.modal = 0;
           this.arrayError = [];
           this.listCertificate(1,this.search,this.valor);
+        },
+
+        closeModalAcomp(){
+          this.add = 0; 
         },
 
         updatecertificate(page,search,valor){
@@ -466,7 +552,7 @@
        font-size: 30px;
        padding-right: 10px;
     }
-    .certificate h2{
+    .acta h2{
        color: rgb(235, 23, 23);
        font-size: 40px;
     }
