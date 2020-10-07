@@ -10,6 +10,8 @@ class Certificate extends Model
 
         'client_id',
         'cityOrigin_certificate',
+        'temperature_entry_client',
+        'temperature_exit_client',
         'number_certificate',
         'cityDestination_certificate', 
         'placabike_certificate',

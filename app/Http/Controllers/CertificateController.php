@@ -22,7 +22,8 @@ class CertificateController extends Controller
                                     'certificates.placabike_certificate','certificates.placaCar_certificate',
                                     'certificates.adults_certificate','certificates.children_certificate', 
                                     'certificates.entry_certificate','certificates.exit_certificate',
-                                    'certificates.observation_certificate','customers.firstSurname_client',
+                                    'certificates.observation_certificate', 'certificates.temperature_entry_client',
+                                    'certificates.temperature_exit_client','customers.firstSurname_client',
                                     'customers.cedula_client','customers.email_client','customers.name_client',
                                     'customers.nationality_client','customers.phone_client', 'customers.secondSurname_client')
                                 ->where($valor, 'like', '%'. $search . '%')
@@ -35,7 +36,8 @@ class CertificateController extends Controller
                                         'certificates.placabike_certificate','certificates.placaCar_certificate',
                                         'certificates.adults_certificate','certificates.children_certificate', 
                                         'certificates.entry_certificate','certificates.exit_certificate',
-                                        'certificates.observation_certificate','customers.firstSurname_client',
+                                        'certificates.observation_certificate', 'certificates.temperature_entry_client',
+                                        'certificates.temperature_exit_client','customers.firstSurname_client',
                                         'customers.cedula_client','customers.email_client','customers.name_client',
                                         'customers.nationality_client','customers.phone_client','customers.secondSurname_client')
                                         ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(10);
@@ -92,6 +94,8 @@ class CertificateController extends Controller
             $certificates->client_id = $request->client_id;
             $certificates->cityOrigin_certificate = $request->cityOrigin_certificate;
             $certificates->number_certificate = $request->number_certificate;
+            $certificates->temperature_entry_client = $request->temperature_entry_client;
+            $certificates->temperature_exit_client = $request->temperature_exit_client;
             $certificates->cityDestination_certificate = $request->cityDestination_certificate;
             $certificates->placabike_certificate = $request->placabike_certificate;
             $certificates->placaCar_certificate = $request->placaCar_certificate;

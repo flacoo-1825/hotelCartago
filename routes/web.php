@@ -84,3 +84,11 @@ Route::get('companion','CompanionController@index')->name('companion.index');
 Route::post('companion/register','CompanionController@store')->name('companion.store');
 Route::put('companion/update','CompanionController@update')->name('companion.update');
 Route::get('companion/searchCompanions','CompanionController@searchCompanions')->name('companion.searchCompanions');
+
+Route::get('counter','CounterController@index')->name('counter.index');
+Route::put('counter/update','CounterController@update')->name('counter.update');
+Route::get('counter/searchCheck','CounterController@searchCheck')->name('counter.searchCheck');
+Route::get('counter/searchTicket','CounterController@searchTicket')->name('counter.searchTicket');
+Route::get('counter/searchCertificate','CounterController@searchCertificate')->name('counter.searchCertificate');
+Route::get('counter/searchReception','CounterController@searchReception')->name('counter.searchReception');
+Route::get('counter/searchExt','CounterController@searchExt')->name('counter.searchExt');

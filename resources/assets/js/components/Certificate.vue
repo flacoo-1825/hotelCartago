@@ -176,6 +176,26 @@
                                         </div>
                                     </div>
                                     <div class="row">
+                                        <div class="col-sm-12 col-md-3 input-group">
+                                          <div class="input-group">
+                                            <label for="text-input ">Temperatura de entrada</label>
+                                          </div>
+                                          <input type="number" class="form-control"  v-model="temperature_entry_client"  placeholder="">
+                                          <div class="input-group-append">
+                                            <span class="input-group-text">°C</span>
+                                          </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-3 input-group">
+                                          <div class="input-group">
+                                            <label for="text-input ">Temperatura de salida</label>
+                                          </div>
+                                          <input type="number" class="form-control"  v-model="temperature_exit_client"  placeholder="">
+                                          <div class="input-group-append">
+                                            <span class="input-group-text">°C</span>
+                                          </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Placa Auto</label>
                                             <input type="text" class="form-control"  v-model="placaCar_certificate" v-bind:disabled="desactivar==1" placeholder="Ej: MNZ 328">
@@ -247,6 +267,8 @@
             add : 0,
             entry_certificate : new Date(),
             cityOrigin_certificate : '',
+            temperature_entry_client :0,
+            temperature_exit_client :0,
             cityDestination_certificate : '',
             children_certificate : '',
             adults_certificate : '',
@@ -423,7 +445,7 @@
                           //console.log(data);
                             this.modal = 1;
                             this.desactivar = 1;
-                            this.titleModal = 'Informacion completa del cliente';
+                            this.titleModal = 'Informacion completa del Acta';
                             this.accion = 3;
                             this.client_id = data['id'];
                             this.cedula_client=  data['cedula_client'];
@@ -448,6 +470,8 @@
                             this.placaCar_certificate = data['placaCar_certificate'];
                             this.placabike_certificate = data['placabike_certificate'];
                             this.entry_certificate = data['entry_certificate'];
+                            this.temperature_entry_client = data['temperature_entry_client'];
+                            this.temperature_exit_client = data['temperature_exit_client'];
 
 
                           break;

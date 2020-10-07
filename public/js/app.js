@@ -82671,617 +82671,591 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-  data: function data() {
-    return {
-      lang: {
-        formatLocale: {
-          firstDayOfWeek: 7
-        },
-        monthBeforeYear: false
-      },
-      name_room: 'Clase de habitación',
-      type_id: 0,
-      type_room: 0,
-      stateRoom: 'Disponible',
-      cc_client: '',
-      arrayUsuarioCliente: [],
-      client_id: 0,
-      cedula_client: '',
-      entry_certificate: new Date(),
-      cityOrigin_certificate: '',
-      cityDestination_certificate: '',
-      children_certificate: '',
-      adults_certificate: '',
-      observation_certificate: '',
-      placaCar_certificate: '',
-      placabike_certificate: '',
-      name_client: '',
-      firstSurname_client: '',
-      secondSurname_client: '',
-      phone_client: '',
-      birth_date_client: new Date(),
-      gender_client: 0,
-      age_client: '',
-      state_client: 0,
-      number_certificate: '032CT',
-      email_client: '',
-      address_client: '',
-      city_client: '',
-      nationality_client: '',
-      number: '',
-      price: '',
-      frozen: '',
-      state: '',
-      price_air: '',
-      name_acomp: '',
-      firstSurname_acomp: '',
-      secondSurname_acomp: '',
-      cedula_acomp: '',
-      birth_date_acomp: new Date(),
-      listAcomp: [],
-      arrayroom: [],
-      client: [],
-      arrayRoom: [],
-      rooms: '',
-      opcion: 'Elige una opción',
-      modal: 0,
-      titleModal: '',
-      accion: 0,
-      rooms_id: 0,
-      add: 0,
-      desactivar: 0,
-      condition: 1,
-      search: '',
-      valor: 'state',
-      arrayError: [],
-      pagination: {
-        'total': 0,
-        'current_page': 0,
-        'per_page': 0,
-        'last_page': 0,
-        'from': 0,
-        'to': 0
-      },
-      offset: 3,
-      es: __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__["es"]
-    };
-  },
-
-  computed: {
-    //muestra la pagina activa
-    isActived: function isActived() {
-      return this.pagination.current_page;
-    },
-    //Calcula las paginas
-    pagesNumber: function pagesNumber() {
-      if (!this.pagination.to) {
-        return [];
-      }
-
-      var from = this.pagination.current_page - this.offset;
-      if (from < 1) {
-        from = 1;
-      }
-
-      var to = from + this.offset * 2;
-      if (to >= this.pagination.last_page) {
-        to = this.pagination.last_page;
-      }
-
-      var pagesArray = [];
-      while (from <= to) {
-        pagesArray.push(from);
-        from++;
-      }
-      return pagesArray;
-    }
-  },
-
-  methods: {
-    listRoomsActive: function listRoomsActive(page, search, valor) {
-      var me = this;
-      var url = 'room/active?page=' + page + '&search=' + search + "&valor=" + valor;
-      axios.get(url).then(function (response) {
-        var respuesta = response.data;
-        me.arrayRoom = respuesta.room.data;
-        me.pagination = respuesta.pagination;
-        // console.log(respuesta);
-      }).catch(function (error) {
-        console.log(error);
-      });
-    },
-    cambiarPagina: function cambiarPagina(page, search, valor) {
-      var me = this;
-      //Actualiza la página actual
-      me.pagination.current_page = page;
-      //Envia la petición para visualizar la data de esa página
-      me.listRoomsActive(page, search, valor);
-    },
-    search_client: function search_client(cc_client) {
-      var me = this;
-      var url = 'customers/searchClient?cc_client=' + cc_client;
-      axios.get(url).then(function (response) {
-        var respuesta = response.data;
-        me.arrayUsuarioCliente = respuesta.client;
-        // console.log(me.arrayUsuarioCliente);
-        if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
-          me.closeModal();
-          var swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: 'btn btn-success',
-              cancelButton: 'btn btn-danger'
+    data: function data() {
+        return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7
+                },
+                monthBeforeYear: false
             },
-            buttonsStyling: false
-          });
-          swalWithBootstrapButtons.fire({
-            title: 'El huésped no está registrado!',
-            text: "Desea registrar el huésped?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Registrar',
-            cancelButtonText: 'Cancelar!',
-            reverseButtons: true
-          }).then(function (result) {
-            if (result.value) {
-              me.openModal('room', 'register', me.arrayUsuarioCliente);
-              // swalWithBootstrapButtons.fire(
-              //   'Huésped registrado!',
-              //   'Ya puedes ingresarlo.',
-              //   'success'
-              // )
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-              swalWithBootstrapButtons.fire('Cancelado', 'Recuerda él huésped no está en la base de datos :)', 'error');
+            name_room: 'Clase de habitación',
+            type_id: 0,
+            type_room: 0,
+            stateRoom: 'Disponible',
+            cc_client: '',
+            arrayUsuarioCliente: [],
+            client_id: 0,
+            temperature_exit_client: 0,
+            temperature_entry_client: 0,
+            cedula_client: '',
+            entry_certificate: new Date(),
+            cityOrigin_certificate: '',
+            cityDestination_certificate: '',
+            children_certificate: '',
+            adults_certificate: '',
+            observation_certificate: '',
+            placaCar_certificate: '',
+            placabike_certificate: '',
+            name_client: '',
+            firstSurname_client: '',
+            secondSurname_client: '',
+            phone_client: '',
+            birth_date_client: new Date(),
+            gender_client: 0,
+            age_client: '',
+            state_client: 0,
+            number_certificate: '032CT',
+            number_update: 0,
+            email_client: '',
+            address_client: '',
+            city_client: '',
+            nationality_client: '',
+            number: '',
+            price: '',
+            frozen: '',
+            state: '',
+            price_air: '',
+            name_acomp: '',
+            firstSurname_acomp: '',
+            secondSurname_acomp: '',
+            cedula_acomp: '',
+            birth_date_acomp: new Date(),
+            listAcomp: [],
+            arrayroom: [],
+            client: [],
+            arrayRoom: [],
+            rooms: '',
+            opcion: 'Elige una opción',
+            modal: 0,
+            titleModal: '',
+            accion: 0,
+            rooms_id: 0,
+            add: 0,
+            desactivar: 0,
+            condition: 1,
+            search: '',
+            valor: 'state',
+            arrayError: [],
+            pagination: {
+                'total': 0,
+                'current_page': 0,
+                'per_page': 0,
+                'last_page': 0,
+                'from': 0,
+                'to': 0
+            },
+            offset: 3,
+            es: __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__["es"]
+        };
+    },
+
+    computed: {
+        //muestra la pagina activa
+        isActived: function isActived() {
+            return this.pagination.current_page;
+        },
+        //Calcula las paginas
+        pagesNumber: function pagesNumber() {
+            if (!this.pagination.to) {
+                return [];
             }
-          });
-        } else {
-          me.closeModal();
-          me.openModal('room', 'certificate', me.arrayUsuarioCliente);
-        }
 
-        // me.id_client = respuesta.client.id;
-      }).catch(function (error) {
-        console.log(error);
-      });
-    },
-    registerCustomers: function registerCustomers(page, search, valor) {
-
-      var me = this;
-      var url = 'customers/register?page=' + page + '&search=' + search + "&valor=" + valor;
-      axios.post(url, {
-
-        'cedula_client': this.cedula_client,
-        'name_client': this.name_client,
-        'firstSurname_client': this.firstSurname_client,
-        'secondSurname_client': this.secondSurname_client,
-        'birth_date_client': this.birth_date_client,
-        'gender_client': this.gender_client,
-        'age_client': this.age_client,
-        'address_client': this.address_client,
-        'city_client': this.city_client,
-        'nationality_client': this.nationality_client,
-        'state_client': this.state_client,
-        'phone_client': this.phone_client,
-        'email_client': this.email_client
-
-      }).then(function (response) {
-        Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Tu huésped fue registrado con éxito',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        me.closeModal();
-        me.search_client(me.cc_client);
-      }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
-      });
-    },
-    registerCertificate: function registerCertificate() {
-
-      var me = this;
-      var url = 'certificate/register';
-      axios.post(url, {
-
-        'client_id': this.client_id,
-        'number_certificate': this.number_certificate,
-        'cityOrigin_certificate': this.cityOrigin_certificate,
-        'cityDestination_certificate': this.cityDestination_certificate,
-        'placabike_certificate': this.placabike_certificate,
-        'placaCar_certificate': this.placaCar_certificate,
-        'adults_certificate': this.adults_certificate,
-        'children_certificate': this.children_certificate,
-        'entry_certificate': this.entry_certificate,
-        'observation_certificate': this.observation_certificate,
-        'listAcomp': this.listAcomp
-
-      }).then(function (response) {
-        Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Tu acta fue registrada con éxito',
-          showConfirmButton: false,
-          timer: 1500
-        });
-      }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
-      });
-    },
-    openModal: function openModal(model, accion) {
-      var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-
-
-      switch (model) {
-        case "room":
-          {
-
-            switch (accion) {
-              case "create":
-                {
-                  this.modal = 1;
-                  this.stateRoom = 'Disponible';
-                  this.desactivar = 0;
-                  this.titleModal = 'Ingreso de huésped';
-                  this.accion = 1;
-                  this.cc_client = '';
-                  this.rooms_id = data['id'];
-
-                  break;
-                };
-
-              case "edit":
-                {
-
-                  // console.log(data);
-                  this.modal = 1;
-                  this.stateRoom = 'Ocupada';
-                  this.desactivar = 0;
-                  this.titleModal = 'Información';
-                  this.accion = 2;
-                  this.rooms_id = data['id'];
-                  this.type_room = data['type_room_id'];
-                  this.number = data['number'];
-                  this.price = data['price'];
-                  this.price_air = data['price_air'];
-                  this.frozen = data['frozen'];
-                  this.state = data['state'];
-                  this.type_id = data['type_room_id'];
-                  this.name_client = data['name_client'];
-                  this.cedula_client = data['cedula_client'];
-                  this.phone_client = data['phone_client'];
-                  this.firstSurname_client = data['firstSurname_client'];
-                  this.secondSurname_client = data['secondSurname_client'];
-
-                  break;
-                };
-
-              case "certificate":
-                {
-
-                  //console.log(data);
-                  this.modal = 1;
-                  this.desactivar = 1;
-                  this.stateRoom = 'certificate';
-                  this.titleModal = 'Acta de entrada';
-                  this.accion = 4;
-                  this.rooms_id;
-                  this.children_certificate = '';
-                  this.adults_certificate = '';
-                  this.cityOrigin_certificate = '';
-                  this.cityDestination_certificate = '';
-                  this.name_client = data['name_client'];
-                  this.type_room = data['type_room'];
-                  this.number = data['number'];
-                  this.price = data['price'];
-                  this.price_air = data['price_air'];
-                  this.frozen = data['frozen'];
-                  this.state = data['state'];
-                  this.client_id = data['id'];
-                  this.type_id = data['type_room_id'];
-                  this.cedula_client = data['cedula_client'];
-                  this.firstSurname_client = data['firstSurname_client'];
-                  this.secondSurname_client = data['secondSurname_client'];
-                  this.birth_date_client = data['birth_date_client'];
-                  this.gender_client = data['gender_client'];
-                  this.age_client = data['age_client'];
-                  this.address_client = data['address_client'];
-                  this.city_client = data['city_client'];
-                  this.nationality_client = data['nationality_client'];
-                  this.state_client = data['state_client'];
-                  this.phone_client = data['phone_client'];
-                  this.email_client = data['email_client'];
-
-                  break;
-                };
-
-              case "register":
-                {
-                  //console.log(data);
-                  this.modal = 1;
-                  this.desactivar = 1;
-                  this.stateRoom = 'register';
-                  this.titleModal = 'Registro de nuevo huésped';
-                  this.accion = 3;
-                  this.cedula_client = '';
-                  this.name_client = '';
-                  this.birth_date_client = '';
-                  this.firstSurname_client = '';
-                  this.secondSurname_client = '';
-                  this.gender_client = 0;
-                  this.age_client = '';
-                  this.address_client = '';
-                  this.city_client = '';
-                  this.nationality_client = '';
-                  this.state_client = 0;
-                  this.phone_client = '';
-                  this.email_client = '';
-
-                  break;
-                };
-
-              case "agregar":
-                {
-                  this.add = 1;
-                  this.modal = 0;
-                  this.titleModal = 'Listado de Acompañantes';
-
-                  break;
-                };
+            var from = this.pagination.current_page - this.offset;
+            if (from < 1) {
+                from = 1;
             }
-          }
-      }
-    },
-    closeModal: function closeModal() {
-      this.modal = 0;
-      // this.arrayError = [];
-      this.listRoomsActive(1, this.search, this.valor);
-    },
-    closeModalAcomp: function closeModalAcomp() {
-      this.add = 0;
-      this.modal = 1;
-    },
-    stateBusy: function stateBusy() {
 
-      var me = this;
-      me.registerCertificate();
-      var url = 'room/statebusy';
-      axios.put(url, {
+            var to = from + this.offset * 2;
+            if (to >= this.pagination.last_page) {
+                to = this.pagination.last_page;
+            }
 
-        'id': this.rooms_id,
-        'client_id': this.client_id
-
-      }).then(function (response) {
-        Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Tu habitación queda en estado Ocupada!',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        me.closeModal();
-        me.updateCustomers();
-        me.listRoomsActive(1, this.search, this.valor);
-      }).catch(function (error) {
-        // var respuesta = error.response.data;
-        // me.arrayError = respuesta.errors;
-        // console.log(error.response.data);
-      });
-    },
-    stateFree: function stateFree() {
-      var _this = this;
-
-      var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-success',
-          cancelButton: 'btn btn-danger'
-        },
-        buttonsStyling: false
-      });
-
-      swalWithBootstrapButtons.fire({
-        title: 'Está seguro?',
-        text: "Va a facturar ésta habitación!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Si, facturar',
-        cancelButtonText: 'No, Cancelar!',
-        reverseButtons: true
-      }).then(function (result) {
-        if (result.value) {
-
-          var me = _this;
-          var url = 'room/statefree';
-          axios.put(url, {
-
-            'id': _this.rooms_id
-            // 'client_id' : 1,
-
-          }).then(function (response) {
-            me.listRoomsActive(1, '', 'valor');
-            me.closeModal();
-          }).catch(function (error) {
-            console.log(error);
-          });
-
-          swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Disponible.', 'success');
-        } else if (
-        /* Read more about handling dismissals below */
-        result.dismiss === Swal.DismissReason.cancel) {
-          swalWithBootstrapButtons.fire('Cancelado', 'Tu habitacióm sigue Ocupada :)', 'error');
+            var pagesArray = [];
+            while (from <= to) {
+                pagesArray.push(from);
+                from++;
+            }
+            return pagesArray;
         }
-      });
     },
-    addAcomp: function addAcomp() {
 
-      if (this.name_acomp != "" && this.firstSurname_acomp != "" && this.secondSurname_acomp != "" && this.cedula_acomp != "" && this.birth_date_acomp != "") {
-
-        this.listAcomp.push({ name_acomp: this.name_acomp, firstSurname_acomp: this.firstSurname_acomp, secondSurname_acomp: this.secondSurname_acomp,
-          cedula_acomp: this.cedula_acomp, birth_date_acomp: this.birth_date_acomp });
-        this.name_acomp = '';
-        this.firstSurname_acomp = '';
-        this.secondSurname_acomp = '';
-        this.cedula_acomp = '';
-        this.birth_date_acomp = '';
-      } else {
-        alert("Por favor ingrese todos los campos del formulario gracias.");
-      }
-    },
-    deleteAcomp: function deleteAcomp(acomp) {
-
-      var index = this.listAcomp.indexOf(acomp);
-      this.listAcomp.splice(index, 1);
-    },
-    updateCustomers: function updateCustomers(page, search, valor) {
-
-      var me = this;
-      var url = 'customers/update?page=' + page + '&search=' + search + "&valor=" + valor;
-      axios.put(url, {
-
-        'id': this.client_id,
-        'cedula_client': this.cedula_client,
-        'name_client': this.name_client,
-        'firstSurname_client': this.firstSurname_client,
-        'secondSurname_client': this.secondSurname_client,
-        'birth_date_client': this.birth_date_client,
-        'gender_client': this.gender_client,
-        'age_client': this.age_client,
-        'address_client': this.address_client,
-        'city_client': this.city_client,
-        'nationality_client': this.nationality_client,
-        'state_client': this.state_client,
-        'phone_client': this.phone_client,
-        'email_client': this.email_client
-
-      }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
-      });
-    },
-    updateRoom: function updateRoom(page, search, valor) {
-
-      var me = this;
-      var url = 'room/update?page=' + page + '&search=' + search + "&valor=" + valor;
-      axios.put(url, {
-
-        'id': this.habitacion_id,
-        'type_id': this.type_id,
-        'number': this.number,
-        'price': this.price,
-        'price_air': this.price_air,
-        'frozen': this.frozen,
-        'state': this.state
-
-      }).then(function (response) {
-        Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Habitación Actualizada con Éxito',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        me.closeModal();
-      }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
-      });
-    },
-    activarRoom: function activarRoom(id) {
-      var _this2 = this;
-
-      var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-success',
-          cancelButton: 'btn btn-danger'
+    methods: {
+        listRoomsActive: function listRoomsActive(page, search, valor) {
+            var me = this;
+            var url = 'room/active?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayRoom = respuesta.room.data;
+                me.pagination = respuesta.pagination;
+                // console.log(respuesta);
+            }).catch(function (error) {
+                console.log(error);
+            });
         },
-        buttonsStyling: false
-      });
-
-      swalWithBootstrapButtons.fire({
-        title: 'Está seguro?',
-        text: "Va a Activar ésta habitación!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Si, Activala',
-        cancelButtonText: 'No, Cancelar!',
-        reverseButtons: true
-      }).then(function (result) {
-        if (result.value) {
-
-          var me = _this2;
-
-          axios.put('room/activo', {
-            'id': id
-          }).then(function (response) {
-            me.listRoom(1, '', 'valor');
-          }).catch(function (error) {
-            console.log(error);
-          });
-
-          swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Activada.', 'success');
-        } else if (
-        /* Read more about handling dismissals below */
-        result.dismiss === Swal.DismissReason.cancel) {
-          swalWithBootstrapButtons.fire('Cancelado', 'Tu tipo de habitación sigue Desactivado :)', 'error');
-        }
-      });
-    },
-    desactivarRoom: function desactivarRoom(id) {
-      var _this3 = this;
-
-      var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-success',
-          cancelButton: 'btn btn-danger'
+        search_certificate: function search_certificate() {
+            var me = this;
+            var id_search = 1;
+            var url = 'counter/searchCertificate';
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.number_update = respuesta[0].number_certificate;
+                var end = respuesta[0].end_certificate;
+                me.number_certificate = me.number_update + end;
+                //  me.arrayRoom = respuesta.room.data;
+                // console.log(number+end);
+            }).catch(function (error) {
+                console.log(error);
+            });
         },
-        buttonsStyling: false
-      });
+        cambiarPagina: function cambiarPagina(page, search, valor) {
+            var me = this;
+            //Actualiza la página actual
+            me.pagination.current_page = page;
+            //Envia la petición para visualizar la data de esa página
+            me.listRoomsActive(page, search, valor);
+        },
+        search_client: function search_client(cc_client) {
+            var me = this;
+            var url = 'customers/searchClient?cc_client=' + cc_client;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayUsuarioCliente = respuesta.client;
+                // console.log(me.arrayUsuarioCliente);
+                if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
+                    me.closeModal();
+                    var swalWithBootstrapButtons = Swal.mixin({
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    swalWithBootstrapButtons.fire({
+                        title: 'El huésped no está registrado!',
+                        text: "Desea registrar el huésped?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Registrar',
+                        cancelButtonText: 'Cancelar!',
+                        reverseButtons: true
+                    }).then(function (result) {
+                        if (result.value) {
+                            me.openModal('room', 'register', me.arrayUsuarioCliente);
+                            // swalWithBootstrapButtons.fire(
+                            //   'Huésped registrado!',
+                            //   'Ya puedes ingresarlo.',
+                            //   'success'
+                            // )
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            swalWithBootstrapButtons.fire('Cancelado', 'Recuerda él huésped no está en la base de datos :)', 'error');
+                        }
+                    });
+                } else {
+                    me.closeModal();
+                    me.openModal('room', 'certificate', me.arrayUsuarioCliente);
+                }
 
-      swalWithBootstrapButtons.fire({
-        title: 'Está seguro?',
-        text: "Va a desactivar ésta habitación!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Si, Desactivala',
-        cancelButtonText: 'No, Cancelar!',
-        reverseButtons: true
-      }).then(function (result) {
-        if (result.value) {
+                // me.id_client = respuesta.client.id;
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        registerCustomers: function registerCustomers(page, search, valor) {
 
-          var me = _this3;
+            var me = this;
+            var url = 'customers/register?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.post(url, {
 
-          axios.put('room/inactivo', {
-            'id': id
-          }).then(function (response) {
-            me.listRooms(1, '', 'valor');
-          }).catch(function (error) {
-            console.log(error);
-          });
+                'cedula_client': this.cedula_client,
+                'name_client': this.name_client,
+                'firstSurname_client': this.firstSurname_client,
+                'secondSurname_client': this.secondSurname_client,
+                'birth_date_client': this.birth_date_client,
+                'gender_client': this.gender_client,
+                'age_client': this.age_client,
+                'address_client': this.address_client,
+                'city_client': this.city_client,
+                'nationality_client': this.nationality_client,
+                'state_client': this.state_client,
+                'phone_client': this.phone_client,
+                'email_client': this.email_client
 
-          swalWithBootstrapButtons.fire('Desativado!', 'Tu habitación quedó desativada.', 'success');
-        } else if (
-        /* Read more about handling dismissals below */
-        result.dismiss === Swal.DismissReason.cancel) {
-          swalWithBootstrapButtons.fire('Cancelado', 'Tu habitación está a salvo :)', 'error');
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Tu huésped fue registrado con éxito',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                me.closeModal();
+                me.search_client(me.cc_client);
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        },
+        registerCertificate: function registerCertificate() {
+
+            var me = this;
+            var url = 'certificate/register';
+            axios.post(url, {
+
+                'client_id': this.client_id,
+                'number_certificate': this.number_certificate,
+                'cityOrigin_certificate': this.cityOrigin_certificate,
+                'cityDestination_certificate': this.cityDestination_certificate,
+                'placabike_certificate': this.placabike_certificate,
+                'placaCar_certificate': this.placaCar_certificate,
+                'adults_certificate': this.adults_certificate,
+                'children_certificate': this.children_certificate,
+                'entry_certificate': this.entry_certificate,
+                'observation_certificate': this.observation_certificate,
+                'listAcomp': this.listAcomp,
+                'temperature_exit_client': this.temperature_exit_client,
+                'temperature_entry_client': this.temperature_entry_client
+
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Tu acta fue registrada con éxito',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        },
+        openModal: function openModal(model, accion) {
+            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+            switch (model) {
+                case "room":
+                    {
+
+                        switch (accion) {
+                            case "create":
+                                {
+                                    this.modal = 1;
+                                    this.stateRoom = 'Disponible';
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Ingreso de huésped';
+                                    this.accion = 1;
+                                    this.cc_client = '';
+                                    this.rooms_id = data['id'];
+
+                                    break;
+                                };
+
+                            case "edit":
+                                {
+
+                                    // console.log(data);
+                                    this.modal = 1;
+                                    this.stateRoom = 'Ocupada';
+                                    this.desactivar = 0;
+                                    this.titleModal = 'Información';
+                                    this.accion = 2;
+                                    this.rooms_id = data['id'];
+                                    this.type_room = data['type_room_id'];
+                                    this.number = data['number'];
+                                    this.price = data['price'];
+                                    this.price_air = data['price_air'];
+                                    this.frozen = data['frozen'];
+                                    this.state = data['state'];
+                                    this.type_id = data['type_room_id'];
+                                    this.name_client = data['name_client'];
+                                    this.cedula_client = data['cedula_client'];
+                                    this.phone_client = data['phone_client'];
+                                    this.firstSurname_client = data['firstSurname_client'];
+                                    this.secondSurname_client = data['secondSurname_client'];
+
+                                    break;
+                                };
+
+                            case "certificate":
+                                {
+                                    this.search_certificate();
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.stateRoom = 'certificate';
+                                    this.titleModal = 'Acta de entrada';
+                                    this.accion = 4;
+                                    this.rooms_id;
+                                    this.children_certificate = '';
+                                    this.adults_certificate = '';
+                                    this.cityOrigin_certificate = '';
+                                    this.cityDestination_certificate = '';
+                                    this.name_client = data['name_client'];
+                                    this.type_room = data['type_room'];
+                                    this.number = data['number'];
+                                    this.price = data['price'];
+                                    this.price_air = data['price_air'];
+                                    this.frozen = data['frozen'];
+                                    this.state = data['state'];
+                                    this.client_id = data['id'];
+                                    this.type_id = data['type_room_id'];
+                                    this.cedula_client = data['cedula_client'];
+                                    this.firstSurname_client = data['firstSurname_client'];
+                                    this.secondSurname_client = data['secondSurname_client'];
+                                    this.birth_date_client = data['birth_date_client'];
+                                    this.gender_client = data['gender_client'];
+                                    this.age_client = data['age_client'];
+                                    this.address_client = data['address_client'];
+                                    this.city_client = data['city_client'];
+                                    this.nationality_client = data['nationality_client'];
+                                    this.state_client = data['state_client'];
+                                    this.phone_client = data['phone_client'];
+                                    this.email_client = data['email_client'];
+
+                                    break;
+                                };
+
+                            case "register":
+                                {
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.stateRoom = 'register';
+                                    this.titleModal = 'Registro de nuevo huésped';
+                                    this.accion = 3;
+                                    this.cedula_client = '';
+                                    this.name_client = '';
+                                    this.birth_date_client = '';
+                                    this.firstSurname_client = '';
+                                    this.secondSurname_client = '';
+                                    this.gender_client = 0;
+                                    this.age_client = '';
+                                    this.address_client = '';
+                                    this.city_client = '';
+                                    this.nationality_client = '';
+                                    this.state_client = 0;
+                                    this.phone_client = '';
+                                    this.email_client = '';
+
+                                    break;
+                                };
+
+                            case "agregar":
+                                {
+                                    this.add = 1;
+                                    this.modal = 0;
+                                    this.titleModal = 'Listado de Acompañantes';
+
+                                    break;
+                                };
+                        }
+                    }
+            }
+        },
+        closeModal: function closeModal() {
+            this.modal = 0;
+            // this.arrayError = [];
+            this.listRoomsActive(1, this.search, this.valor);
+        },
+        closeModalAcomp: function closeModalAcomp() {
+            this.add = 0;
+            this.modal = 1;
+        },
+        updateCertificate: function updateCertificate() {
+            var me = this;
+            var url = 'counter/update';
+            axios.put(url, {
+
+                'option': 3,
+                'number_certificate': this.number_update
+
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        },
+        stateBusy: function stateBusy() {
+
+            var me = this;
+            me.registerCertificate();
+            me.updateCertificate();
+            var url = 'room/statebusy';
+            axios.put(url, {
+
+                'id': this.rooms_id,
+                'client_id': this.client_id
+
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Tu habitación queda en estado Ocupada!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                me.closeModal();
+                me.updateCustomers();
+                me.listRoomsActive(1, this.search, this.valor);
+            }).catch(function (error) {
+                // var respuesta = error.response.data;
+                // me.arrayError = respuesta.errors;
+                // console.log(error.response.data);
+            });
+        },
+        stateFree: function stateFree() {
+            var _this = this;
+
+            var swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            });
+
+            swalWithBootstrapButtons.fire({
+                title: 'Está seguro?',
+                text: "Va a facturar ésta habitación!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Si, facturar',
+                cancelButtonText: 'No, Cancelar!',
+                reverseButtons: true
+            }).then(function (result) {
+                if (result.value) {
+
+                    var me = _this;
+                    var url = 'room/statefree';
+                    axios.put(url, {
+
+                        'id': _this.rooms_id
+                        // 'client_id' : 1,
+
+                    }).then(function (response) {
+                        me.listRoomsActive(1, '', 'valor');
+                        me.closeModal();
+                    }).catch(function (error) {
+                        console.log(error);
+                    });
+
+                    swalWithBootstrapButtons.fire('Activado!', 'Tu habitación quedó Disponible.', 'success');
+                } else if (
+                /* Read more about handling dismissals below */
+                result.dismiss === Swal.DismissReason.cancel) {
+                    swalWithBootstrapButtons.fire('Cancelado', 'Tu habitacióm sigue Ocupada :)', 'error');
+                }
+            });
+        },
+        addAcomp: function addAcomp() {
+
+            if (this.name_acomp != "" && this.firstSurname_acomp != "" && this.secondSurname_acomp != "" && this.cedula_acomp != "" && this.birth_date_acomp != "") {
+
+                this.listAcomp.push({ name_acomp: this.name_acomp, firstSurname_acomp: this.firstSurname_acomp, secondSurname_acomp: this.secondSurname_acomp,
+                    cedula_acomp: this.cedula_acomp, birth_date_acomp: this.birth_date_acomp });
+                this.name_acomp = '';
+                this.firstSurname_acomp = '';
+                this.secondSurname_acomp = '';
+                this.cedula_acomp = '';
+                this.birth_date_acomp = '';
+            } else {
+                alert("Por favor ingrese todos los campos del formulario gracias.");
+            }
+        },
+        deleteAcomp: function deleteAcomp(acomp) {
+
+            var index = this.listAcomp.indexOf(acomp);
+            this.listAcomp.splice(index, 1);
+        },
+        updateCustomers: function updateCustomers(page, search, valor) {
+
+            var me = this;
+            var url = 'customers/update?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.put(url, {
+
+                'id': this.client_id,
+                'cedula_client': this.cedula_client,
+                'name_client': this.name_client,
+                'firstSurname_client': this.firstSurname_client,
+                'secondSurname_client': this.secondSurname_client,
+                'birth_date_client': this.birth_date_client,
+                'gender_client': this.gender_client,
+                'age_client': this.age_client,
+                'address_client': this.address_client,
+                'city_client': this.city_client,
+                'nationality_client': this.nationality_client,
+                'state_client': this.state_client,
+                'phone_client': this.phone_client,
+                'email_client': this.email_client
+
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
+        },
+        updateRoom: function updateRoom(page, search, valor) {
+
+            var me = this;
+            var url = 'room/update?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.put(url, {
+
+                'id': this.habitacion_id,
+                'type_id': this.type_id,
+                'number': this.number,
+                'price': this.price,
+                'price_air': this.price_air,
+                'frozen': this.frozen,
+                'state': this.state
+
+            }).then(function (response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Habitación Actualizada con Éxito',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                me.closeModal();
+            }).catch(function (error) {
+                var respuesta = error.response.data;
+                me.arrayError = respuesta.errors;
+                console.log(error.response.data);
+            });
         }
-      });
+    },
+
+    mounted: function mounted() {
+        this.listRoomsActive(1, this.search, this.valor);
     }
-  },
-
-  mounted: function mounted() {
-    this.listRoomsActive(1, this.search, this.valor);
-  }
 });
 
 /***/ }),
@@ -83835,14 +83809,14 @@ var render = function() {
                       ? [
                           _c("div", { staticClass: "row" }, [
                             _c("div", {
-                              staticClass: "col-md-8 mb-2 certificate"
+                              staticClass: "col-md-6 mb-2 certificate"
                             }),
                             _vm._v(" "),
                             _c(
                               "div",
                               {
                                 staticClass:
-                                  "col-md-4 mb-2 certificate  input-group"
+                                  "col-md-6 mb-2 certificate  input-group"
                               },
                               [
                                 _c("label", { attrs: { for: "text-input " } }, [
@@ -84148,7 +84122,79 @@ var render = function() {
                             ])
                           ]),
                           _vm._v(" "),
-                          _vm._m(4),
+                          _c("div", { staticClass: "row" }, [
+                            _c(
+                              "div",
+                              { staticClass: "col-sm-12 col-md-3 input-group" },
+                              [
+                                _vm._m(4),
+                                _vm._v(" "),
+                                _c("input", {
+                                  directives: [
+                                    {
+                                      name: "model",
+                                      rawName: "v-model",
+                                      value: _vm.temperature_entry_client,
+                                      expression: "temperature_entry_client"
+                                    }
+                                  ],
+                                  staticClass: "form-control",
+                                  attrs: { type: "number", placeholder: "" },
+                                  domProps: {
+                                    value: _vm.temperature_entry_client
+                                  },
+                                  on: {
+                                    input: function($event) {
+                                      if ($event.target.composing) {
+                                        return
+                                      }
+                                      _vm.temperature_entry_client =
+                                        $event.target.value
+                                    }
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _vm._m(5)
+                              ]
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "col-sm-12 col-md-3 input-group" },
+                              [
+                                _vm._m(6),
+                                _vm._v(" "),
+                                _c("input", {
+                                  directives: [
+                                    {
+                                      name: "model",
+                                      rawName: "v-model",
+                                      value: _vm.temperature_exit_client,
+                                      expression: "temperature_exit_client"
+                                    }
+                                  ],
+                                  staticClass: "form-control",
+                                  attrs: { type: "number", placeholder: "" },
+                                  domProps: {
+                                    value: _vm.temperature_exit_client
+                                  },
+                                  on: {
+                                    input: function($event) {
+                                      if ($event.target.composing) {
+                                        return
+                                      }
+                                      _vm.temperature_exit_client =
+                                        $event.target.value
+                                    }
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _vm._m(7)
+                              ]
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _vm._m(8),
                           _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
                             _c("div", { staticClass: "col-sm-12 col-md-4" }, [
@@ -84216,7 +84262,7 @@ var render = function() {
                             ])
                           ]),
                           _vm._v(" "),
-                          _vm._m(5),
+                          _vm._m(9),
                           _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
                             _c("div", { staticClass: "col-sm-12 col-md-6" }, [
@@ -84561,7 +84607,7 @@ var render = function() {
                             ])
                           ]),
                           _vm._v(" "),
-                          _vm._m(6),
+                          _vm._m(10),
                           _vm._v(" "),
                           _c("div", { staticClass: "row" }, [
                             _c("div", { staticClass: "col-sm-12 col-md-4" }, [
@@ -85253,6 +85299,42 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Temperatura de entrada")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group-append" }, [
+      _c("span", { staticClass: "input-group-text" }, [_vm._v("°C")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Temperatura de salida")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group-append" }, [
+      _c("span", { staticClass: "input-group-text" }, [_vm._v("°C")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
     return _c("div", { staticClass: "row" }, [
       _c(
         "div",
@@ -85627,6 +85709,26 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -85645,6 +85747,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             add: 0,
             entry_certificate: new Date(),
             cityOrigin_certificate: '',
+            temperature_entry_client: 0,
+            temperature_exit_client: 0,
             cityDestination_certificate: '',
             children_certificate: '',
             adults_certificate: '',
@@ -85815,7 +85919,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                                     //console.log(data);
                                     this.modal = 1;
                                     this.desactivar = 1;
-                                    this.titleModal = 'Informacion completa del cliente';
+                                    this.titleModal = 'Informacion completa del Acta';
                                     this.accion = 3;
                                     this.client_id = data['id'];
                                     this.cedula_client = data['cedula_client'];
@@ -85840,6 +85944,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                                     this.placaCar_certificate = data['placaCar_certificate'];
                                     this.placabike_certificate = data['placabike_certificate'];
                                     this.entry_certificate = data['entry_certificate'];
+                                    this.temperature_entry_client = data['temperature_entry_client'];
+                                    this.temperature_exit_client = data['temperature_exit_client'];
 
                                     break;
                                 }
@@ -86672,6 +86778,74 @@ var render = function() {
                     ]),
                     _vm._v(" "),
                     _c("div", { staticClass: "row" }, [
+                      _c(
+                        "div",
+                        { staticClass: "col-sm-12 col-md-3 input-group" },
+                        [
+                          _vm._m(4),
+                          _vm._v(" "),
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: _vm.temperature_entry_client,
+                                expression: "temperature_entry_client"
+                              }
+                            ],
+                            staticClass: "form-control",
+                            attrs: { type: "number", placeholder: "" },
+                            domProps: { value: _vm.temperature_entry_client },
+                            on: {
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.temperature_entry_client =
+                                  $event.target.value
+                              }
+                            }
+                          }),
+                          _vm._v(" "),
+                          _vm._m(5)
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "col-sm-12 col-md-3 input-group" },
+                        [
+                          _vm._m(6),
+                          _vm._v(" "),
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: _vm.temperature_exit_client,
+                                expression: "temperature_exit_client"
+                              }
+                            ],
+                            staticClass: "form-control",
+                            attrs: { type: "number", placeholder: "" },
+                            domProps: { value: _vm.temperature_exit_client },
+                            on: {
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.temperature_exit_client =
+                                  $event.target.value
+                              }
+                            }
+                          }),
+                          _vm._v(" "),
+                          _vm._m(7)
+                        ]
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
                       _c("div", { staticClass: "col-sm-12 col-md-4" }, [
                         _c("label", { attrs: { for: "text-input " } }, [
                           _vm._v("Placa Auto")
@@ -86987,6 +87161,42 @@ var staticRenderFns = [
         _vm._v(" "),
         _c("th", [_vm._v("Temperatura de salida")])
       ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Temperatura de entrada")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group-append" }, [
+      _c("span", { staticClass: "input-group-text" }, [_vm._v("°C")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group" }, [
+      _c("label", { attrs: { for: "text-input " } }, [
+        _vm._v("Temperatura de salida")
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "input-group-append" }, [
+      _c("span", { staticClass: "input-group-text" }, [_vm._v("°C")])
     ])
   }
 ]

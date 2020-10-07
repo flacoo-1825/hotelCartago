@@ -154,13 +154,12 @@
                                   </template>
                                   <template v-else-if="stateRoom=='certificate'">
                                     <div class="row">
-                                      <div class="col-md-8 mb-2 certificate">
-                                            
-                                        </div>
-                                        <div class="col-md-4 mb-2 certificate  input-group">
-                                            <label for="text-input ">Acta</label>
-                                            <h2 v-text="number_certificate"></h2>
-                                        </div>
+                                      <div class="col-md-6 mb-2 certificate">
+                                      </div>
+                                      <div class="col-md-6 mb-2 certificate  input-group">
+                                          <label for="text-input ">Acta</label>
+                                          <h2 v-text="number_certificate"></h2>
+                                      </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12 mb-2 text-center certificate">
@@ -207,6 +206,26 @@
                                         <div class="col-sm-12 col-md-4">
                                             <label for="text-input ">Ciudad de destino</label>
                                             <input type="text" class="form-control" v-model="cityDestination_certificate"   placeholder="introduzca la ciudad">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-3 input-group">
+                                          <div class="input-group">
+                                            <label for="text-input ">Temperatura de entrada</label>
+                                          </div>
+                                          <input type="number" class="form-control"  v-model="temperature_entry_client"  placeholder="">
+                                          <div class="input-group-append">
+                                            <span class="input-group-text">°C</span>
+                                          </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-3 input-group">
+                                          <div class="input-group">
+                                            <label for="text-input ">Temperatura de salida</label>
+                                          </div>
+                                          <input type="number" class="form-control"  v-model="temperature_exit_client"  placeholder="">
+                                          <div class="input-group-append">
+                                            <span class="input-group-text">°C</span>
+                                          </div>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -452,6 +471,8 @@
             cc_client: '',
             arrayUsuarioCliente : [],
             client_id : 0,
+            temperature_exit_client : 0,
+            temperature_entry_client : 0,
             cedula_client : '',
             entry_certificate : new Date(),
             cityOrigin_certificate : '',
@@ -470,6 +491,7 @@
             age_client : '',
             state_client : 0,
             number_certificate : '032CT',
+            number_update : 0,
             email_client : '',
             address_client : '',
             city_client : '',
@@ -558,8 +580,26 @@
           })
             .catch(function (error) {
               console.log(error);
-            });
-      },
+              });
+        },
+
+        search_certificate(){
+          let me=this;
+          var id_search = 1;
+          var url = 'counter/searchCertificate';
+          axios.get(url).then(function (response) {
+               var respuesta= response.data;
+               me.number_update = respuesta[0].number_certificate;
+               var end = respuesta[0].end_certificate;
+               me.number_certificate = me.number_update+end;
+              //  me.arrayRoom = respuesta.room.data;
+              // console.log(number+end);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
 
         cambiarPagina(page,search,valor){
           let me = this;
@@ -680,6 +720,8 @@
                             'entry_certificate'           :    this.entry_certificate,
                             'observation_certificate'     :    this.observation_certificate,
                             'listAcomp'                   :    this.listAcomp,
+                            'temperature_exit_client'     :    this.temperature_exit_client,
+                            'temperature_entry_client'    :    this.temperature_entry_client,
             
                     
                            
@@ -750,7 +792,7 @@
                       };
 
                       case "certificate" :{
-
+                          this.search_certificate();
                           //console.log(data);
                           this.modal = 1;
                           this.desactivar = 1;
@@ -835,11 +877,28 @@
           this.add = 0;
           this.modal = 1; 
         },
+        updateCertificate(){
+          let me=this;
+          var url = 'counter/update';
+          axios.put(url,{
 
+                      'option' : 3,
+                      'number_certificate' :    this.number_update,
+
+
+          })
+            .catch(function (error) {
+                  var respuesta = error.response.data;
+                  me.arrayError = respuesta.errors;
+                  console.log(error.response.data);
+            });
+
+        },
         stateBusy(){
 
                 let me = this;
                 me.registerCertificate();
+                me.updateCertificate();
                 var url  = 'room/statebusy';
                 axios.put(url,{
 
@@ -975,9 +1034,7 @@
                        console.log(error.response.data);
                   });
 
-            },
-
-
+        },
 
 
         updateRoom(page,search,valor){
@@ -1013,109 +1070,7 @@
 
             },
 
-        activarRoom(id){
-
-                const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                  confirmButton: 'btn btn-success',
-                  cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-                })
-
-                swalWithBootstrapButtons.fire({
-                  title: 'Está seguro?',
-                  text: "Va a Activar ésta habitación!",
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Si, Activala',
-                  cancelButtonText: 'No, Cancelar!',
-                  reverseButtons: true
-                }).then((result) => {
-                  if (result.value) { 
-
-                      let me = this;
-
-                          axios.put('room/activo',{
-                              'id': id
-                          }).then(function (response) {
-                              me.listRoom(1,'','valor');
-                           
-                          }).catch(function (error) {
-                              console.log(error);
-                          });
-                      
-
-                    swalWithBootstrapButtons.fire(
-                      'Activado!',
-                      'Tu habitación quedó Activada.',
-                      'success'
-                    )
-                  } else if (
-                    /* Read more about handling dismissals below */
-                    result.dismiss === Swal.DismissReason.cancel
-                  ) {
-                    swalWithBootstrapButtons.fire(
-                      'Cancelado',
-                      'Tu tipo de habitación sigue Desactivado :)',
-                      'error'
-                    )
-                  }
-                })
-            },
-
-        desactivarRoom(id){
-
-                const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                  confirmButton: 'btn btn-success',
-                  cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-                })
-
-                swalWithBootstrapButtons.fire({
-                  title: 'Está seguro?',
-                  text: "Va a desactivar ésta habitación!",
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Si, Desactivala',
-                  cancelButtonText: 'No, Cancelar!',
-                  reverseButtons: true
-                }).then((result) => {
-                  if (result.value) { 
-
-                      let me = this;
-
-                          axios.put('room/inactivo',{
-                              'id': id
-                          }).then(function (response) {
-                              me.listRooms(1,'','valor');
-                           
-                          }).catch(function (error) {
-                              console.log(error);
-                          });
-                      
-
-                    swalWithBootstrapButtons.fire(
-                      'Desativado!',
-                      'Tu habitación quedó desativada.',
-                      'success'
-                    )
-                  } else if (
-                    /* Read more about handling dismissals below */
-                    result.dismiss === Swal.DismissReason.cancel
-                  ) {
-                    swalWithBootstrapButtons.fire(
-                      'Cancelado',
-                      'Tu habitación está a salvo :)',
-                      'error'
-                    )
-                  }
-                })
-              }
-
-            },
+        },
 
       mounted() {
         this.listRoomsActive(1,this.search,this.valor);
