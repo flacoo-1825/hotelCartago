@@ -133,17 +133,15 @@ class ProductController extends Controller
     {   
          
        if (!$request->ajax()) return redirect('/');
+        //  $search = $request->search;
+        //  $valor = $request->valor;
          $search = $request->search;
          $valor = $request->valor;
          
-        if ($search==''){
-            $product = Product::where('state_type_rooms','=','1')
-                          ->orderBy('id', 'desc')->paginate(18);
-        }
-        else{
-            $product = Type_room::where('state_type_rooms','=','1')
-                          ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
-        }
+      
+            $product = Product::where('condition_product','=','1')
+                    ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
+  
  
         return [
                 'pagination'      => [
@@ -154,7 +152,7 @@ class ProductController extends Controller
                 'from'              => $product->firstItem(),
                 'to'                  => $product->lastItem(),
             ],
-            'Room' => $product
+            'products' => $product
         ];
     }
 }

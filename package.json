@@ -20,6 +20,7 @@
         "vue": "^2.5.7"
     },
     "dependencies": {
+        "vue-currency-filter": "^5.2.0",
         "vue2-datepicker": "^3.6.2"
     }
 }

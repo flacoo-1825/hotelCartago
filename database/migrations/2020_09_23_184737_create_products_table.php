@@ -21,8 +21,8 @@ class CreateProductsTable extends Migration
             $table->string('img_product')->nullable();
             $table->integer('stock_product')->nullable();
             $table->string('start_product')->nullable();
-            $table->string('buy_product')->nullable();
-            $table->string('sale_product')->nullable();
+            $table->double('buy_product', 8, 2)->nullable();
+            $table->double('sale_product', 8, 2)->nullable();
             $table->boolean('condition_product')->default(1);
 
             $table->timestamps();

@@ -113,7 +113,8 @@ class RoomController extends Controller
          
         if ($search==''){
             $room = Room::leftJoin('customers','rooms.client_id' ,'=', 'customers.id')
-                        ->select('rooms.id', 'rooms.state',
+                        ->join('type_rooms','rooms.type_room_id', '=', 'type_rooms.id')
+                        ->select('rooms.id', 'rooms.state','type_rooms.name_type_room',
                         'rooms.number','rooms.price','rooms.client_id','rooms.condition',
                         'rooms.price_air','rooms.frozen','rooms.number_facture',
                         'rooms.state','customers.firstSurname_client','customers.cedula_client',
@@ -123,8 +124,16 @@ class RoomController extends Controller
                         ->orderBy('id', 'desc')->paginate(9);
         }
         else{
-            $room = Room::where('condition','=','1')
-                          ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
+            $room = Room::leftJoin('customers','rooms.client_id' ,'=', 'customers.id')
+                        ->join('type_rooms','rooms.type_room_id', '=', 'type_rooms.id')
+                        ->select('rooms.id', 'rooms.state','type_rooms.name_type_room',
+                        'rooms.number','rooms.price','rooms.client_id','rooms.condition',
+                        'rooms.price_air','rooms.frozen','rooms.number_facture',
+                        'rooms.state','customers.firstSurname_client','customers.cedula_client',
+                        'customers.name_client','customers.nationality_client','customers.phone_client', 
+                        'customers.secondSurname_client')
+                        ->where('condition','=','1')
+                        ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
         }
  
         return [

@@ -1,19 +1,22 @@
 <template>
     <div class="container-fluid">
+
+        <template v-if="factura==0">
                 <!-- Ejemplo de tabla Listado -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-chevron-right fa5x"></i> Reception
-                        <!-- <button type="button" class="btn btn-success"  @click="openModal('product','create')">
-                            <i class="fas fa-plus-circle"></i>&nbsp;Nuevo producto
-                        </button> -->
+                        <button type="button" class="btn btn-success"  @click="openModal('product','create')">
+                            <i class="fas fa-cash-register"></i> Venta Extra
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="form-group row">
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <select class="form-control col-md-3" v-model="valor">
-                                      <option value="state">Nombre</option>
+                                      <option value="state">Estado</option>
+                                      <option value="name_type_room">Habitación</option>
                                     </select>
                                     <input type="text" v-model="search" @keyup="listRoomsActive(1,search,valor)"  class="form-control" placeholder="Texto a buscar">
                                     <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
@@ -30,19 +33,20 @@
                                     <div class="text-center">
                                       <h3 v-text="room.state"></h3>
                                       <h2 v-text="room.number"></h2>
-                                      <div class="text-value-sm text-primary" v-text="room.name"></div>
+                                      <h5 class="text-value-sm text-black" v-text="room.name_type_room"></h5>
                                     </div>
                                   </div>
                                 </div>
                               </template>
                               <template v-else>
                                 <div @click="openModal('room','edit',room)">
+                                <!-- <div @click="factura=1,room"> -->
                                   <div class=" m-1 card-body p-3 d-flex align-items-center " :class='room.state'>
                                     <i class="fas fa-bed  p-3  mr-3"></i>
                                     <div class="text-center">
                                       <h3 v-text="room.state"></h3>
                                       <h2 v-text="room.number"></h2>
-                                      <div class="text-value-sm text-primary" v-text="room.name"></div>
+                                      <h5 class="text-value-sm text-black" v-text="room.name_type_room"></h5>
                                     </div>
                                   </div>
                                 </div>
@@ -141,6 +145,14 @@
                                   </template>
                                   <template v-else-if="stateRoom=='Ocupada'">
                                     <div class="row">
+                                      <div class="col-md-6 mb-2 certificate">
+                                      </div>
+                                      <div class="col-md-6 mb-2 certificate  input-group">
+                                          <label for="text-input ">Factura</label>
+                                          <h2 v-text="number_check"></h2>
+                                      </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-lg-3 mb-2">
                                             <label for="text-input ">Cliente : <span v-text="name_client+' '+firstSurname_client + ' ' +secondSurname_client"></span></label>
                                         </div>
@@ -161,7 +173,7 @@
                                           <h2 v-text="number_certificate"></h2>
                                       </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row mb-4">
                                         <div class="col-md-12 mb-2 text-center certificate">
                                             <h3>Información del huéped</h3>
                                         </div>
@@ -222,13 +234,13 @@
                                           <div class="input-group">
                                             <label for="text-input ">Temperatura de salida</label>
                                           </div>
-                                          <input type="number" class="form-control"  v-model="temperature_exit_client"  placeholder="">
+                                          <input type="number" class="form-control"  v-model="temperature_exit_client" v-bind:disabled="desactivar==1" placeholder="">
                                           <div class="input-group-append">
                                             <span class="input-group-text">°C</span>
                                           </div>
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row mb-4">
                                         <div class="col-md-12 mb-2 mt-4 certificate text-center ">
                                             <h3>Información del vehículo</h3>
                                         </div>
@@ -243,7 +255,7 @@
                                             <input type="text" class="form-control"  v-model="placabike_certificate"  placeholder="Ej: MNZ 328">
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row mb-4">
                                         <div class="col-md-12 mb-2 mt-4 certificate text-center ">
                                             <h3>Información de los acompañantes</h3>
                                         </div>
@@ -300,17 +312,17 @@
                                     </div>
                                     <div class="row">   
                                       <div class="col-md-10">
-                                        <a @click="addAcomp()" href="#" class="btn  btn-success" title="agregar" >
-                                           <i class="fas fa-plus-circle"></i> agregar
-                                        </a>
-                                      </div>
-                                      <div class="col-md-2">
                                         <a @click="openModal('room','agregar')" href="#" class="btn  btn-info">
                                           <i class="fas fa-list"></i> Ver Lista
                                         </a>
                                       </div>
+                                      <div class="col-md-2">
+                                        <a @click="addAcomp()" href="#" class="btn  btn-success" title="agregar" >
+                                           <i class="fas fa-plus-circle"></i> agregar
+                                        </a>
+                                      </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row mb-3">
                                         <div class="col-md-12 mb-2 mt-4 certificate text-center ">
                                             <h3>Información de la habitación</h3>
                                         </div>
@@ -423,7 +435,6 @@
                             <div class="modal-footer">
                                 <a  class="btn btn-danger  text-white" @click="closeModal()">Cerrar</a>
                                 <a  class="btn btn-success  text-white"  @click="search_client(cc_client)" v-if="accion==1">Ingresar</a>
-                                <a  class="btn btn-success  text-white" @click="stateFree()" v-if="accion==2">Facturar</a>
                                 <a  class="btn btn-success  text-white" @click="registerCustomers()" v-if="accion==3">Registrar</a>
                                 <a  class="btn btn-success  text-white" @click="stateBusy()" v-if="accion==4">Hospedar</a>
                                 <hr>
@@ -440,11 +451,233 @@
                     </div>
                     <!-- /.modal-dialog -->
                 </div>
-
+        </template>
+                
+        <template v-if="factura==1">
+          <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chevron-right fa5x"></i> Factura
+                        <span>
+                            <button type="button" class="btn btn-danger"  @click="factura=0">
+                              <i class="fas fa-times-circle"></i> Cerrar
+                            </button>
+                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="container-fluid mb-5">
+                          <div class="row">
+                            <div class="col-md-8 mb-2">
+                            </div>
+                            <div class="col-md-4 mb-2 certificate  input-group">
+                                <label for="text-input ">Factura</label>
+                                <h2 v-text="number_check"></h2>
+                            </div>
+                          </div>
+                          <div class="row mb-4">
+                              <div class="col-md-12 mb-2 text-center certificate">
+                                  <h3>Información del huéped</h3>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-sm-12 col-md-4 mb-2 input-group">
+                                <label for="text-input ">Cliente : 
+                                  <span v-text="name_client">
+                                    </span>&nbsp
+                                    <span v-text="firstSurname_client">&nbsp
+                                    </span>
+                                    <span v-text="secondSurname_client">&nbsp
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="col-md-6 mb-2 input-group">
+                                <label for="text-input ">Celular : <span v-text="phone_client"></span></label>
+                            </div>
+                          </div>
+                          <div class="row mb-4">
+                              <div class="col-md-12 mb-2 text-center certificate">
+                                  <h3>Detalle habitación</h3>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-md-4 mb-2 input-group">
+                                <label for="text-input ">tipo ventilación : <span v-text="frozen"></span></label>
+                            </div>
+                            <div class="col-md-4 mb-2 input-group">
+                                <label for="text-input ">Precio : <span >{{price | currency}}</span></label>
+                            </div>
+                          </div>
+                          <div class="row mb-4">
+                              <div class="col-md-12 mb-2 text-center certificate">
+                                  <h3>Ventas adiccionales</h3>
+                              </div>
+                              <div class="col-md-12 mb-2 text-right certificate">
+                                  <button type="button" class="btn btn-success"  @click="openModal('room','sale')">
+                                    <i class="fas fa-cash-register"></i> Venta Extra
+                                  </button>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <table class="table table-bordered table-striped table-sm">
+                              <thead>
+                                  <tr>
+                                      <th>Detalle de la venta</th>
+                                      <th>Estado</th>
+                                      <th>total</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr class="text-center" v-for="room in arrayRoom" :Key="room.id">
+                                    <td><a href="#" class="btn  btn-info btn-sm p-1" title="Ver" @click="openModal('room','ver',room)" ><i class="far fa-eye"></i> Ver detalle</a></td>
+                                    <td  v-text="room.price"></td>
+                                    <td class="d-flex justify-content-between">
+                                        <template v-if="room.condition">
+                                            <button class="btn btn-success btn-sm p-1" title="Activo"   @click="desactivarRoom(room.id)"><i class="fas fa-check p-1"></i> Activar</button>
+                                        </template>
+                                        <template v-else>
+                                            <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="activarRoom(room.id)"><i class="fas fa-times"></i> Desactivar</a>
+                                        </template>
+                                    </td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                            <nav>
+                                <ul class="pagination">
+                                  <li class="page-item" v-if="pagination.current_page > 1">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1,search,valor)">Anterior</a>
+                                  </li>
+                                  <li class="page-item" v-for="page in pagesNumber" :key="page" :class="[page == isActived ? 'active' : '']">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(page,search,valor)" v-text="page"></a>
+                                  </li>
+                                  <li class="page-item" v-if="pagination.current_page < pagination.last_page">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1,search,valor)">Siguiente</a>
+                                  </li>
+                                </ul>
+                            </nav>
+                          </div>
+                        </div>
+                    </div>
+          </div>
+        </template>
+        <div class="modal fade" tabindex="-1" :class="{'mostrar' : add}" >
+                  <div class="modal-dialog modal-dialog-scroll modal-lg" role="document">
+                    <div class="modal-content container bg-container-modal">
+                      <div class="text-center">
+                        <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col-md-12">
+                              <div class="input-group">
+                                  <input type="text" v-model="search" @keyup="listProductActive(1,search,valor)"  class="form-control" placeholder="Producto a buscar">
+                                  <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
+                              </div>
+                            </div>
+                          <div class="col">
+                            <table class="table table-hover  table-sm text-center" >
+                              <thead >
+                                <tr>
+                                  <th>Producto</th>
+                                  <th>Precio C/u</th>
+                                  <th>cantidad</th>
+                                  <th>total</th>
+                                  <th >Opciones</th>
+                                </tr>
+                              </thead>
+                              <tbody class="bg-white text-center table-bordered">
+                                <tr v-for="product in arrayProducts " :key="product.id">
+                                  <td><a href="#" class="btn btn-primary" v-text="product.name_product" ></a></td>
+                                  <td  >Precio : {{product.sale_product | currency}} </td>
+                                  <td>
+                                    <input type="number" v-model="cantidad_product">
+                                  </td>
+                                  <td v-text="product.sale_product*cantidad_product"></td>
+                                  <!-- <td v-text:format="dateformat(acomp.birth_date_acomp)"></td> -->
+                                  <td>
+                                    <a href="#" class="btn btn-success "  title="Agregar" @click="addProduct(product)" >
+                                      <i class="fas fa-trash-alt"></i> Agregar
+                                    </a>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                                  
+                              </div>
+                          </div>
+                      
+                      </div>
+                      <div class="row modal-footer">
+                        <div class="col-lg-2">
+                          <a class="btn btn-danger  text-white" @click="closeModalAcomp()">Cerrar</a>
+                        </div>       
+                      </div>
+                      <!-- /.modal-content -->
+                    </div>
+                  <!-- /.modal-dialog -->
+                  </div>
+        </div>
+        <template v-if="factura==2">
+          <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chevron-right fa5x"></i> venta
+                        <span>
+                            <button type="button" class="btn btn-danger"  @click="factura=0">
+                              <i class="fas fa-times-circle"></i> Cerrar
+                            </button>
+                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="container-fluid mb-5">
+                          <div class="row">
+                            <div class="col-md-8 mb-2">
+                            </div>
+                            <div class="col-md-4 mb-2 certificate  input-group">
+                                <label for="text-input ">Factura</label>
+                                <h2 v-text="number_check"></h2>
+                            </div>
+                          </div>
+                          <div class="row mb-4">
+                              <div class="col-md-12 mb-2 text-center certificate">
+                                  <h3>Productos para ser facturados</h3>
+                              </div>
+                              <div class="col-md-12 mb-2 text-right certificate">
+                                  <button type="button" class="btn btn-success"  @click="openModal('room','products')">
+                                    <i class="fas fa-plus-circle"></i> Venta Extra
+                                  </button>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <table class="table table-bordered table-striped table-sm">
+                              <thead>
+                                  <tr>
+                                      <th>Producto</th>
+                                      <th>valor C/u</th>
+                                      <th>Cantidad</th>
+                                      <th>subTotal</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr class="text-center" v-for="product in listProduct" :Key="product.id">
+                                    <td class="imgProduct">
+                                      <img :src="ruta+product.url_img" alt="not fount">
+                                    </td>
+                                    <td  v-text="product.sale_product"></td>
+                                    <td  v-text="product.cantidad_product"></td>
+                                    <td class="d-flex justify-content-between">
+                                        <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteProduct(product)"><i class="fas fa-trash-alt"></i> Eliminar</a>
+                                    </td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                    </div>
+          </div>
+        </template>
     </div>
             <!--closed here Data-->
-
-           
+  
 </template>
 
 
@@ -453,7 +686,15 @@
   import DatePicker from 'vue2-datepicker';
   import 'vue2-datepicker/index.css';
   import {es}  from 'vue2-datepicker/locale/es';
-
+  import VueCurrencyFilter from 'vue-currency-filter'
+  Vue.use(VueCurrencyFilter, {
+    symbol: '$', // El símbolo, por ejemplo €
+    thousandsSeparator: ',', // Separador de miles
+    fractionCount: 2, // ¿Cuántos decimales mostrar?
+    fractionSeparator: '.', // Separador de decimales
+    symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+    symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+  })
   export default {
 
     data() {
@@ -464,9 +705,18 @@
                     },
                     monthBeforeYear: false,
             },
+            ruta : 'img/products/',
+            url_img : '',
+            total : '',
+            name_product : '',
+            sale_product : 0,
+            cantidad_product : 0,
+            factura : 0,
+            number_check : '',
             name_room : 'Clase de habitación',
             type_id:0,
             type_room : 0,
+            number_update_check : '',
             stateRoom : 'Disponible',
             cc_client: '',
             arrayUsuarioCliente : [],
@@ -507,9 +757,11 @@
             cedula_acomp : '',
             birth_date_acomp : new Date(),
             listAcomp : [],
+            listProduct : [],
             arrayroom : [],
             client : [],
             arrayRoom : [],
+            arrayProducts : [],
             rooms : '',
             opcion : 'Elige una opción',
             modal : 0,
@@ -562,11 +814,28 @@
             }
             return pagesArray;             
 
-        }
+        },
+
     },
 
 
     methods : {
+      
+        listProductActive(page,search){
+          let me=this;
+          var valor = 'name_product'
+          var url = 'product/active?page=' + page + '&search='+ search + "&valor=" + valor;
+          axios.get(url).then(function (response) {
+               var respuesta= response.data;
+               me.arrayProducts = respuesta.products.data;
+               me.pagination= respuesta.pagination;
+              // console.log(me.arrayProducts);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
 
         listRoomsActive(page,search,valor){
           let me=this;
@@ -594,6 +863,24 @@
                me.number_certificate = me.number_update+end;
               //  me.arrayRoom = respuesta.room.data;
               // console.log(number+end);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
+
+        search_check(){
+          let me=this;
+          var id_search = 1;
+          var url = 'counter/searchCheck';
+          axios.get(url).then(function (response) {
+               var respuesta= response.data;
+               me.number_update_check = respuesta[0].number_check;
+               var end = respuesta[0].end_check;
+               me.number_check = me.number_update_check+end;
+              //  me.arrayRoom = respuesta.room.data;
+              //  console.log(me.number_check+end);
 
           })
             .catch(function (error) {
@@ -767,8 +1054,9 @@
                       case "edit" :{
 
                           // console.log(data);
-                          this.modal = 1;
-                          this.stateRoom = 'Ocupada'
+                          this.search_check();
+                          this.factura = 1;
+                          // this.stateRoom = 'Ocupada'
                           this.desactivar = 0;
                           this.titleModal = 'Información';
                           this.accion = 2;
@@ -785,6 +1073,9 @@
                           this.phone_client=  data['phone_client'];
                           this.firstSurname_client =  data['firstSurname_client'];
                           this.secondSurname_client =  data['secondSurname_client'];
+                          this.number_update_check =  this.number_update_check;
+                          this.name_type_room = data['name_type_room'];
+
 
 
                           break;
@@ -799,6 +1090,7 @@
                           this.stateRoom = 'certificate'
                           this.titleModal = 'Acta de entrada';
                           this.accion = 4;
+                          this.number_certificate;
                           this.rooms_id ;
                           this.children_certificate = '';
                           this.adults_certificate = '';
@@ -862,6 +1154,27 @@
 
                         break;
                       };
+
+                       case "sale" :{
+
+                        this.factura = 2;
+                        this.titleModal = 'Productos';
+
+                        break;
+                      };
+
+                      case "products" :{
+                         
+                        this.add = 1;
+                        this.titleModal = 'Productos';
+                        this.arrayProducts = [];
+                        this.name_product = '';
+                        this.cantidad_product = 1;
+                        this.sale_product = 0;
+                        this.search = '';
+
+                        break;
+                      };
                   }
               }
           }
@@ -875,7 +1188,8 @@
         },
         closeModalAcomp(){
           this.add = 0;
-          this.modal = 1; 
+          this.modal = 1;
+          this.titleModal ='Acta de entrada'; 
         },
         updateCertificate(){
           let me=this;
@@ -955,7 +1269,7 @@
 
                           }).then(function (response) {
                               me.listRoomsActive(1,'','valor');
-                              me.closeModal();
+                              me.factura = 0;
                            
                           }).catch(function (error) {
                               console.log(error);
@@ -1002,6 +1316,21 @@
 
            var index =  this.listAcomp.indexOf(acomp);
            this.listAcomp.splice(index,1);
+
+        },
+
+
+        addProduct(product){
+              console.log(product);
+
+            this.listProduct.push({name_product:product.name_product, sale_product:product.sale_product, cantidad_product:this.cantidad_product,
+                                total:product.sale_product*this.cantidad_product, url_img:product.img_product});
+
+        },
+        deleteProduct(product){
+
+           var index =  this.listProduct.indexOf(product);
+           this.listProduct.splice(index,1);
 
         },
 
@@ -1184,6 +1513,24 @@
 
     .form_certificate{
       overflow: auto;
+    }
+
+    .imgProduct{
+    width: 60px;
+    height: 60px;
+    }
+
+    .product_img .imgProduct{
+        width: 100%;
+    }
+
+    .img_products{
+        width: 100px;
+        height: 100px;
+    }
+
+    .imgProduct img{
+        width: 100%;
     }
 
 </style>
