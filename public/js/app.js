@@ -82975,6 +82975,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
+//
+//
 
 
 
@@ -83047,7 +83051,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       address_client: '',
       city_client: '',
       nationality_client: ''
-    }, _defineProperty(_ref, 'number', ''), _defineProperty(_ref, 'price', ''), _defineProperty(_ref, 'frozen', ''), _defineProperty(_ref, 'state', ''), _defineProperty(_ref, 'price_air', ''), _defineProperty(_ref, 'name_acomp', ''), _defineProperty(_ref, 'firstSurname_acomp', ''), _defineProperty(_ref, 'secondSurname_acomp', ''), _defineProperty(_ref, 'cedula_acomp', ''), _defineProperty(_ref, 'birth_date_acomp', new Date()), _defineProperty(_ref, 'listAcomp', []), _defineProperty(_ref, 'listProduct', []), _defineProperty(_ref, 'arrayroom', []), _defineProperty(_ref, 'client', []), _defineProperty(_ref, 'arrayRoom', []), _defineProperty(_ref, 'arrayProducts', []), _defineProperty(_ref, 'rooms', ''), _defineProperty(_ref, 'opcion', 'Elige una opción'), _defineProperty(_ref, 'modal', 0), _defineProperty(_ref, 'titleModal', ''), _defineProperty(_ref, 'accion', 0), _defineProperty(_ref, 'rooms_id', 0), _defineProperty(_ref, 'add', 0), _defineProperty(_ref, 'desactivar', 0), _defineProperty(_ref, 'condition', 1), _defineProperty(_ref, 'search', ''), _defineProperty(_ref, 'valor', 'state'), _defineProperty(_ref, 'arrayError', []), _defineProperty(_ref, 'pagination', {
+    }, _defineProperty(_ref, 'number', ''), _defineProperty(_ref, 'price', ''), _defineProperty(_ref, 'frozen', ''), _defineProperty(_ref, 'state', ''), _defineProperty(_ref, 'price_air', ''), _defineProperty(_ref, 'name_acomp', ''), _defineProperty(_ref, 'firstSurname_acomp', ''), _defineProperty(_ref, 'secondSurname_acomp', ''), _defineProperty(_ref, 'cedula_acomp', ''), _defineProperty(_ref, 'birth_date_acomp', new Date()), _defineProperty(_ref, 'listAcomp', []), _defineProperty(_ref, 'listProduct', []), _defineProperty(_ref, 'arrayroom', []), _defineProperty(_ref, 'client', []), _defineProperty(_ref, 'arrayRoom', []), _defineProperty(_ref, 'arrayProducts', []), _defineProperty(_ref, 'dataRoom', []), _defineProperty(_ref, 'rooms', ''), _defineProperty(_ref, 'opcion', 'Elige una opción'), _defineProperty(_ref, 'modal', 0), _defineProperty(_ref, 'titleModal', ''), _defineProperty(_ref, 'accion', 0), _defineProperty(_ref, 'rooms_id', 0), _defineProperty(_ref, 'add', 0), _defineProperty(_ref, 'desactivar', 0), _defineProperty(_ref, 'condition', 1), _defineProperty(_ref, 'search', ''), _defineProperty(_ref, 'valor', 'state'), _defineProperty(_ref, 'arrayError', []), _defineProperty(_ref, 'pagination', {
       'total': 0,
       'current_page': 0,
       'per_page': 0,
@@ -83104,10 +83108,6 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       var url = 'sale/register';
       axios.post(url, {
 
-        // 'product_id' : 1,
-        // 'number_bill' : this.number_certificate,
-        // 'dian_bill' : 'yes',
-        // 'total_bill' : 30000,
         'sale': this.listProduct
 
       }).then(function (response) {
@@ -83118,10 +83118,12 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
           showConfirmButton: false,
           timer: 1500
         });
+        var room = [];
+        room = me.dataRoom;
+        // console.log(room);
+        me.openModal('room', 'edit', room);
       }).catch(function (error) {
-        var respuesta = error.response.data;
-        me.arrayError = respuesta.errors;
-        console.log(error.response.data);
+        console.log(error);
       });
     },
     listProductActive: function listProductActive(page, search) {
@@ -83172,7 +83174,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         me.listSales = response.data;
         //  me.listSale = respuesta[0].number_certificate;
         //  me.arrayRoom = respuesta.room.data;
-        console.log(respuesta);
+        // console.log(respuesta);
       }).catch(function (error) {
         console.log(error);
       });
@@ -83335,7 +83337,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
             var total_reception = 0;
             var sales = this.listProduct;
             for (var i = 0; i < sales.length; i++) {
-              var item = sales[i]['sale_producto'];
+              var item = sales[i]['sale_product'] * sales[i]['cantidad_product'];
               total_reception += item;
             }
             return total_reception;
@@ -83391,6 +83393,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
                   this.secondSurname_client = data['secondSurname_client'];
                   this.number_facture = data['number_facture'];
                   this.name_type_room = data['name_type_room'];
+                  this.dataRoom = data;
                   this.search_sales();
 
                   break;
@@ -83475,6 +83478,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
 
                   this.factura = 2;
                   this.titleModal = 'Productos';
+                  this.listProduct = [];
 
                   break;
                 };
@@ -83513,6 +83517,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
     },
     closeModal: function closeModal() {
       this.modal = 0;
+      this.search = '';
       // this.arrayError = [];
       this.listRoomsActive(1, this.search, this.valor);
     },
@@ -86255,6 +86260,7 @@ var render = function() {
                       on: {
                         click: function($event) {
                           _vm.factura = 0
+                          _vm.closeModal()
                         }
                       }
                     },
@@ -86277,7 +86283,7 @@ var render = function() {
                         },
                         [
                           _c("i", { staticClass: "fas fa-money-check-alt" }),
-                          _vm._v(" Facturar")
+                          _vm._v(" Facturar\n                        ")
                         ]
                       )
                     : _vm._e()
@@ -86619,7 +86625,7 @@ var render = function() {
           _c(
             "div",
             {
-              staticClass: "modal-dialog modal-dialog-scroll modal-lg",
+              staticClass: "modal-dialog modal-dialog-scrollable modal-lg",
               attrs: { role: "document" }
             },
             [
@@ -86966,7 +86972,9 @@ var render = function() {
                         },
                         [
                           _c("i", { staticClass: "fas fa-money-check-alt" }),
-                          _vm._v(" Agregar a la habitación")
+                          _vm._v(
+                            " Agregar a la habitación\n                        "
+                          )
                         ]
                       )
                     : _vm._e()
@@ -87051,11 +87059,13 @@ var render = function() {
                                   })
                                 ]),
                                 _vm._v(" "),
-                                _c("td", {
-                                  domProps: {
-                                    textContent: _vm._s(product.sale_product)
-                                  }
-                                }),
+                                _c("td", [
+                                  _vm._v(
+                                    _vm._s(
+                                      _vm._f("currency")(product.sale_product)
+                                    )
+                                  )
+                                ]),
                                 _vm._v(" "),
                                 _c("td", {
                                   domProps: {

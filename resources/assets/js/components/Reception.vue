@@ -459,10 +459,12 @@
                     <div class="card-header">
                         <i class="fas fa-chevron-right fa5x"></i> Factura
                         <span>
-                            <button type="button" class="btn btn-danger"  @click="factura=0">
+                            <button type="button" class="btn btn-danger"  @click="factura=0;closeModal()">
                               <i class="fas fa-times-circle"></i> Cerrar
                             </button>
-                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2">
+                              <i class="fas fa-money-check-alt"></i> Facturar
+                            </a>
                         </span>
                     </div>
                     <div class="card-body">
@@ -572,7 +574,7 @@
           </div>
         </template>
         <div class="modal fade" tabindex="-1" :class="{'mostrar' : add}" >
-                  <div class="modal-dialog modal-dialog-scroll modal-lg" role="document">
+                  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
                     <div class="modal-content container bg-container-modal">
                       <div class="text-center">
                         <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
@@ -662,7 +664,9 @@
                             <button type="button" class="btn btn-danger"  @click="factura=0">
                               <i class="fas fa-times-circle"></i> Cerrar
                             </button>
-                            <a  class="btn btn-info shadow text-white" @click="addSaleRoom()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Agregar a la habitación</a>
+                            <a  class="btn btn-info shadow text-white" @click="addSaleRoom()" v-if="accion==2">
+                              <i class="fas fa-money-check-alt"></i> Agregar a la habitación
+                            </a>
                         </span>
                     </div>
                     <div class="card-body">
@@ -701,7 +705,7 @@
                                     <td class="imgProduct">
                                       <img :src="ruta+product.url_img" alt="not fount">
                                     </td>
-                                    <td  v-text="product.sale_product"></td>
+                                    <td>{{product.sale_product | currency}}</td>
                                     <td  v-text="product.cantidad_product"></td>
                                     <td class="d-flex justify-content-between">
                                         <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteProduct(product)"><i class="fas fa-trash-alt">
@@ -818,6 +822,7 @@
             client : [],
             arrayRoom : [],
             arrayProducts : [],
+            dataRoom : [],
             rooms : '',
             opcion : 'Elige una opción',
             modal : 0,
@@ -892,12 +897,7 @@
             var url  = 'sale/register';
             axios.post(url,{
 
-                        // 'product_id' : 1,
-                        // 'number_bill' : this.number_certificate,
-                        // 'dian_bill' : 'yes',
-                        // 'total_bill' : 30000,
                         'sale' : this.listProduct,
-
 
             }).then(function (response) {
                 Swal.fire({
@@ -907,11 +907,13 @@
                   showConfirmButton: false,
                   timer: 1500
                 });
+                  var room = [];
+                  room = me.dataRoom;
+                  // console.log(room);
+                  me.openModal('room','edit',room);
               })
               .catch(function (error) {
-                    var respuesta = error.response.data;
-                    me.arrayError = respuesta.errors;
-                    console.log(error.response.data);
+                    console.log(error);
               });
         },
       
@@ -972,7 +974,7 @@
                me.listSales= response.data;
               //  me.listSale = respuesta[0].number_certificate;
               //  me.arrayRoom = respuesta.room.data;
-              console.log(respuesta);
+              // console.log(respuesta);
 
           })
             .catch(function (error) {
@@ -1159,7 +1161,7 @@
                 var total_reception = 0;
                 var sales = this.listProduct;
                 for(var i = 0; i < sales.length; i++){
-                  var item = sales[i]['sale_producto'];
+                  var item = sales[i]['sale_product']*sales[i]['cantidad_product'];
                   total_reception += item;
                 }
                 return total_reception;
@@ -1212,6 +1214,7 @@
                           this.secondSurname_client =  data['secondSurname_client'];
                           this.number_facture = data['number_facture'];
                           this.name_type_room = data['name_type_room'];
+                          this.dataRoom = data;
                           this.search_sales();
 
 
@@ -1297,6 +1300,7 @@
 
                         this.factura = 2;
                         this.titleModal = 'Productos';
+                        this.listProduct = [];
 
                         break;
                       };
@@ -1335,6 +1339,7 @@
 
         closeModal(){
           this.modal = 0;
+          this.search = '';
          // this.arrayError = [];
           this.listRoomsActive(1,this.search,this.valor);
         },
