@@ -430,6 +430,7 @@
                                         </div>
                                     </div>
                                   </template>
+                                  <template v-else-if="stateRoom=='reception'"></template>
                                 </form>
                             </div>
                             <div class="modal-footer">
@@ -471,7 +472,7 @@
                             </div>
                             <div class="col-md-4 mb-2 certificate  input-group">
                                 <label for="text-input ">Factura</label>
-                                <h2 v-text="number_check"></h2>
+                                <h2 v-text="number_facture"></h2>
                             </div>
                           </div>
                           <div class="row mb-4">
@@ -507,7 +508,8 @@
                                 <label for="text-input ">Precio : <span >{{price | currency}}</span></label>
                             </div>
                           </div>
-                          <div class="row mb-4">
+                          <hr>
+                          <div class="row mb-4 mt-3">
                               <div class="col-md-12 mb-2 text-center certificate">
                                   <h3>Ventas adiccionales</h3>
                               </div>
@@ -519,29 +521,39 @@
                           </div>
                           <div class="row">
                             <table class="table table-bordered table-striped table-sm">
-                              <thead>
+                              <thead >
                                   <tr>
-                                      <th>Detalle de la venta</th>
-                                      <th>Estado</th>
-                                      <th>total</th>
+                                      <th class="text-center">Producto</th>
+                                      <th class="text-center">Factura</th>
+                                      <th class="text-center">cantidad</th>
+                                      <th class="text-center">total</th>
+                                      <th class="text-center">
+                                        <span class="custom-control custom-checkbox">
+                                          <a href="#" @click="selectAll()" class="btn btn-primary">Seleccionar Todo</a>
+                                        </span>
+                                        <span class="custom-control custom-checkbox">
+                                          <a href="#" class="btn btn-success" @click="openModal('room','reception')" >Generar factura</a>
+                                        </span>
+                                      </th>
                                   </tr>
                               </thead>
                               <tbody>
-                                  <tr class="text-center" v-for="room in arrayRoom" :Key="room.id">
-                                    <td><a href="#" class="btn  btn-info btn-sm p-1" title="Ver" @click="openModal('room','ver',room)" ><i class="far fa-eye"></i> Ver detalle</a></td>
-                                    <td  v-text="room.price"></td>
-                                    <td class="d-flex justify-content-between">
-                                        <template v-if="room.condition">
-                                            <button class="btn btn-success btn-sm p-1" title="Activo"   @click="desactivarRoom(room.id)"><i class="fas fa-check p-1"></i> Activar</button>
-                                        </template>
-                                        <template v-else>
-                                            <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="activarRoom(room.id)"><i class="fas fa-times"></i> Desactivar</a>
-                                        </template>
+                                  <tr class="text-center" v-for="product in listSales" :Key="product.id">
+                                    <td v-text="product.name_product">
+                                    </td>
+                                    <td  v-text="product.number_bill_sales"></td>
+                                    <td  v-text="product.quantity_sales"></td>
+                                    <td>{{product.total_sales | currency}}</td>
+                                    <td class="d-flex justify-content-center">
+                                        <span class="custom-control custom-checkbox">
+                                          <input type="checkbox" class="custom-control-input prueba" :value="product"  :id="product.id" v-model="check" >
+                                          <label :for="product.id"  class="custom-control-label" >facturar por recepción</label>
+                                        </span>
                                     </td>
                                   </tr>
                               </tbody>
                             </table>
-                            <nav>
+                            <!-- <nav>
                                 <ul class="pagination">
                                   <li class="page-item" v-if="pagination.current_page > 1">
                                         <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1,search,valor)">Anterior</a>
@@ -553,7 +565,7 @@
                                         <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1,search,valor)">Siguiente</a>
                                   </li>
                                 </ul>
-                            </nav>
+                            </nav> -->
                           </div>
                         </div>
                     </div>
@@ -568,11 +580,13 @@
                       <div class="modal-body">
                         <div class="row">
                           <div class="col-md-12">
+                            <template v-if="newSale==1">
                               <div class="input-group">
-                                  <input type="text" v-model="search" @keyup="listProductActive(1,search,valor)"  class="form-control" placeholder="Producto a buscar">
-                                  <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
+                                <input type="text" v-model="search" @keyup="listProductActive(1,search,valor)"  class="form-control" placeholder="Producto a buscar">
+                                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
                               </div>
-                            </div>
+                            </template>
+                          </div>
                           <div class="col">
                             <table class="table table-hover  table-sm text-center" >
                               <thead >
@@ -581,35 +595,59 @@
                                   <th>Precio C/u</th>
                                   <th>cantidad</th>
                                   <th>total</th>
-                                  <th >Opciones</th>
                                 </tr>
                               </thead>
-                              <tbody class="bg-white text-center table-bordered">
-                                <tr v-for="product in arrayProducts " :key="product.id">
-                                  <td><a href="#" class="btn btn-primary" v-text="product.name_product" ></a></td>
-                                  <td  >Precio : {{product.sale_product | currency}} </td>
-                                  <td>
-                                    <input type="number" v-model="cantidad_product">
-                                  </td>
-                                  <td v-text="product.sale_product*cantidad_product"></td>
-                                  <!-- <td v-text:format="dateformat(acomp.birth_date_acomp)"></td> -->
-                                  <td>
-                                    <a href="#" class="btn btn-success "  title="Agregar" @click="addProduct(product)" >
-                                      <i class="fas fa-trash-alt"></i> Agregar
-                                    </a>
-                                  </td>
-                                </tr>
-                              </tbody>
+                              <template v-if="newSale==1">
+                                <tbody class="bg-white text-center table-bordered">
+                                  <tr v-for="product in arrayProducts " :key="product.id">
+                                    <td v-text="product.name_product"></td>
+                                    <td  >Precio : {{product.sale_product | currency}} </td>
+                                    <td>
+                                      <input type="number" v-model="cantidad_product">
+                                    </td>
+                                    <td v-text="product.sale_product*cantidad_product"></td>
+                                    <!-- <td v-text:format="dateformat(acomp.birth_date_acomp)"></td> -->
+                                    <td>
+                                      <a href="#" class="btn btn-success "  title="Agregar" @click="addProduct(product)" >
+                                        <i class="fas fa-trash-alt"></i> Agregar
+                                      </a>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </template>
+                              <template v-if="newSale==2">
+                                <tbody class="bg-white text-center table-bordered">
+                                  <tr v-for="product in check " :key="product.id">
+                                    <td v-text="product.name_product"></td>
+                                    <td  >Precio : {{product.price_unit_sales | currency}} </td>
+                                    <td v-text="product.quantity_sales"></td>
+                                    <td>{{product.total_sales | currency}} </td>
+                                  </tr>
+                                </tbody>
+                              </template>
                             </table>
-                                  
-                              </div>
+                            <template v-if="newSale==2">
+                              <table class="table table-hover  table-sm text-center" >
+                                <thead >
+                                  <tr class="d-flex justify-content-end">
+                                    <th>total</th>
+                                    <th>{{totalNewSale | currency}}</th>
+                                  </tr>
+                                </thead>
+                              </table>
+                            </template>
                           </div>
-                      
+                        </div>
                       </div>
                       <div class="row modal-footer">
-                        <div class="col-lg-2">
-                          <a class="btn btn-danger  text-white" @click="closeModalAcomp()">Cerrar</a>
-                        </div>       
+                          <div class="col-lg-2">
+                            <a class="btn btn-danger  text-white" @click="closeModalAcomp()"><i class="fas fa-times-circle"></i> Cerrar</a>
+                          </div>   
+                        <template v-if="newSale==2">
+                          <div class="col-lg-2">
+                            <a class="btn btn-success text-white"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                          </div> 
+                        </template>  
                       </div>
                       <!-- /.modal-content -->
                     </div>
@@ -619,12 +657,12 @@
         <template v-if="factura==2">
           <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-chevron-right fa5x"></i> venta
+                        <i class="fas fa-chevron-right fa5x"></i>
                         <span>
                             <button type="button" class="btn btn-danger"  @click="factura=0">
                               <i class="fas fa-times-circle"></i> Cerrar
                             </button>
-                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                            <a  class="btn btn-info shadow text-white" @click="addSaleRoom()" v-if="accion==2"><i class="fas fa-money-check-alt"></i> Agregar a la habitación</a>
                         </span>
                     </div>
                     <div class="card-body">
@@ -654,7 +692,8 @@
                                       <th>Producto</th>
                                       <th>valor C/u</th>
                                       <th>Cantidad</th>
-                                      <th>subTotal</th>
+                                      <th>subTotal
+                                      </th>
                                   </tr>
                               </thead>
                               <tbody>
@@ -665,10 +704,20 @@
                                     <td  v-text="product.sale_product"></td>
                                     <td  v-text="product.cantidad_product"></td>
                                     <td class="d-flex justify-content-between">
-                                        <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteProduct(product)"><i class="fas fa-trash-alt"></i> Eliminar</a>
+                                        <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteProduct(product)"><i class="fas fa-trash-alt">
+                                          </i> Eliminar
+                                        </a>
                                     </td>
                                   </tr>
                               </tbody>
+                            </table>
+                            <table class="table table-hover  table-sm text-center" >
+                                <thead >
+                                  <tr class="d-flex justify-content-end">
+                                    <th>total</th>
+                                    <th>{{totalNewSaleRoom | currency}}</th>
+                                  </tr>
+                                </thead>
                             </table>
                           </div>
                         </div>
@@ -705,6 +754,13 @@
                     },
                     monthBeforeYear: false,
             },
+            option : 0,
+            listSales : [],
+            newSale: 0,
+            eliminar : 0,
+            number_facture : '',
+            number : 0,
+            check : [],
             ruta : 'img/products/',
             url_img : '',
             total : '',
@@ -816,10 +872,48 @@
 
         },
 
+        totalNewSale: function(){
+            var option = 1;
+            return this.totalSales(option);
+        },
+
+        totalNewSaleRoom: function(){
+            var option = 2;
+            return this.totalSales(option);
+        },
+
     },
 
 
     methods : {
+
+        addSaleRoom(){
+            let me = this;
+            var url  = 'sale/register';
+            axios.post(url,{
+
+                        // 'product_id' : 1,
+                        // 'number_bill' : this.number_certificate,
+                        // 'dian_bill' : 'yes',
+                        // 'total_bill' : 30000,
+                        'sale' : this.listProduct,
+
+
+            }).then(function (response) {
+                Swal.fire({
+                  position: 'center',
+                  icon: 'success',
+                  title: 'Tus productos se cargaron a la habitación',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+              })
+              .catch(function (error) {
+                    var respuesta = error.response.data;
+                    me.arrayError = respuesta.errors;
+                    console.log(error.response.data);
+              });
+        },
       
         listProductActive(page,search){
           let me=this;
@@ -863,6 +957,22 @@
                me.number_certificate = me.number_update+end;
               //  me.arrayRoom = respuesta.room.data;
               // console.log(number+end);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
+
+        search_sales(){
+          let me=this;
+          var number_facture = this.number_facture;
+          var url = 'sale/listSales?number_facture='+number_facture;
+          axios.get(url).then(function (response) {
+               me.listSales= response.data;
+              //  me.listSale = respuesta[0].number_certificate;
+              //  me.arrayRoom = respuesta.room.data;
+              console.log(respuesta);
 
           })
             .catch(function (error) {
@@ -1031,7 +1141,33 @@
                   });
 
             },
+        totalSales(option){
+          
+          switch (option){
+            case 1 :{
+                var total_reception = 0;
+                var sales = this.check;
+                for(var i = 0; i < sales.length; i++){
+                  var item = sales[i]['total_sales'];
+                  total_reception += item;
+                }
+                return total_reception;
+                break;
+            }
 
+            case 2 :{
+                var total_reception = 0;
+                var sales = this.listProduct;
+                for(var i = 0; i < sales.length; i++){
+                  var item = sales[i]['sale_producto'];
+                  total_reception += item;
+                }
+                return total_reception;
+                break;
+            }
+          }
+          
+        },
 
         openModal(model, accion, data = [] ){
 
@@ -1040,6 +1176,7 @@
 
                   switch(accion){
                       case "create" : {
+                          this.search_check();
                           this.modal = 1;
                           this.stateRoom = 'Disponible'
                           this.desactivar = 0;
@@ -1054,9 +1191,9 @@
                       case "edit" :{
 
                           // console.log(data);
-                          this.search_check();
                           this.factura = 1;
                           // this.stateRoom = 'Ocupada'
+                          this.eleminar = 1;
                           this.desactivar = 0;
                           this.titleModal = 'Información';
                           this.accion = 2;
@@ -1073,8 +1210,9 @@
                           this.phone_client=  data['phone_client'];
                           this.firstSurname_client =  data['firstSurname_client'];
                           this.secondSurname_client =  data['secondSurname_client'];
-                          this.number_update_check =  this.number_update_check;
+                          this.number_facture = data['number_facture'];
                           this.name_type_room = data['name_type_room'];
+                          this.search_sales();
 
 
 
@@ -1166,12 +1304,26 @@
                       case "products" :{
                          
                         this.add = 1;
+                        this.newSale = 1;
                         this.titleModal = 'Productos';
                         this.arrayProducts = [];
                         this.name_product = '';
                         this.cantidad_product = 1;
                         this.sale_product = 0;
                         this.search = '';
+
+                        break;
+                      };
+
+                      case "reception" :{
+                         
+                        this.add = 1;
+                        this.newSale = 2;
+                        this.titleModal = 'Factura recepción';
+                        this.check = this.check;
+                        this.name_product = '';
+                        this.cantidad_product = 0;
+                        this.sale_product = 0;
 
                         break;
                       };
@@ -1199,6 +1351,21 @@
                       'option' : 3,
                       'number_certificate' :    this.number_update,
 
+          })
+            .catch(function (error) {
+                  var respuesta = error.response.data;
+                  me.arrayError = respuesta.errors;
+                  console.log(error.response.data);
+            });
+
+        },
+        updateCheck(){
+          let me=this;
+          var url = 'counter/update';
+          axios.put(url,{
+
+                      'option' : 1,
+                      'number_check' :    this.number_update_check,
 
           })
             .catch(function (error) {
@@ -1213,11 +1380,13 @@
                 let me = this;
                 me.registerCertificate();
                 me.updateCertificate();
+                me.updateCheck();
                 var url  = 'room/statebusy';
                 axios.put(url,{
 
                             'id' :    this.rooms_id,
                             'client_id' : this.client_id,
+                            'number_check' : this.number_check,
 
                 }).then(function (response) {
                     Swal.fire({
@@ -1235,6 +1404,47 @@
                         // var respuesta = error.response.data;
                         // me.arrayError = respuesta.errors;
                         // console.log(error.response.data);
+                  });
+
+            },
+
+        registerBill(){
+
+                let me = this;
+                var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
+                axios.post(url,{
+
+                            'cedula_client' :    this.cedula_client,
+                            'name_client' :    this.name_client,
+                            'firstSurname_client' :   this.firstSurname_client,
+                            'secondSurname_client'    : this.secondSurname_client,
+                            'birth_date_client'    : this.birth_date_client,
+                            'gender_client'    : this.gender_client,
+                            'age_client'    : this.age_client,
+                            'address_client'    : this.address_client,
+                            'city_client'    : this.city_client,
+                            'nationality_client'    : this.nationality_client,
+                            'state_client'    : this.state_client,
+                            'phone_client'    : this.phone_client,
+                            'email_client'    : this.email_client,
+                    
+                           
+
+                }).then(function (response) {
+                    Swal.fire({
+                      position: 'center',
+                      icon: 'success',
+                      title: 'Tu huésped fue registrado con éxito',
+                      showConfirmButton: false,
+                      timer: 1500
+                    });
+                      me.closeModal();
+                      me.search_client(me.cc_client);
+                  })
+                  .catch(function (error) {
+                        var respuesta = error.response.data;
+                        me.arrayError = respuesta.errors;
+                        console.log(error.response.data);
                   });
 
             },
@@ -1323,8 +1533,8 @@
         addProduct(product){
               console.log(product);
 
-            this.listProduct.push({name_product:product.name_product, sale_product:product.sale_product, cantidad_product:this.cantidad_product,
-                                total:product.sale_product*this.cantidad_product, url_img:product.img_product});
+            this.listProduct.push({product_id : product.id, name_product:product.name_product, sale_product:product.sale_product, cantidad_product:this.cantidad_product,
+                                total:product.sale_product*this.cantidad_product, url_img:product.img_product, number_facture : this.number_facture});
 
         },
         deleteProduct(product){
@@ -1398,6 +1608,15 @@
                   });
 
             },
+
+            selectAll(){
+                var items=document.getElementsByClassName('prueba');
+                for(var i=0; i<items.length; i++){
+                  if(items[i].type=='checkbox')
+                    items[i].checked=true;
+                    this.check=this.listSales;
+                }
+            }
 
         },
 

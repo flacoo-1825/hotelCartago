@@ -138,22 +138,29 @@ class ProductController extends Controller
          $search = $request->search;
          $valor = $request->valor;
          
-      
-            $product = Product::where('condition_product','=','1')
-                    ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
-  
- 
-        return [
-                'pagination'      => [
-                'total'              => $product->total(),
-                'current_page' => $product->currentPage(),
-                'per_page'       => $product->perPage(),
-                'last_page'      => $product->lastPage(),
-                'from'              => $product->firstItem(),
-                'to'                  => $product->lastItem(),
-            ],
+        if ($search=='') {
+            $product = [];
+            return [
+               
             'products' => $product
         ];
+        }else{
+            $product = Product::where('condition_product','=','1')
+            ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(18);
+            return [
+                    'pagination'      => [
+                    'total'              => $product->total(),
+                    'current_page' => $product->currentPage(),
+                    'per_page'       => $product->perPage(),
+                    'last_page'      => $product->lastPage(),
+                    'from'              => $product->firstItem(),
+                    'to'                  => $product->lastItem(),
+                ],
+                'products' => $product
+            ];
+        }
+       
+  
     }
 }
 

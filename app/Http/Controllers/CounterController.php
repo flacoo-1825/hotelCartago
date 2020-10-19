@@ -31,7 +31,7 @@ class CounterController extends Controller
         switch($option){
             case 1 : {
 
-                $counter->number_check = $request->number_check;
+                $counter->number_check = $request->number_check+1;
                 $counter->save();
 
             break;

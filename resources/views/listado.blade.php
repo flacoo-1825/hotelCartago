@@ -76,7 +76,7 @@
             <nav class="sidebar-nav">
                 <ul class="nav">
                     <li class="nav-item" @click="indice=0">
-                        <a class="nav-link active" href="main.html"><i class="fas fa-street-view"></i> Recepción</a>
+                        <a class="nav-link active" href="#"><i class="fas fa-street-view"></i> Recepción</a>
                     </li>
                     <li class="nav-title">
                         Administrativo

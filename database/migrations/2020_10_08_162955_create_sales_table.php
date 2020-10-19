@@ -19,9 +19,11 @@ class CreateSalesTable extends Migration
             $table->integer('checkbook_id')->unsigned()->nullable();
             $table->integer('product_id')->unsigned()->nullable();
             $table->integer('taxe_id')->unsigned()->nullable();
-            $table->string('number_bill');
+            $table->string('number_bill_sales');
             $table->enum('dian_bill',['yes','no']);
-            $table->double('total_bill', 8, 2)->nullable();
+            $table->integer('quantity_sales')->unsigned()->nullable();
+            $table->double('price_unit_sales', 8, 2)->nullable();
+            $table->double('total_sales', 8, 2)->nullable();
             $table->boolean('state_bill')->default(1);
             $table->timestamps();
 

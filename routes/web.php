@@ -92,3 +92,13 @@ Route::get('counter/searchTicket','CounterController@searchTicket')->name('count
 Route::get('counter/searchCertificate','CounterController@searchCertificate')->name('counter.searchCertificate');
 Route::get('counter/searchReception','CounterController@searchReception')->name('counter.searchReception');
 Route::get('counter/searchExt','CounterController@searchExt')->name('counter.searchExt');
+
+Route::get('sale','SaleController@index')->name('sale.index');
+Route::post('sale/register','SaleController@store')->name('companion.store');
+Route::put('sale/update','SaleController@update')->name('sale.update');
+Route::get('sale/searchCheck','SaleController@searchCheck')->name('sale.searchCheck');
+Route::get('sale/searchTicket','SaleController@searchTicket')->name('sale.searchTicket');
+Route::get('sale/searchCertificate','SaleController@searchCertificate')->name('sale.searchCertificate');
+Route::get('sale/searchReception','SaleController@searchReception')->name('sale.searchReception');
+Route::get('sale/searchExt','SaleController@searchExt')->name('sale.searchExt');
+Route::get('sale/listSales','SaleController@listSales')->name('sale.listSales');

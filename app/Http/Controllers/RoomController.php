@@ -90,6 +90,7 @@ class RoomController extends Controller
         $room =  Room::findOrFail($request->id);
         $room->state = 'Ocupada';
         $room->client_id = $request->client_id;
+        $room->number_facture = $request->number_check;
         $room->save();
     }
 
