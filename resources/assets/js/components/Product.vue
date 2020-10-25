@@ -173,7 +173,7 @@
             stock_product : '',
             start_product : '',
             sale_product : '',
-            imagenMiniatura: 'imagen.jpg',
+            imagenMiniatura: 'logo.png',
             imagen_old : '',
             ruta : 'img/products/',
             img_product : '',
@@ -341,7 +341,7 @@
                             this.nombre_img = '';
                             this.img_product = '';
                             this.ruta = 'img/products/';
-                            this.imagenMiniatura = 'imagen.jpg';
+                            this.imagenMiniatura = 'logo.png';
 
 
                         break;       

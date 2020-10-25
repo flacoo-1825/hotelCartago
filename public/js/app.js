@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 111);
+/******/ 	return __webpack_require__(__webpack_require__.s = 112);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -266,13 +266,323 @@ module.exports = function normalizeComponent (
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+  MIT License http://www.opensource.org/licenses/mit-license.php
+  Author Tobias Koppers @sokra
+  Modified by Evan You @yyx990803
+*/
+
+var hasDocument = typeof document !== 'undefined'
+
+if (typeof DEBUG !== 'undefined' && DEBUG) {
+  if (!hasDocument) {
+    throw new Error(
+    'vue-style-loader cannot be used in a non-browser environment. ' +
+    "Use { target: 'node' } in your Webpack config to indicate a server-rendering environment."
+  ) }
+}
+
+var listToStyles = __webpack_require__(150)
+
+/*
+type StyleObject = {
+  id: number;
+  parts: Array<StyleObjectPart>
+}
+
+type StyleObjectPart = {
+  css: string;
+  media: string;
+  sourceMap: ?string
+}
+*/
+
+var stylesInDom = {/*
+  [id: number]: {
+    id: number,
+    refs: number,
+    parts: Array<(obj?: StyleObjectPart) => void>
+  }
+*/}
+
+var head = hasDocument && (document.head || document.getElementsByTagName('head')[0])
+var singletonElement = null
+var singletonCounter = 0
+var isProduction = false
+var noop = function () {}
+var options = null
+var ssrIdKey = 'data-vue-ssr-id'
+
+// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+// tags it will allow on a page
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\b/.test(navigator.userAgent.toLowerCase())
+
+module.exports = function (parentId, list, _isProduction, _options) {
+  isProduction = _isProduction
+
+  options = _options || {}
+
+  var styles = listToStyles(parentId, list)
+  addStylesToDom(styles)
+
+  return function update (newList) {
+    var mayRemove = []
+    for (var i = 0; i < styles.length; i++) {
+      var item = styles[i]
+      var domStyle = stylesInDom[item.id]
+      domStyle.refs--
+      mayRemove.push(domStyle)
+    }
+    if (newList) {
+      styles = listToStyles(parentId, newList)
+      addStylesToDom(styles)
+    } else {
+      styles = []
+    }
+    for (var i = 0; i < mayRemove.length; i++) {
+      var domStyle = mayRemove[i]
+      if (domStyle.refs === 0) {
+        for (var j = 0; j < domStyle.parts.length; j++) {
+          domStyle.parts[j]()
+        }
+        delete stylesInDom[domStyle.id]
+      }
+    }
+  }
+}
+
+function addStylesToDom (styles /* Array<StyleObject> */) {
+  for (var i = 0; i < styles.length; i++) {
+    var item = styles[i]
+    var domStyle = stylesInDom[item.id]
+    if (domStyle) {
+      domStyle.refs++
+      for (var j = 0; j < domStyle.parts.length; j++) {
+        domStyle.parts[j](item.parts[j])
+      }
+      for (; j < item.parts.length; j++) {
+        domStyle.parts.push(addStyle(item.parts[j]))
+      }
+      if (domStyle.parts.length > item.parts.length) {
+        domStyle.parts.length = item.parts.length
+      }
+    } else {
+      var parts = []
+      for (var j = 0; j < item.parts.length; j++) {
+        parts.push(addStyle(item.parts[j]))
+      }
+      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
+    }
+  }
+}
+
+function createStyleElement () {
+  var styleElement = document.createElement('style')
+  styleElement.type = 'text/css'
+  head.appendChild(styleElement)
+  return styleElement
+}
+
+function addStyle (obj /* StyleObjectPart */) {
+  var update, remove
+  var styleElement = document.querySelector('style[' + ssrIdKey + '~="' + obj.id + '"]')
+
+  if (styleElement) {
+    if (isProduction) {
+      // has SSR styles and in production mode.
+      // simply do nothing.
+      return noop
+    } else {
+      // has SSR styles but in dev mode.
+      // for some reason Chrome can't handle source map in server-rendered
+      // style tags - source maps in <style> only works if the style tag is
+      // created and inserted dynamically. So we remove the server rendered
+      // styles and inject new ones.
+      styleElement.parentNode.removeChild(styleElement)
+    }
+  }
+
+  if (isOldIE) {
+    // use singleton mode for IE9.
+    var styleIndex = singletonCounter++
+    styleElement = singletonElement || (singletonElement = createStyleElement())
+    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
+    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
+  } else {
+    // use multi-style-tag mode in all other cases
+    styleElement = createStyleElement()
+    update = applyToTag.bind(null, styleElement)
+    remove = function () {
+      styleElement.parentNode.removeChild(styleElement)
+    }
+  }
+
+  update(obj)
+
+  return function updateStyle (newObj /* StyleObjectPart */) {
+    if (newObj) {
+      if (newObj.css === obj.css &&
+          newObj.media === obj.media &&
+          newObj.sourceMap === obj.sourceMap) {
+        return
+      }
+      update(obj = newObj)
+    } else {
+      remove()
+    }
+  }
+}
+
+var replaceText = (function () {
+  var textStore = []
+
+  return function (index, replacement) {
+    textStore[index] = replacement
+    return textStore.filter(Boolean).join('\n')
+  }
+})()
+
+function applyToSingletonTag (styleElement, index, remove, obj) {
+  var css = remove ? '' : obj.css
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = replaceText(index, css)
+  } else {
+    var cssNode = document.createTextNode(css)
+    var childNodes = styleElement.childNodes
+    if (childNodes[index]) styleElement.removeChild(childNodes[index])
+    if (childNodes.length) {
+      styleElement.insertBefore(cssNode, childNodes[index])
+    } else {
+      styleElement.appendChild(cssNode)
+    }
+  }
+}
+
+function applyToTag (styleElement, obj) {
+  var css = obj.css
+  var media = obj.media
+  var sourceMap = obj.sourceMap
+
+  if (media) {
+    styleElement.setAttribute('media', media)
+  }
+  if (options.ssrId) {
+    styleElement.setAttribute(ssrIdKey, obj.id)
+  }
+
+  if (sourceMap) {
+    // https://developer.chrome.com/devtools/docs/javascript-debugging
+    // this makes source maps inside style tags work properly in Chrome
+    css += '\n/*# sourceURL=' + sourceMap.sources[0] + ' */'
+    // http://stackoverflow.com/a/26603875
+    css += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + ' */'
+  }
+
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css
+  } else {
+    while (styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild)
+    }
+    styleElement.appendChild(document.createTextNode(css))
+  }
+}
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var bind = __webpack_require__(51);
-var isBuffer = __webpack_require__(120);
+var bind = __webpack_require__(52);
+var isBuffer = __webpack_require__(121);
 
 /*global toString:true*/
 
@@ -575,316 +885,6 @@ module.exports = {
 
 
 /***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-// css base code, injected by the css-loader
-module.exports = function(useSourceMap) {
-	var list = [];
-
-	// return the list of modules as css string
-	list.toString = function toString() {
-		return this.map(function (item) {
-			var content = cssWithMappingToString(item, useSourceMap);
-			if(item[2]) {
-				return "@media " + item[2] + "{" + content + "}";
-			} else {
-				return content;
-			}
-		}).join("");
-	};
-
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
-};
-
-function cssWithMappingToString(item, useSourceMap) {
-	var content = item[1] || '';
-	var cssMapping = item[3];
-	if (!cssMapping) {
-		return content;
-	}
-
-	if (useSourceMap && typeof btoa === 'function') {
-		var sourceMapping = toComment(cssMapping);
-		var sourceURLs = cssMapping.sources.map(function (source) {
-			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
-		});
-
-		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
-	}
-
-	return [content].join('\n');
-}
-
-// Adapted from convert-source-map (MIT)
-function toComment(sourceMap) {
-	// eslint-disable-next-line no-undef
-	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-
-	return '/*# ' + data + ' */';
-}
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Author Tobias Koppers @sokra
-  Modified by Evan You @yyx990803
-*/
-
-var hasDocument = typeof document !== 'undefined'
-
-if (typeof DEBUG !== 'undefined' && DEBUG) {
-  if (!hasDocument) {
-    throw new Error(
-    'vue-style-loader cannot be used in a non-browser environment. ' +
-    "Use { target: 'node' } in your Webpack config to indicate a server-rendering environment."
-  ) }
-}
-
-var listToStyles = __webpack_require__(149)
-
-/*
-type StyleObject = {
-  id: number;
-  parts: Array<StyleObjectPart>
-}
-
-type StyleObjectPart = {
-  css: string;
-  media: string;
-  sourceMap: ?string
-}
-*/
-
-var stylesInDom = {/*
-  [id: number]: {
-    id: number,
-    refs: number,
-    parts: Array<(obj?: StyleObjectPart) => void>
-  }
-*/}
-
-var head = hasDocument && (document.head || document.getElementsByTagName('head')[0])
-var singletonElement = null
-var singletonCounter = 0
-var isProduction = false
-var noop = function () {}
-var options = null
-var ssrIdKey = 'data-vue-ssr-id'
-
-// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-// tags it will allow on a page
-var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\b/.test(navigator.userAgent.toLowerCase())
-
-module.exports = function (parentId, list, _isProduction, _options) {
-  isProduction = _isProduction
-
-  options = _options || {}
-
-  var styles = listToStyles(parentId, list)
-  addStylesToDom(styles)
-
-  return function update (newList) {
-    var mayRemove = []
-    for (var i = 0; i < styles.length; i++) {
-      var item = styles[i]
-      var domStyle = stylesInDom[item.id]
-      domStyle.refs--
-      mayRemove.push(domStyle)
-    }
-    if (newList) {
-      styles = listToStyles(parentId, newList)
-      addStylesToDom(styles)
-    } else {
-      styles = []
-    }
-    for (var i = 0; i < mayRemove.length; i++) {
-      var domStyle = mayRemove[i]
-      if (domStyle.refs === 0) {
-        for (var j = 0; j < domStyle.parts.length; j++) {
-          domStyle.parts[j]()
-        }
-        delete stylesInDom[domStyle.id]
-      }
-    }
-  }
-}
-
-function addStylesToDom (styles /* Array<StyleObject> */) {
-  for (var i = 0; i < styles.length; i++) {
-    var item = styles[i]
-    var domStyle = stylesInDom[item.id]
-    if (domStyle) {
-      domStyle.refs++
-      for (var j = 0; j < domStyle.parts.length; j++) {
-        domStyle.parts[j](item.parts[j])
-      }
-      for (; j < item.parts.length; j++) {
-        domStyle.parts.push(addStyle(item.parts[j]))
-      }
-      if (domStyle.parts.length > item.parts.length) {
-        domStyle.parts.length = item.parts.length
-      }
-    } else {
-      var parts = []
-      for (var j = 0; j < item.parts.length; j++) {
-        parts.push(addStyle(item.parts[j]))
-      }
-      stylesInDom[item.id] = { id: item.id, refs: 1, parts: parts }
-    }
-  }
-}
-
-function createStyleElement () {
-  var styleElement = document.createElement('style')
-  styleElement.type = 'text/css'
-  head.appendChild(styleElement)
-  return styleElement
-}
-
-function addStyle (obj /* StyleObjectPart */) {
-  var update, remove
-  var styleElement = document.querySelector('style[' + ssrIdKey + '~="' + obj.id + '"]')
-
-  if (styleElement) {
-    if (isProduction) {
-      // has SSR styles and in production mode.
-      // simply do nothing.
-      return noop
-    } else {
-      // has SSR styles but in dev mode.
-      // for some reason Chrome can't handle source map in server-rendered
-      // style tags - source maps in <style> only works if the style tag is
-      // created and inserted dynamically. So we remove the server rendered
-      // styles and inject new ones.
-      styleElement.parentNode.removeChild(styleElement)
-    }
-  }
-
-  if (isOldIE) {
-    // use singleton mode for IE9.
-    var styleIndex = singletonCounter++
-    styleElement = singletonElement || (singletonElement = createStyleElement())
-    update = applyToSingletonTag.bind(null, styleElement, styleIndex, false)
-    remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true)
-  } else {
-    // use multi-style-tag mode in all other cases
-    styleElement = createStyleElement()
-    update = applyToTag.bind(null, styleElement)
-    remove = function () {
-      styleElement.parentNode.removeChild(styleElement)
-    }
-  }
-
-  update(obj)
-
-  return function updateStyle (newObj /* StyleObjectPart */) {
-    if (newObj) {
-      if (newObj.css === obj.css &&
-          newObj.media === obj.media &&
-          newObj.sourceMap === obj.sourceMap) {
-        return
-      }
-      update(obj = newObj)
-    } else {
-      remove()
-    }
-  }
-}
-
-var replaceText = (function () {
-  var textStore = []
-
-  return function (index, replacement) {
-    textStore[index] = replacement
-    return textStore.filter(Boolean).join('\n')
-  }
-})()
-
-function applyToSingletonTag (styleElement, index, remove, obj) {
-  var css = remove ? '' : obj.css
-
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = replaceText(index, css)
-  } else {
-    var cssNode = document.createTextNode(css)
-    var childNodes = styleElement.childNodes
-    if (childNodes[index]) styleElement.removeChild(childNodes[index])
-    if (childNodes.length) {
-      styleElement.insertBefore(cssNode, childNodes[index])
-    } else {
-      styleElement.appendChild(cssNode)
-    }
-  }
-}
-
-function applyToTag (styleElement, obj) {
-  var css = obj.css
-  var media = obj.media
-  var sourceMap = obj.sourceMap
-
-  if (media) {
-    styleElement.setAttribute('media', media)
-  }
-  if (options.ssrId) {
-    styleElement.setAttribute(ssrIdKey, obj.id)
-  }
-
-  if (sourceMap) {
-    // https://developer.chrome.com/devtools/docs/javascript-debugging
-    // this makes source maps inside style tags work properly in Chrome
-    css += '\n/*# sourceURL=' + sourceMap.sources[0] + ' */'
-    // http://stackoverflow.com/a/26603875
-    css += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + ' */'
-  }
-
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = css
-  } else {
-    while (styleElement.firstChild) {
-      styleElement.removeChild(styleElement.firstChild)
-    }
-    styleElement.appendChild(document.createTextNode(css))
-  }
-}
-
-
-/***/ }),
 /* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -963,158 +963,8 @@ function isValid(dirtyDate) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = getTimezoneOffsetInMilliseconds;
-var MILLISECONDS_IN_MINUTE = 60000;
-
-function getDateMillisecondsPart(date) {
-  return date.getTime() % MILLISECONDS_IN_MINUTE;
-}
-/**
- * Google Chrome as of 67.0.3396.87 introduced timezones with offset that includes seconds.
- * They usually appear for dates that denote time before the timezones were introduced
- * (e.g. for 'Europe/Prague' timezone the offset is GMT+00:57:44 before 1 October 1891
- * and GMT+01:00:00 after that date)
- *
- * Date#getTimezoneOffset returns the offset in minutes and would return 57 for the example above,
- * which would lead to incorrect calculations.
- *
- * This function returns the timezone offset in milliseconds that takes seconds in account.
- */
-
-
-function getTimezoneOffsetInMilliseconds(dirtyDate) {
-  var date = new Date(dirtyDate.getTime());
-  var baseTimezoneOffset = Math.ceil(date.getTimezoneOffset());
-  date.setSeconds(0, 0);
-  var hasNegativeUTCOffset = baseTimezoneOffset > 0;
-  var millisecondsPartOfTimezoneOffset = hasNegativeUTCOffset ? (MILLISECONDS_IN_MINUTE + getDateMillisecondsPart(date)) % MILLISECONDS_IN_MINUTE : getDateMillisecondsPart(date);
-  return baseTimezoneOffset * MILLISECONDS_IN_MINUTE + millisecondsPartOfTimezoneOffset;
-}
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = addDays;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name addDays
- * @category Day Helpers
- * @summary Add the specified number of days to the given date.
- *
- * @description
- * Add the specified number of days to the given date.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the date to be changed
- * @param {Number} amount - the amount of days to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
- * @returns {Date} the new date with the days added
- * @throws {TypeError} 2 arguments required
- *
- * @example
- * // Add 10 days to 1 September 2014:
- * var result = addDays(new Date(2014, 8, 1), 10)
- * //=> Thu Sep 11 2014 00:00:00
- */
-
-function addDays(dirtyDate, dirtyAmount) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
-  var date = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate);
-  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
-
-  if (isNaN(amount)) {
-    return new Date(NaN);
-  }
-
-  if (!amount) {
-    // If 0 days, no-op to avoid changing times in the hour before end of DST
-    return date;
-  }
-
-  date.setDate(date.getDate() + amount);
-  return date;
-}
-
-/***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = startOfWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
-
-
-
-/**
- * @name startOfWeek
- * @category Week Helpers
- * @summary Return the start of a week for the given date.
- *
- * @description
- * Return the start of a week for the given date.
- * The result will be in the local timezone.
- *
- * ### v2.0.0 breaking changes:
- *
- * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
- *
- * @param {Date|Number} date - the original date
- * @param {Object} [options] - an object with options.
- * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
- * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
- * @returns {Date} the start of a week
- * @throws {TypeError} 1 argument required
- * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
- *
- * @example
- * // The start of a week for 2 September 2014 11:55:00:
- * var result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
- * //=> Sun Aug 31 2014 00:00:00
- *
- * @example
- * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
- * var result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
- * //=> Mon Sep 01 2014 00:00:00
- */
-
-function startOfWeek(dirtyDate, dirtyOptions) {
-  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
-  var options = dirtyOptions || {};
-  var locale = options.locale;
-  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : Object(__WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__["a" /* default */])(localeWeekStartsOn);
-  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : Object(__WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__["a" /* default */])(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
-
-  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
-    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
-  }
-
-  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
-  var day = date.getDay();
-  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
-  date.setDate(date.getDate() - diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_date_fns__ = __webpack_require__(161);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_date_fns__ = __webpack_require__(162);
 
 
 function _defineProperty(obj, key, value) {
@@ -5410,12 +5260,248 @@ _extends(DatePicker, {
 
 
 /***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = getTimezoneOffsetInMilliseconds;
+var MILLISECONDS_IN_MINUTE = 60000;
+
+function getDateMillisecondsPart(date) {
+  return date.getTime() % MILLISECONDS_IN_MINUTE;
+}
+/**
+ * Google Chrome as of 67.0.3396.87 introduced timezones with offset that includes seconds.
+ * They usually appear for dates that denote time before the timezones were introduced
+ * (e.g. for 'Europe/Prague' timezone the offset is GMT+00:57:44 before 1 October 1891
+ * and GMT+01:00:00 after that date)
+ *
+ * Date#getTimezoneOffset returns the offset in minutes and would return 57 for the example above,
+ * which would lead to incorrect calculations.
+ *
+ * This function returns the timezone offset in milliseconds that takes seconds in account.
+ */
+
+
+function getTimezoneOffsetInMilliseconds(dirtyDate) {
+  var date = new Date(dirtyDate.getTime());
+  var baseTimezoneOffset = Math.ceil(date.getTimezoneOffset());
+  date.setSeconds(0, 0);
+  var hasNegativeUTCOffset = baseTimezoneOffset > 0;
+  var millisecondsPartOfTimezoneOffset = hasNegativeUTCOffset ? (MILLISECONDS_IN_MINUTE + getDateMillisecondsPart(date)) % MILLISECONDS_IN_MINUTE : getDateMillisecondsPart(date);
+  return baseTimezoneOffset * MILLISECONDS_IN_MINUTE + millisecondsPartOfTimezoneOffset;
+}
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = addDays;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name addDays
+ * @category Day Helpers
+ * @summary Add the specified number of days to the given date.
+ *
+ * @description
+ * Add the specified number of days to the given date.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the date to be changed
+ * @param {Number} amount - the amount of days to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
+ * @returns {Date} the new date with the days added
+ * @throws {TypeError} 2 arguments required
+ *
+ * @example
+ * // Add 10 days to 1 September 2014:
+ * var result = addDays(new Date(2014, 8, 1), 10)
+ * //=> Thu Sep 11 2014 00:00:00
+ */
+
+function addDays(dirtyDate, dirtyAmount) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(2, arguments);
+  var date = Object(__WEBPACK_IMPORTED_MODULE_1__toDate_index_js__["a" /* default */])(dirtyDate);
+  var amount = Object(__WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__["a" /* default */])(dirtyAmount);
+
+  if (isNaN(amount)) {
+    return new Date(NaN);
+  }
+
+  if (!amount) {
+    // If 0 days, no-op to avoid changing times in the hour before end of DST
+    return date;
+  }
+
+  date.setDate(date.getDate() + amount);
+  return date;
+}
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = startOfWeek;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
+
+
+
+/**
+ * @name startOfWeek
+ * @category Week Helpers
+ * @summary Return the start of a week for the given date.
+ *
+ * @description
+ * Return the start of a week for the given date.
+ * The result will be in the local timezone.
+ *
+ * ### v2.0.0 breaking changes:
+ *
+ * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+ *
+ * @param {Date|Number} date - the original date
+ * @param {Object} [options] - an object with options.
+ * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
+ * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
+ * @returns {Date} the start of a week
+ * @throws {TypeError} 1 argument required
+ * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
+ *
+ * @example
+ * // The start of a week for 2 September 2014 11:55:00:
+ * var result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0))
+ * //=> Sun Aug 31 2014 00:00:00
+ *
+ * @example
+ * // If the week starts on Monday, the start of the week for 2 September 2014 11:55:00:
+ * var result = startOfWeek(new Date(2014, 8, 2, 11, 55, 0), { weekStartsOn: 1 })
+ * //=> Mon Sep 01 2014 00:00:00
+ */
+
+function startOfWeek(dirtyDate, dirtyOptions) {
+  Object(__WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__["a" /* default */])(1, arguments);
+  var options = dirtyOptions || {};
+  var locale = options.locale;
+  var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
+  var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : Object(__WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__["a" /* default */])(localeWeekStartsOn);
+  var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : Object(__WEBPACK_IMPORTED_MODULE_1__lib_toInteger_index_js__["a" /* default */])(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+
+  if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+    throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  }
+
+  var date = Object(__WEBPACK_IMPORTED_MODULE_0__toDate_index_js__["a" /* default */])(dirtyDate);
+  var day = date.getDay();
+  var diff = (day < weekStartsOn ? 7 : 0) + day - weekStartsOn;
+  date.setDate(date.getDate() - diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/***/ }),
 /* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(299);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(300)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
+			var newContent = require("!!../css-loader/index.js!./index.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function (global, factory) {
+	 true ? module.exports = factory(__webpack_require__(8)) :
+	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
+	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
+}(this, (function (DatePicker) { 'use strict';
+
+	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
+
+	function unwrapExports (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var es = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports["default"] = void 0;
+	var locale = {
+	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
+	  firstDayOfWeek: 1,
+	  firstWeekContainsDate: 1
+	};
+	var _default = locale;
+	exports["default"] = _default;
+	module.exports = exports.default;
+	});
+
+	var es$1 = unwrapExports(es);
+
+	var lang = {
+	  formatLocale: es$1,
+	  yearFormat: 'YYYY',
+	  monthFormat: 'MMM',
+	  monthBeforeYear: true
+	};
+	DatePicker.locale('es', lang);
+
+	return lang;
+
+})));
+
+
+/***/ }),
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5452,13 +5538,13 @@ function startOfISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarDays;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfDay_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5512,7 +5598,7 @@ function differenceInCalendarDays(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5574,13 +5660,13 @@ function compareAsc(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5638,15 +5724,15 @@ function getISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__ = __webpack_require__(190);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__ = __webpack_require__(191);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__ = __webpack_require__(193);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__ = __webpack_require__(194);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__ = __webpack_require__(196);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_formatDistance_index_js__ = __webpack_require__(191);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_formatLong_index_js__ = __webpack_require__(192);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_formatRelative_index_js__ = __webpack_require__(194);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_localize_index_js__ = __webpack_require__(195);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_match_index_js__ = __webpack_require__(197);
 
 
 
@@ -5679,7 +5765,7 @@ var locale = {
 /* harmony default export */ __webpack_exports__["a"] = (locale);
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5694,92 +5780,6 @@ function addLeadingZeros(number, targetLength) {
 
   return sign + output;
 }
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(298);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(299)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../css-loader/index.js!./index.css", function() {
-			var newContent = require("!!../css-loader/index.js!./index.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-(function (global, factory) {
-	 true ? module.exports = factory(__webpack_require__(11)) :
-	typeof define === 'function' && define.amd ? define(['vue2-datepicker'], factory) :
-	(global = global || self, (global.DatePicker = global.DatePicker || {}, global.DatePicker.lang = global.DatePicker.lang || {}, global.DatePicker.lang.es = factory(global.DatePicker)));
-}(this, (function (DatePicker) { 'use strict';
-
-	DatePicker = DatePicker && DatePicker.hasOwnProperty('default') ? DatePicker['default'] : DatePicker;
-
-	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-	}
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var es = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports["default"] = void 0;
-	var locale = {
-	  months: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
-	  monthsShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
-	  weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
-	  weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
-	  weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
-	  firstDayOfWeek: 1,
-	  firstWeekContainsDate: 1
-	};
-	var _default = locale;
-	exports["default"] = _default;
-	module.exports = exports.default;
-	});
-
-	var es$1 = unwrapExports(es);
-
-	var lang = {
-	  formatLocale: es$1,
-	  yearFormat: 'YYYY',
-	  monthFormat: 'MMM',
-	  monthBeforeYear: true
-	};
-	DatePicker.locale('es', lang);
-
-	return lang;
-
-})));
-
 
 /***/ }),
 /* 20 */
@@ -5810,6 +5810,15 @@ module.exports = g;
 
 /***/ }),
 /* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var r=Array.prototype.map,t=Array.isArray,n=Object.prototype.toString;function e(r){return!!(""===r||r&&r.charCodeAt&&r.substr)}function o(r){return t?t(r):"[object Array]"===n.call(r)}function a(r){return r&&"[object Object]"===n.call(r)}function i(r,t){var n;for(n in r=r||{},t=t||{})t.hasOwnProperty(n)&&null==r[n]&&(r[n]=t[n]);return r}function s(t,n,e){if(!t)return[];if(r&&t.map===r)return t.map(n,e);var o,a=[],i=0;for(i=0,o=t.length;i<o;i++)a[i]=n.call(e,t[i],i,t);return a}var c={settings:{currency:{symbol:"$",format:"%s%v",decimal:".",thousand:",",precision:2,grouping:3},number:{precision:0,grouping:3,thousand:",",decimal:"."}}};function u(r,t){return void 0===t&&(t=0),r=Math.round(Math.abs(r)),isNaN(r)?t:r}var l=function r(t,n){if(o(t))return s(t,function(t){return r(t,n)});if("number"==typeof(t=t||0))return t;n=n||c.settings.number.decimal;var e=new RegExp("[^0-9-"+n+"]",["g"]),a=parseFloat((""+t).replace(/\((?=\d+)(.*)\)/,"-$1").replace(e,"").replace(n,"."));return isNaN(a)?0:a},p=function(r,t){t=u(t,c.settings.number.precision);var n=Number(l(r)+"e"+t),e=Math.round(n);return Number(e+"e-"+t).toFixed(t)},f={name:"currency",symbol:"",thousandsSeparator:".",fractionCount:0,fractionSeparator:",",symbolPosition:"front",symbolSpacing:!0,avoidEmptyDecimals:void 0},m={install:function(r,t){var n=function(t){null==t&&(t={});var n=i(t,f),m=n.name,y=function(r,t){if(null==r)return{};var n,e,o={},a=Object.keys(r);for(e=0;e<a.length;e++)t.indexOf(n=a[e])>=0||(o[n]=r[n]);return o}(n,["name"]),d=function(r,t,n,f,m,d,v,b){var g=i({symbol:t,thousandsSeparator:n,fractionCount:f,fractionSeparator:m,symbolPosition:d,symbolSpacing:v,avoidEmptyDecimals:b},y);"object"==typeof t&&(g=i(t,y));var h=0,S="-"===String(r).charAt(0);S&&(r=String(r).slice(1));var A,C=parseFloat(r);return isNaN(C)||(h=C),A="front"===g.symbolPosition?g.symbolSpacing?"%s %v":"%s%v":g.symbolSpacing?"%v %s":"%v%s",g.fractionCount>0&&(r=p(r,g.fractionCount)),h=function r(t,n,f,m,y,d,v){if(o(t))return s(t,function(t){return r(t,n,f,m,y,d,v)});t=l(t);var b=i(a(n)?n:{symbol:n,precision:f,thousand:m,decimal:y,format:d,avoidEmptyDecimals:v},c.settings.currency),g=function(r){var t=c.settings.currency.format;return"function"==typeof r&&(r=r()),e(r)&&r.match("%v")?{pos:r,neg:r.replace("-","").replace("%v","-%v"),zero:r}:r&&r.pos&&r.pos.match("%v")?r:e(t)?c.settings.currency.format={pos:t,neg:t.replace("%v","-%v"),zero:t}:t}(b.format);return(t>0?g.pos:t<0?g.neg:g.zero).replace("%s",b.symbol).replace("%v",function r(t,n,e,f,m){if(o(t))return s(t,function(t){return r(t,n,e,f,m)});t=l(t);var y=i(a(n)?n:{precision:n,thousand:e,decimal:f},c.settings.number),d=u(y.precision),v=t<0?"-":"",b=parseInt(p(Math.abs(t||0),d),10)+"",g=b.length>3?b.length%3:0,h="";return d&&(h=y.decimal+p(Math.abs(t),d).split(".")[1],void 0!==m&&parseInt(p(Math.abs(t||0),1),10)==t&&(h=""===m?"":y.decimal+m)),v+(g?b.substr(0,g)+y.thousand:"")+b.substr(g).replace(/(\d{3})(?=\d)/g,"$1"+y.thousand)+h}(Math.abs(t),u(b.precision),b.thousand,b.decimal,b.avoidEmptyDecimals))}(r,{format:A,symbol:g.symbol,precision:g.fractionCount,thousand:g.thousandsSeparator,decimal:g.fractionSeparator,avoidEmptyDecimals:g.avoidEmptyDecimals}),S&&(h="-"+h),h};r.filter(m,d),r.prototype["$"+m]={setConfig:function(r){y=i(r,f)},getConfig:function(){return y},format:d}};Array.isArray(t)?t.forEach(function(r){return n(r)}):n(t)}};/* harmony default export */ __webpack_exports__["a"] = (m);
+//# sourceMappingURL=vue-currency-filter.module.js.map
+
+
+/***/ }),
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5888,7 +5897,7 @@ function addMonths(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5930,13 +5939,13 @@ function addMilliseconds(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfISOWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -5978,12 +5987,12 @@ function startOfISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameDay;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6018,13 +6027,13 @@ function isSameDay(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subMilliseconds;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6059,7 +6068,7 @@ function subMilliseconds(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6098,7 +6107,7 @@ function isWeekend(dirtyDate) {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6138,13 +6147,13 @@ function startOfDay(dirtyDate) {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addWeeks;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addDays_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addDays_index_js__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6180,7 +6189,7 @@ function addWeeks(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6224,14 +6233,14 @@ function differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInMonths;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarMonths_index_js__ = __webpack_require__(65);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarMonths_index_js__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6276,12 +6285,12 @@ function differenceInMonths(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInSeconds;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6319,7 +6328,7 @@ function differenceInSeconds(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6360,7 +6369,7 @@ function startOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6383,7 +6392,7 @@ function startOfUTCISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6417,14 +6426,14 @@ function startOfUTCWeek(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
-var utils = __webpack_require__(4);
-var normalizeHeaderName = __webpack_require__(122);
+var utils = __webpack_require__(6);
+var normalizeHeaderName = __webpack_require__(123);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -6440,10 +6449,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(53);
+    adapter = __webpack_require__(54);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(53);
+    adapter = __webpack_require__(54);
   }
   return adapter;
 }
@@ -6518,10 +6527,10 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(53)))
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6558,13 +6567,13 @@ function isSunday(dirtyDate) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addHours;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6600,13 +6609,13 @@ function addHours(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addQuarters;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6642,13 +6651,13 @@ function addQuarters(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInDays;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarDays_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarDays_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6739,7 +6748,7 @@ function differenceInDays(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6782,14 +6791,14 @@ function startOfQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = eachWeekendOfInterval;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachDayOfInterval_index_js__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSunday_index_js__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isWeekend_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachDayOfInterval_index_js__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSunday_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isWeekend_index_js__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -6842,7 +6851,7 @@ function eachWeekendOfInterval(interval) {
 }
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6884,7 +6893,7 @@ function endOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6926,7 +6935,7 @@ function startOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6966,14 +6975,14 @@ function endOfDay(dirtyDate) {
 }
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -7014,13 +7023,13 @@ function getUTCWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getWeekYear_index_js__ = __webpack_require__(95);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getWeekYear_index_js__ = __webpack_require__(96);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -7087,13 +7096,13 @@ function startOfWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subDays;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addDays_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addDays_index_js__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -7128,12 +7137,12 @@ function subDays(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -7180,14 +7189,14 @@ function isSameWeek(dirtyDateLeft, dirtyDateRight, dirtyOptions) {
 }
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = setMonth;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getDaysInMonth_index_js__ = __webpack_require__(89);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getDaysInMonth_index_js__ = __webpack_require__(90);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -7233,7 +7242,7 @@ function setMonth(dirtyDate, dirtyMonth) {
 }
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -9858,7 +9867,7 @@ Popper.Defaults = Defaults;
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(20)))
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9876,7 +9885,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -10066,18 +10075,18 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
-var settle = __webpack_require__(123);
-var buildURL = __webpack_require__(125);
-var parseHeaders = __webpack_require__(126);
-var isURLSameOrigin = __webpack_require__(127);
-var createError = __webpack_require__(54);
+var utils = __webpack_require__(6);
+var settle = __webpack_require__(124);
+var buildURL = __webpack_require__(126);
+var parseHeaders = __webpack_require__(127);
+var isURLSameOrigin = __webpack_require__(128);
+var createError = __webpack_require__(55);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -10157,7 +10166,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(128);
+      var cookies = __webpack_require__(129);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -10235,13 +10244,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(124);
+var enhanceError = __webpack_require__(125);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -10260,7 +10269,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10272,7 +10281,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10298,17 +10307,17 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addBusinessDays;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isWeekend_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isWeekend_index_js__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__isSunday_index_js__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSaturday_index_js__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__isSunday_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSaturday_index_js__ = __webpack_require__(59);
 
 
 
@@ -10368,7 +10377,7 @@ function addBusinessDays(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10405,14 +10414,14 @@ function isSaturday(dirtyDate) {
 }
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addISOWeekYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setISOWeekYear_index_js__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getISOWeekYear_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setISOWeekYear_index_js__ = __webpack_require__(61);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10455,15 +10464,15 @@ function addISOWeekYears(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = setISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10515,13 +10524,13 @@ function setISOWeekYear(dirtyDate, dirtyISOWeekYear) {
 }
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addMinutes;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10557,13 +10566,13 @@ function addMinutes(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addSeconds;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMilliseconds_index_js__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10598,13 +10607,13 @@ function addSeconds(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = addYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10639,12 +10648,12 @@ function addYears(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarISOWeekYears;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10687,7 +10696,7 @@ function differenceInCalendarISOWeekYears(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10732,7 +10741,7 @@ function differenceInCalendarMonths(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10771,13 +10780,13 @@ function getQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInCalendarWeeks;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10836,7 +10845,7 @@ function differenceInCalendarWeeks(dirtyDateLeft, dirtyDateRight, dirtyOptions) 
 }
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10879,12 +10888,12 @@ function differenceInCalendarYears(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInHours;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10922,13 +10931,13 @@ function differenceInHours(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subISOWeekYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addISOWeekYears_index_js__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addISOWeekYears_index_js__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -10970,12 +10979,12 @@ function subISOWeekYears(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInMinutes;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMilliseconds_index_js__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11021,14 +11030,14 @@ function differenceInMinutes(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = differenceInYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarYears_index_js__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarYears_index_js__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11076,7 +11085,7 @@ function differenceInYears(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11174,7 +11183,7 @@ function eachDayOfInterval(dirtyInterval, options) {
 }
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11216,7 +11225,7 @@ function endOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11280,19 +11289,19 @@ function endOfWeek(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = format;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__locale_en_US_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__subMilliseconds_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_formatters_index_js__ = __webpack_require__(199);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_format_longFormatters_index_js__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_protectedTokens_index_js__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_formatters_index_js__ = __webpack_require__(200);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_format_longFormatters_index_js__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_protectedTokens_index_js__ = __webpack_require__(83);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -11728,11 +11737,11 @@ function cleanEscapedString(input) {
 }
 
 /***/ }),
-/* 77 */
+/* 78 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addLeadingZeros_index_js__ = __webpack_require__(19);
 
 /*
  * |     | Unit                           |     | Unit                           |
@@ -11817,14 +11826,14 @@ var formatters = {
 /* harmony default export */ __webpack_exports__["a"] = (formatters);
 
 /***/ }),
-/* 78 */
+/* 79 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCISOWeekYear_index_js__ = __webpack_require__(201);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCISOWeekYear_index_js__ = __webpack_require__(202);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11844,13 +11853,13 @@ function getUTCISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 79 */
+/* 80 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCISOWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11880,14 +11889,14 @@ function getUTCISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 80 */
+/* 81 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getUTCWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCWeek_index_js__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeekYear_index_js__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCWeek_index_js__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeekYear_index_js__ = __webpack_require__(203);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -11907,7 +11916,7 @@ function getUTCWeek(dirtyDate, options) {
 }
 
 /***/ }),
-/* 81 */
+/* 82 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12009,7 +12018,7 @@ var longFormatters = {
 /* harmony default export */ __webpack_exports__["a"] = (longFormatters);
 
 /***/ }),
-/* 82 */
+/* 83 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12037,18 +12046,18 @@ function throwProtectedError(token, format, input) {
 }
 
 /***/ }),
-/* 83 */
+/* 84 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = formatDistance;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInMonths_index_js__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInSeconds_index_js__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__locale_en_US_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInMonths_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInSeconds_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__locale_en_US_index_js__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_cloneObject_index_js__ = __webpack_require__(84);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_cloneObject_index_js__ = __webpack_require__(85);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -12265,19 +12274,19 @@ function formatDistance(dirtyDate, dirtyBaseDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 84 */
+/* 85 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = cloneObject;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assign_index_js__ = __webpack_require__(85);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__assign_index_js__ = __webpack_require__(86);
 
 function cloneObject(dirtyObject) {
   return Object(__WEBPACK_IMPORTED_MODULE_0__assign_index_js__["a" /* default */])({}, dirtyObject);
 }
 
 /***/ }),
-/* 85 */
+/* 86 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12299,17 +12308,17 @@ function assign(target, dirtyObject) {
 }
 
 /***/ }),
-/* 86 */
+/* 87 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = formatDistanceStrict;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compareAsc_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compareAsc_index_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInSeconds_index_js__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_cloneObject_index_js__ = __webpack_require__(84);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__locale_en_US_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInSeconds_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_cloneObject_index_js__ = __webpack_require__(85);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__locale_en_US_index_js__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -12560,7 +12569,7 @@ function formatDistanceStrict(dirtyDate, dirtyBaseDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 87 */
+/* 88 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12599,7 +12608,7 @@ function getDate(dirtyDate) {
 }
 
 /***/ }),
-/* 88 */
+/* 89 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12638,7 +12647,7 @@ function getDay(dirtyDate) {
 }
 
 /***/ }),
-/* 89 */
+/* 90 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12681,7 +12690,7 @@ function getDaysInMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 90 */
+/* 91 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12720,7 +12729,7 @@ function isLeapYear(dirtyDate) {
 }
 
 /***/ }),
-/* 91 */
+/* 92 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12767,14 +12776,14 @@ function getISODay(dirtyDate) {
 }
 
 /***/ }),
-/* 92 */
+/* 93 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfISOWeekYear_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -12816,7 +12825,7 @@ function getISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 93 */
+/* 94 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12855,13 +12864,13 @@ function getTime(dirtyDate) {
 }
 
 /***/ }),
-/* 94 */
+/* 95 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -12923,12 +12932,12 @@ function getWeek(dirtyDate, options) {
 }
 
 /***/ }),
-/* 95 */
+/* 96 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -13013,7 +13022,7 @@ function getWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 96 */
+/* 97 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13055,13 +13064,13 @@ function lastDayOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 97 */
+/* 98 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = sub;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subDays_index_js__ = __webpack_require__(47);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMonths_index_js__ = __webpack_require__(98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__subDays_index_js__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMonths_index_js__ = __webpack_require__(99);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_toInteger_index_js__ = __webpack_require__(2);
@@ -13133,13 +13142,13 @@ function sub(dirtyDate, duration) {
 }
 
 /***/ }),
-/* 98 */
+/* 99 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subMonths;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13174,20 +13183,20 @@ function subMonths(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 99 */
+/* 100 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subMilliseconds_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_assign_index_js__ = __webpack_require__(85);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_longFormatters_index_js__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_protectedTokens_index_js__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_assign_index_js__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_format_longFormatters_index_js__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_protectedTokens_index_js__ = __webpack_require__(83);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lib_parsers_index_js__ = __webpack_require__(238);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lib_parsers_index_js__ = __webpack_require__(239);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13741,12 +13750,12 @@ function cleanEscapedString(input) {
 }
 
 /***/ }),
-/* 100 */
+/* 101 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameHour;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfHour_index_js__ = __webpack_require__(101);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfHour_index_js__ = __webpack_require__(102);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13781,7 +13790,7 @@ function isSameHour(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 101 */
+/* 102 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13821,12 +13830,12 @@ function startOfHour(dirtyDate) {
 }
 
 /***/ }),
-/* 102 */
+/* 103 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameISOWeek;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13863,12 +13872,12 @@ function isSameISOWeek(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 103 */
+/* 104 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameMinute;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfMinute_index_js__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfMinute_index_js__ = __webpack_require__(105);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -13907,7 +13916,7 @@ function isSameMinute(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13947,7 +13956,7 @@ function startOfMinute(dirtyDate) {
 }
 
 /***/ }),
-/* 105 */
+/* 106 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13987,12 +13996,12 @@ function isSameMonth(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 106 */
+/* 107 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameQuarter;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfQuarter_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfQuarter_index_js__ = __webpack_require__(41);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -14027,12 +14036,12 @@ function isSameQuarter(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 107 */
+/* 108 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = isSameSecond;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfSecond_index_js__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfSecond_index_js__ = __webpack_require__(109);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -14071,7 +14080,7 @@ function isSameSecond(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 108 */
+/* 109 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -14111,7 +14120,7 @@ function startOfSecond(dirtyDate) {
 }
 
 /***/ }),
-/* 109 */
+/* 110 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -14151,7 +14160,7 @@ function isSameYear(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 110 */
+/* 111 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -14215,15 +14224,15 @@ function lastDayOfWeek(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 111 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(112);
-module.exports = __webpack_require__(343);
+__webpack_require__(113);
+module.exports = __webpack_require__(358);
 
 
 /***/ }),
-/* 112 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -14233,9 +14242,9 @@ module.exports = __webpack_require__(343);
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-__webpack_require__(113);
+__webpack_require__(114);
 
-window.Vue = __webpack_require__(136);
+window.Vue = __webpack_require__(137);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -14243,19 +14252,22 @@ window.Vue = __webpack_require__(136);
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-Vue.component('example-component', __webpack_require__(140));
-Vue.component('principal', __webpack_require__(143));
-Vue.component('type-room', __webpack_require__(146));
-Vue.component('room', __webpack_require__(152));
-Vue.component('client', __webpack_require__(157));
-Vue.component('links', __webpack_require__(302));
-Vue.component('worker', __webpack_require__(307));
-Vue.component('category', __webpack_require__(312));
-Vue.component('provider', __webpack_require__(317));
-Vue.component('product', __webpack_require__(322));
-Vue.component('reception', __webpack_require__(327));
+Vue.component('example-component', __webpack_require__(141));
+Vue.component('principal', __webpack_require__(144));
+Vue.component('type-room', __webpack_require__(147));
+Vue.component('room', __webpack_require__(153));
+Vue.component('client', __webpack_require__(158));
+Vue.component('links', __webpack_require__(303));
+Vue.component('worker', __webpack_require__(308));
+Vue.component('category', __webpack_require__(313));
+Vue.component('provider', __webpack_require__(318));
+Vue.component('product', __webpack_require__(323));
+Vue.component('reception', __webpack_require__(328));
 Vue.component('certificate', __webpack_require__(333));
 Vue.component('companion', __webpack_require__(338));
+Vue.component('checkbook', __webpack_require__(343));
+Vue.component('ticket', __webpack_require__(348));
+Vue.component('additional', __webpack_require__(353));
 
 var app = new Vue({
   el: '#app',
@@ -14265,12 +14277,12 @@ var app = new Vue({
 });
 
 /***/ }),
-/* 113 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-window._ = __webpack_require__(114);
-window.Popper = __webpack_require__(50).default;
+window._ = __webpack_require__(115);
+window.Popper = __webpack_require__(51).default;
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support
@@ -14281,7 +14293,7 @@ window.Popper = __webpack_require__(50).default;
 try {
   // window.$ = window.jQuery = require('jquery');
 
-  __webpack_require__(116);
+  __webpack_require__(117);
 } catch (e) {}
 
 /**
@@ -14290,7 +14302,7 @@ try {
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
 
-window.axios = __webpack_require__(118);
+window.axios = __webpack_require__(119);
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
@@ -14326,7 +14338,7 @@ if (token) {
 // });
 
 /***/ }),
-/* 114 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, module) {var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -31492,10 +31504,10 @@ if (token) {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(115)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(116)(module)))
 
 /***/ }),
-/* 115 */
+/* 116 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -31523,7 +31535,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 116 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -31532,7 +31544,7 @@ module.exports = function(module) {
   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
   */
 (function (global, factory) {
-   true ? factory(exports, __webpack_require__(117), __webpack_require__(50)) :
+   true ? factory(exports, __webpack_require__(118), __webpack_require__(51)) :
   typeof define === 'function' && define.amd ? define(['exports', 'jquery', 'popper.js'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.bootstrap = {}, global.jQuery, global.Popper));
 }(this, (function (exports, $, Popper) { 'use strict';
@@ -35939,7 +35951,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 117 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -46818,22 +46830,22 @@ return jQuery;
 
 
 /***/ }),
-/* 118 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(119);
+module.exports = __webpack_require__(120);
 
 /***/ }),
-/* 119 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
-var bind = __webpack_require__(51);
-var Axios = __webpack_require__(121);
-var defaults = __webpack_require__(35);
+var utils = __webpack_require__(6);
+var bind = __webpack_require__(52);
+var Axios = __webpack_require__(122);
+var defaults = __webpack_require__(36);
 
 /**
  * Create an instance of Axios
@@ -46866,15 +46878,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(56);
-axios.CancelToken = __webpack_require__(134);
-axios.isCancel = __webpack_require__(55);
+axios.Cancel = __webpack_require__(57);
+axios.CancelToken = __webpack_require__(135);
+axios.isCancel = __webpack_require__(56);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(135);
+axios.spread = __webpack_require__(136);
 
 module.exports = axios;
 
@@ -46883,7 +46895,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 120 */
+/* 121 */
 /***/ (function(module, exports) {
 
 /*!
@@ -46900,16 +46912,16 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 121 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var defaults = __webpack_require__(35);
-var utils = __webpack_require__(4);
-var InterceptorManager = __webpack_require__(129);
-var dispatchRequest = __webpack_require__(130);
+var defaults = __webpack_require__(36);
+var utils = __webpack_require__(6);
+var InterceptorManager = __webpack_require__(130);
+var dispatchRequest = __webpack_require__(131);
 
 /**
  * Create a new instance of Axios
@@ -46986,13 +46998,13 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 122 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -47005,13 +47017,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 123 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(54);
+var createError = __webpack_require__(55);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -47038,7 +47050,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 124 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47066,13 +47078,13 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 125 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -47139,13 +47151,13 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 126 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -47199,13 +47211,13 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 127 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -47274,13 +47286,13 @@ module.exports = (
 
 
 /***/ }),
-/* 128 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -47334,13 +47346,13 @@ module.exports = (
 
 
 /***/ }),
-/* 129 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 function InterceptorManager() {
   this.handlers = [];
@@ -47393,18 +47405,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 130 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
-var transformData = __webpack_require__(131);
-var isCancel = __webpack_require__(55);
-var defaults = __webpack_require__(35);
-var isAbsoluteURL = __webpack_require__(132);
-var combineURLs = __webpack_require__(133);
+var utils = __webpack_require__(6);
+var transformData = __webpack_require__(132);
+var isCancel = __webpack_require__(56);
+var defaults = __webpack_require__(36);
+var isAbsoluteURL = __webpack_require__(133);
+var combineURLs = __webpack_require__(134);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -47486,13 +47498,13 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 131 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(4);
+var utils = __webpack_require__(6);
 
 /**
  * Transform the data for a request or a response
@@ -47513,7 +47525,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 132 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47534,7 +47546,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 133 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47555,13 +47567,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 134 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(56);
+var Cancel = __webpack_require__(57);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -47619,7 +47631,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 135 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47653,18 +47665,18 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 136 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if (false) {
   module.exports = require('./vue.common.prod.js')
 } else {
-  module.exports = __webpack_require__(137)
+  module.exports = __webpack_require__(138)
 }
 
 
 /***/ }),
-/* 137 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -59628,10 +59640,10 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(138).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(139).setImmediate))
 
 /***/ }),
-/* 138 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var scope = (typeof global !== "undefined" && global) ||
@@ -59687,7 +59699,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(139);
+__webpack_require__(140);
 // On some exotic environments, it's not clear which object `setimmediate` was
 // able to install onto.  Search each possibility in the same order as the
 // `setimmediate` library.
@@ -59701,7 +59713,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)))
 
 /***/ }),
-/* 139 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -59891,18 +59903,18 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(52)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20), __webpack_require__(53)))
 
 /***/ }),
-/* 140 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(141)
+var __vue_script__ = __webpack_require__(142)
 /* template */
-var __vue_template__ = __webpack_require__(142)
+var __vue_template__ = __webpack_require__(143)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -59942,7 +59954,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 141 */
+/* 142 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59971,7 +59983,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 142 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -60014,15 +60026,15 @@ if (false) {
 }
 
 /***/ }),
-/* 143 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(144)
+var __vue_script__ = __webpack_require__(145)
 /* template */
-var __vue_template__ = __webpack_require__(145)
+var __vue_template__ = __webpack_require__(146)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -60061,7 +60073,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 144 */
+/* 145 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -60273,7 +60285,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 145 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -60832,19 +60844,19 @@ if (false) {
 }
 
 /***/ }),
-/* 146 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(147)
+  __webpack_require__(148)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(150)
+var __vue_script__ = __webpack_require__(151)
 /* template */
-var __vue_template__ = __webpack_require__(151)
+var __vue_template__ = __webpack_require__(152)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -60883,17 +60895,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 147 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(148);
+var content = __webpack_require__(149);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("647c5e6b", content, false, {});
+var update = __webpack_require__(5)("647c5e6b", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -60909,10 +60921,10 @@ if(false) {
 }
 
 /***/ }),
-/* 148 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -60923,7 +60935,7 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 149 */
+/* 150 */
 /***/ (function(module, exports) {
 
 /**
@@ -60956,7 +60968,7 @@ module.exports = function listToStyles (parentId, list) {
 
 
 /***/ }),
-/* 150 */
+/* 151 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -61360,7 +61372,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 });
 
 /***/ }),
-/* 151 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -61912,19 +61924,19 @@ if (false) {
 }
 
 /***/ }),
-/* 152 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(153)
+  __webpack_require__(154)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(155)
+var __vue_script__ = __webpack_require__(156)
 /* template */
-var __vue_template__ = __webpack_require__(156)
+var __vue_template__ = __webpack_require__(157)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -61963,17 +61975,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 153 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(154);
+var content = __webpack_require__(155);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("4909e19e", content, false, {});
+var update = __webpack_require__(5)("4909e19e", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -61989,10 +62001,10 @@ if(false) {
 }
 
 /***/ }),
-/* 154 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -62003,11 +62015,12 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 155 */
+/* 156 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue_currency_filter__ = __webpack_require__(21);
 //
 //
 //
@@ -62165,12 +62178,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 
+
+Vue.use(__WEBPACK_IMPORTED_MODULE_0_vue_currency_filter__["a" /* default */], {
+  symbol: '$', // El símbolo, por ejemplo €
+  thousandsSeparator: ',', // Separador de miles
+  fractionCount: 2, // ¿Cuántos decimales mostrar?
+  fractionSeparator: '.', // Separador de decimales
+  symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+  symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+});
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       name_room: 'Clase de habitación',
       type_id: 0,
+      habitacion_id: 0,
       type_room: 0,
       number: '',
       price: '',
@@ -62299,7 +62322,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.desactivar = 0;
                   this.titleModal = 'Editar habitación';
                   this.accion = 2;
-                  this.habitacion_id = data['rooms_id'];
+                  this.habitacion_id = data['id'];
                   this.type_room = data['type_room_id'];
                   this.number = data['number'];
                   this.price = data['price'];
@@ -62319,7 +62342,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.desactivar = 1;
                   this.titleModal = 'Información completa de la habitación';
                   this.accion = 3;
-                  this.habitacion_id = data['rooms_id'];
+                  this.habitacion_id = data['id'];
                   this.type_room = data['type_room'];
                   this.number = data['number'];
                   this.price = data['price'];
@@ -62423,7 +62446,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
           axios.put('room/activo', {
             'id': id
           }).then(function (response) {
-            me.listRoom(1, '', 'valor');
+            me.listRooms(1, '', 'valor');
           }).catch(function (error) {
             console.log(error);
           });
@@ -62486,7 +62509,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 156 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -63170,7 +63193,7 @@ var render = function() {
                           staticClass: "btn btn-success  text-white",
                           on: {
                             click: function($event) {
-                              return _vm.updateroom()
+                              return _vm.updateRoom()
                             }
                           }
                         },
@@ -63244,19 +63267,19 @@ if (false) {
 }
 
 /***/ }),
-/* 157 */
+/* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(158)
+  __webpack_require__(159)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(160)
+var __vue_script__ = __webpack_require__(161)
 /* template */
-var __vue_template__ = __webpack_require__(301)
+var __vue_template__ = __webpack_require__(302)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -63295,17 +63318,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 158 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(159);
+var content = __webpack_require__(160);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("9f4c16aa", content, false, {});
+var update = __webpack_require__(5)("9f4c16aa", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -63321,10 +63344,10 @@ if(false) {
 }
 
 /***/ }),
-/* 159 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -63335,15 +63358,15 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 160 */
+/* 161 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -63796,403 +63819,403 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 161 */
+/* 162 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__add_index_js__ = __webpack_require__(162);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__add_index_js__ = __webpack_require__(163);
 /* unused harmony reexport add */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addBusinessDays_index_js__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addBusinessDays_index_js__ = __webpack_require__(58);
 /* unused harmony reexport addBusinessDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__addDays_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__addDays_index_js__ = __webpack_require__(10);
 /* unused harmony reexport addDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__addHours_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__addHours_index_js__ = __webpack_require__(38);
 /* unused harmony reexport addHours */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addISOWeekYears_index_js__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addISOWeekYears_index_js__ = __webpack_require__(60);
 /* unused harmony reexport addISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__addMilliseconds_index_js__ = __webpack_require__(23);
 /* unused harmony reexport addMilliseconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addMinutes_index_js__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addMinutes_index_js__ = __webpack_require__(62);
 /* unused harmony reexport addMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__ = __webpack_require__(22);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_7__addMonths_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__addQuarters_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__addQuarters_index_js__ = __webpack_require__(39);
 /* unused harmony reexport addQuarters */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__addSeconds_index_js__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__addSeconds_index_js__ = __webpack_require__(63);
 /* unused harmony reexport addSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__addWeeks_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__addWeeks_index_js__ = __webpack_require__(29);
 /* unused harmony reexport addWeeks */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__addYears_index_js__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__addYears_index_js__ = __webpack_require__(64);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_11__addYears_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__areIntervalsOverlapping_index_js__ = __webpack_require__(163);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__areIntervalsOverlapping_index_js__ = __webpack_require__(164);
 /* unused harmony reexport areIntervalsOverlapping */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__closestIndexTo_index_js__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__closestIndexTo_index_js__ = __webpack_require__(165);
 /* unused harmony reexport closestIndexTo */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__closestTo_index_js__ = __webpack_require__(165);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__closestTo_index_js__ = __webpack_require__(166);
 /* unused harmony reexport closestTo */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__compareAsc_index_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__compareAsc_index_js__ = __webpack_require__(16);
 /* unused harmony reexport compareAsc */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__compareDesc_index_js__ = __webpack_require__(166);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__compareDesc_index_js__ = __webpack_require__(167);
 /* unused harmony reexport compareDesc */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__differenceInBusinessDays_index_js__ = __webpack_require__(167);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__differenceInBusinessDays_index_js__ = __webpack_require__(168);
 /* unused harmony reexport differenceInBusinessDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__differenceInCalendarDays_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__differenceInCalendarDays_index_js__ = __webpack_require__(15);
 /* unused harmony reexport differenceInCalendarDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(64);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(65);
 /* unused harmony reexport differenceInCalendarISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__differenceInCalendarISOWeeks_index_js__ = __webpack_require__(168);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__differenceInCalendarISOWeeks_index_js__ = __webpack_require__(169);
 /* unused harmony reexport differenceInCalendarISOWeeks */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__differenceInCalendarMonths_index_js__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__differenceInCalendarMonths_index_js__ = __webpack_require__(66);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_21__differenceInCalendarMonths_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__differenceInCalendarQuarters_index_js__ = __webpack_require__(169);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__differenceInCalendarQuarters_index_js__ = __webpack_require__(170);
 /* unused harmony reexport differenceInCalendarQuarters */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__differenceInCalendarWeeks_index_js__ = __webpack_require__(67);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__differenceInCalendarWeeks_index_js__ = __webpack_require__(68);
 /* unused harmony reexport differenceInCalendarWeeks */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__differenceInCalendarYears_index_js__ = __webpack_require__(68);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__differenceInCalendarYears_index_js__ = __webpack_require__(69);
 /* unused harmony reexport differenceInCalendarYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__differenceInDays_index_js__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__differenceInDays_index_js__ = __webpack_require__(40);
 /* unused harmony reexport differenceInDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__differenceInHours_index_js__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__differenceInHours_index_js__ = __webpack_require__(70);
 /* unused harmony reexport differenceInHours */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__differenceInISOWeekYears_index_js__ = __webpack_require__(170);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__differenceInISOWeekYears_index_js__ = __webpack_require__(171);
 /* unused harmony reexport differenceInISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__differenceInMilliseconds_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__differenceInMilliseconds_index_js__ = __webpack_require__(30);
 /* unused harmony reexport differenceInMilliseconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__differenceInMinutes_index_js__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__differenceInMinutes_index_js__ = __webpack_require__(72);
 /* unused harmony reexport differenceInMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__differenceInMonths_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__differenceInMonths_index_js__ = __webpack_require__(31);
 /* unused harmony reexport differenceInMonths */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__differenceInQuarters_index_js__ = __webpack_require__(171);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__differenceInQuarters_index_js__ = __webpack_require__(172);
 /* unused harmony reexport differenceInQuarters */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__differenceInSeconds_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__differenceInSeconds_index_js__ = __webpack_require__(32);
 /* unused harmony reexport differenceInSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33__differenceInWeeks_index_js__ = __webpack_require__(172);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33__differenceInWeeks_index_js__ = __webpack_require__(173);
 /* unused harmony reexport differenceInWeeks */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34__differenceInYears_index_js__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34__differenceInYears_index_js__ = __webpack_require__(73);
 /* unused harmony reexport differenceInYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35__eachDayOfInterval_index_js__ = __webpack_require__(73);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35__eachDayOfInterval_index_js__ = __webpack_require__(74);
 /* unused harmony reexport eachDayOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36__eachHourOfInterval_index_js__ = __webpack_require__(173);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36__eachHourOfInterval_index_js__ = __webpack_require__(174);
 /* unused harmony reexport eachHourOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37__eachMonthOfInterval_index_js__ = __webpack_require__(174);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37__eachMonthOfInterval_index_js__ = __webpack_require__(175);
 /* unused harmony reexport eachMonthOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_38__eachQuarterOfInterval_index_js__ = __webpack_require__(175);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_38__eachQuarterOfInterval_index_js__ = __webpack_require__(176);
 /* unused harmony reexport eachQuarterOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__eachWeekOfInterval_index_js__ = __webpack_require__(176);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__eachWeekOfInterval_index_js__ = __webpack_require__(177);
 /* unused harmony reexport eachWeekOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__eachWeekendOfInterval_index_js__ = __webpack_require__(42);
 /* unused harmony reexport eachWeekendOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_41__eachWeekendOfMonth_index_js__ = __webpack_require__(177);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_41__eachWeekendOfMonth_index_js__ = __webpack_require__(178);
 /* unused harmony reexport eachWeekendOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_42__eachWeekendOfYear_index_js__ = __webpack_require__(178);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_42__eachWeekendOfYear_index_js__ = __webpack_require__(179);
 /* unused harmony reexport eachWeekendOfYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_43__eachYearOfInterval_index_js__ = __webpack_require__(179);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_43__eachYearOfInterval_index_js__ = __webpack_require__(180);
 /* unused harmony reexport eachYearOfInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44__endOfDay_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_44__endOfDay_index_js__ = __webpack_require__(45);
 /* unused harmony reexport endOfDay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_45__endOfDecade_index_js__ = __webpack_require__(180);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_45__endOfDecade_index_js__ = __webpack_require__(181);
 /* unused harmony reexport endOfDecade */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_46__endOfHour_index_js__ = __webpack_require__(181);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_46__endOfHour_index_js__ = __webpack_require__(182);
 /* unused harmony reexport endOfHour */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_47__endOfISOWeek_index_js__ = __webpack_require__(182);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_47__endOfISOWeek_index_js__ = __webpack_require__(183);
 /* unused harmony reexport endOfISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_48__endOfISOWeekYear_index_js__ = __webpack_require__(183);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_48__endOfISOWeekYear_index_js__ = __webpack_require__(184);
 /* unused harmony reexport endOfISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_49__endOfMinute_index_js__ = __webpack_require__(184);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_49__endOfMinute_index_js__ = __webpack_require__(185);
 /* unused harmony reexport endOfMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_50__endOfMonth_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_50__endOfMonth_index_js__ = __webpack_require__(43);
 /* unused harmony reexport endOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_51__endOfQuarter_index_js__ = __webpack_require__(185);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_51__endOfQuarter_index_js__ = __webpack_require__(186);
 /* unused harmony reexport endOfQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_52__endOfSecond_index_js__ = __webpack_require__(186);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_52__endOfSecond_index_js__ = __webpack_require__(187);
 /* unused harmony reexport endOfSecond */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_53__endOfToday_index_js__ = __webpack_require__(187);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_53__endOfToday_index_js__ = __webpack_require__(188);
 /* unused harmony reexport endOfToday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_54__endOfTomorrow_index_js__ = __webpack_require__(188);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_54__endOfTomorrow_index_js__ = __webpack_require__(189);
 /* unused harmony reexport endOfTomorrow */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_55__endOfWeek_index_js__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_55__endOfWeek_index_js__ = __webpack_require__(76);
 /* unused harmony reexport endOfWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_56__endOfYear_index_js__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_56__endOfYear_index_js__ = __webpack_require__(75);
 /* unused harmony reexport endOfYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_57__endOfYesterday_index_js__ = __webpack_require__(189);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_57__endOfYesterday_index_js__ = __webpack_require__(190);
 /* unused harmony reexport endOfYesterday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_58__format_index_js__ = __webpack_require__(76);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_58__format_index_js__ = __webpack_require__(77);
 /* unused harmony reexport format */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_59__formatDistance_index_js__ = __webpack_require__(83);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_59__formatDistance_index_js__ = __webpack_require__(84);
 /* unused harmony reexport formatDistance */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_60__formatDistanceStrict_index_js__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_60__formatDistanceStrict_index_js__ = __webpack_require__(87);
 /* unused harmony reexport formatDistanceStrict */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_61__formatDistanceToNow_index_js__ = __webpack_require__(203);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_61__formatDistanceToNow_index_js__ = __webpack_require__(204);
 /* unused harmony reexport formatDistanceToNow */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_62__formatDistanceToNowStrict_index_js__ = __webpack_require__(204);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_62__formatDistanceToNowStrict_index_js__ = __webpack_require__(205);
 /* unused harmony reexport formatDistanceToNowStrict */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_63__formatDuration_index_js__ = __webpack_require__(205);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_63__formatDuration_index_js__ = __webpack_require__(206);
 /* unused harmony reexport formatDuration */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_64__formatISO_index_js__ = __webpack_require__(206);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_64__formatISO_index_js__ = __webpack_require__(207);
 /* unused harmony reexport formatISO */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_65__formatISO9075_index_js__ = __webpack_require__(207);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_65__formatISO9075_index_js__ = __webpack_require__(208);
 /* unused harmony reexport formatISO9075 */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_66__formatISODuration_index_js__ = __webpack_require__(208);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_66__formatISODuration_index_js__ = __webpack_require__(209);
 /* unused harmony reexport formatISODuration */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_67__formatRFC3339_index_js__ = __webpack_require__(209);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_67__formatRFC3339_index_js__ = __webpack_require__(210);
 /* unused harmony reexport formatRFC3339 */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_68__formatRFC7231_index_js__ = __webpack_require__(210);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_68__formatRFC7231_index_js__ = __webpack_require__(211);
 /* unused harmony reexport formatRFC7231 */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_69__formatRelative_index_js__ = __webpack_require__(211);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_69__formatRelative_index_js__ = __webpack_require__(212);
 /* unused harmony reexport formatRelative */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_70__fromUnixTime_index_js__ = __webpack_require__(212);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_70__fromUnixTime_index_js__ = __webpack_require__(213);
 /* unused harmony reexport fromUnixTime */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_71__getDate_index_js__ = __webpack_require__(87);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_71__getDate_index_js__ = __webpack_require__(88);
 /* unused harmony reexport getDate */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_72__getDay_index_js__ = __webpack_require__(88);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_72__getDay_index_js__ = __webpack_require__(89);
 /* unused harmony reexport getDay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_73__getDayOfYear_index_js__ = __webpack_require__(213);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_73__getDayOfYear_index_js__ = __webpack_require__(214);
 /* unused harmony reexport getDayOfYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_74__getDaysInMonth_index_js__ = __webpack_require__(89);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_74__getDaysInMonth_index_js__ = __webpack_require__(90);
 /* unused harmony reexport getDaysInMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_75__getDaysInYear_index_js__ = __webpack_require__(214);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_75__getDaysInYear_index_js__ = __webpack_require__(215);
 /* unused harmony reexport getDaysInYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_76__getDecade_index_js__ = __webpack_require__(215);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_76__getDecade_index_js__ = __webpack_require__(216);
 /* unused harmony reexport getDecade */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_77__getHours_index_js__ = __webpack_require__(216);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_77__getHours_index_js__ = __webpack_require__(217);
 /* unused harmony reexport getHours */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_78__getISODay_index_js__ = __webpack_require__(91);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_78__getISODay_index_js__ = __webpack_require__(92);
 /* unused harmony reexport getISODay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_79__getISOWeek_index_js__ = __webpack_require__(92);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_79__getISOWeek_index_js__ = __webpack_require__(93);
 /* unused harmony reexport getISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_80__getISOWeekYear_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_80__getISOWeekYear_index_js__ = __webpack_require__(17);
 /* unused harmony reexport getISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_81__getISOWeeksInYear_index_js__ = __webpack_require__(217);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_81__getISOWeeksInYear_index_js__ = __webpack_require__(218);
 /* unused harmony reexport getISOWeeksInYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_82__getMilliseconds_index_js__ = __webpack_require__(218);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_82__getMilliseconds_index_js__ = __webpack_require__(219);
 /* unused harmony reexport getMilliseconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_83__getMinutes_index_js__ = __webpack_require__(219);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_83__getMinutes_index_js__ = __webpack_require__(220);
 /* unused harmony reexport getMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_84__getMonth_index_js__ = __webpack_require__(220);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_84__getMonth_index_js__ = __webpack_require__(221);
 /* unused harmony reexport getMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_85__getOverlappingDaysInIntervals_index_js__ = __webpack_require__(221);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_85__getOverlappingDaysInIntervals_index_js__ = __webpack_require__(222);
 /* unused harmony reexport getOverlappingDaysInIntervals */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_86__getQuarter_index_js__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_86__getQuarter_index_js__ = __webpack_require__(67);
 /* unused harmony reexport getQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_87__getSeconds_index_js__ = __webpack_require__(222);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_87__getSeconds_index_js__ = __webpack_require__(223);
 /* unused harmony reexport getSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_88__getTime_index_js__ = __webpack_require__(93);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_88__getTime_index_js__ = __webpack_require__(94);
 /* unused harmony reexport getTime */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_89__getUnixTime_index_js__ = __webpack_require__(223);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_89__getUnixTime_index_js__ = __webpack_require__(224);
 /* unused harmony reexport getUnixTime */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_90__getWeek_index_js__ = __webpack_require__(94);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_90__getWeek_index_js__ = __webpack_require__(95);
 /* unused harmony reexport getWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_91__getWeekOfMonth_index_js__ = __webpack_require__(224);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_91__getWeekOfMonth_index_js__ = __webpack_require__(225);
 /* unused harmony reexport getWeekOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_92__getWeekYear_index_js__ = __webpack_require__(95);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_92__getWeekYear_index_js__ = __webpack_require__(96);
 /* unused harmony reexport getWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_93__getWeeksInMonth_index_js__ = __webpack_require__(225);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_93__getWeeksInMonth_index_js__ = __webpack_require__(226);
 /* unused harmony reexport getWeeksInMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_94__getYear_index_js__ = __webpack_require__(226);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_94__getYear_index_js__ = __webpack_require__(227);
 /* unused harmony reexport getYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_95__intervalToDuration_index_js__ = __webpack_require__(227);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_95__intervalToDuration_index_js__ = __webpack_require__(228);
 /* unused harmony reexport intervalToDuration */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_96__isAfter_index_js__ = __webpack_require__(228);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_96__isAfter_index_js__ = __webpack_require__(229);
 /* unused harmony reexport isAfter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_97__isBefore_index_js__ = __webpack_require__(229);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_97__isBefore_index_js__ = __webpack_require__(230);
 /* unused harmony reexport isBefore */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_98__isDate_index_js__ = __webpack_require__(230);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_98__isDate_index_js__ = __webpack_require__(231);
 /* unused harmony reexport isDate */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_99__isEqual_index_js__ = __webpack_require__(231);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_99__isEqual_index_js__ = __webpack_require__(232);
 /* unused harmony reexport isEqual */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_100__isExists_index_js__ = __webpack_require__(232);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_100__isExists_index_js__ = __webpack_require__(233);
 /* unused harmony reexport isExists */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_101__isFirstDayOfMonth_index_js__ = __webpack_require__(233);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_101__isFirstDayOfMonth_index_js__ = __webpack_require__(234);
 /* unused harmony reexport isFirstDayOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_102__isFriday_index_js__ = __webpack_require__(234);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_102__isFriday_index_js__ = __webpack_require__(235);
 /* unused harmony reexport isFriday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_103__isFuture_index_js__ = __webpack_require__(235);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_103__isFuture_index_js__ = __webpack_require__(236);
 /* unused harmony reexport isFuture */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_104__isLastDayOfMonth_index_js__ = __webpack_require__(236);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_104__isLastDayOfMonth_index_js__ = __webpack_require__(237);
 /* unused harmony reexport isLastDayOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_105__isLeapYear_index_js__ = __webpack_require__(90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_105__isLeapYear_index_js__ = __webpack_require__(91);
 /* unused harmony reexport isLeapYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_106__isMatch_index_js__ = __webpack_require__(237);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_106__isMatch_index_js__ = __webpack_require__(238);
 /* unused harmony reexport isMatch */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_107__isMonday_index_js__ = __webpack_require__(243);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_107__isMonday_index_js__ = __webpack_require__(244);
 /* unused harmony reexport isMonday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_108__isPast_index_js__ = __webpack_require__(244);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_108__isPast_index_js__ = __webpack_require__(245);
 /* unused harmony reexport isPast */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_109__isSameDay_index_js__ = __webpack_require__(25);
 /* unused harmony reexport isSameDay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_110__isSameHour_index_js__ = __webpack_require__(100);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_110__isSameHour_index_js__ = __webpack_require__(101);
 /* unused harmony reexport isSameHour */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_111__isSameISOWeek_index_js__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_111__isSameISOWeek_index_js__ = __webpack_require__(103);
 /* unused harmony reexport isSameISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_112__isSameISOWeekYear_index_js__ = __webpack_require__(245);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_112__isSameISOWeekYear_index_js__ = __webpack_require__(246);
 /* unused harmony reexport isSameISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_113__isSameMinute_index_js__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_113__isSameMinute_index_js__ = __webpack_require__(104);
 /* unused harmony reexport isSameMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_114__isSameMonth_index_js__ = __webpack_require__(105);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_114__isSameMonth_index_js__ = __webpack_require__(106);
 /* unused harmony reexport isSameMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_115__isSameQuarter_index_js__ = __webpack_require__(106);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_115__isSameQuarter_index_js__ = __webpack_require__(107);
 /* unused harmony reexport isSameQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_116__isSameSecond_index_js__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_116__isSameSecond_index_js__ = __webpack_require__(108);
 /* unused harmony reexport isSameSecond */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_117__isSameWeek_index_js__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_117__isSameWeek_index_js__ = __webpack_require__(49);
 /* unused harmony reexport isSameWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_118__isSameYear_index_js__ = __webpack_require__(109);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_118__isSameYear_index_js__ = __webpack_require__(110);
 /* unused harmony reexport isSameYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_119__isSaturday_index_js__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_119__isSaturday_index_js__ = __webpack_require__(59);
 /* unused harmony reexport isSaturday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_120__isSunday_index_js__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_120__isSunday_index_js__ = __webpack_require__(37);
 /* unused harmony reexport isSunday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_121__isThisHour_index_js__ = __webpack_require__(246);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_121__isThisHour_index_js__ = __webpack_require__(247);
 /* unused harmony reexport isThisHour */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_122__isThisISOWeek_index_js__ = __webpack_require__(247);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_122__isThisISOWeek_index_js__ = __webpack_require__(248);
 /* unused harmony reexport isThisISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_123__isThisMinute_index_js__ = __webpack_require__(248);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_123__isThisMinute_index_js__ = __webpack_require__(249);
 /* unused harmony reexport isThisMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_124__isThisMonth_index_js__ = __webpack_require__(249);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_124__isThisMonth_index_js__ = __webpack_require__(250);
 /* unused harmony reexport isThisMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_125__isThisQuarter_index_js__ = __webpack_require__(250);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_125__isThisQuarter_index_js__ = __webpack_require__(251);
 /* unused harmony reexport isThisQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_126__isThisSecond_index_js__ = __webpack_require__(251);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_126__isThisSecond_index_js__ = __webpack_require__(252);
 /* unused harmony reexport isThisSecond */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_127__isThisWeek_index_js__ = __webpack_require__(252);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_127__isThisWeek_index_js__ = __webpack_require__(253);
 /* unused harmony reexport isThisWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_128__isThisYear_index_js__ = __webpack_require__(253);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_128__isThisYear_index_js__ = __webpack_require__(254);
 /* unused harmony reexport isThisYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_129__isThursday_index_js__ = __webpack_require__(254);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_129__isThursday_index_js__ = __webpack_require__(255);
 /* unused harmony reexport isThursday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_130__isToday_index_js__ = __webpack_require__(255);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_130__isToday_index_js__ = __webpack_require__(256);
 /* unused harmony reexport isToday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_131__isTomorrow_index_js__ = __webpack_require__(256);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_131__isTomorrow_index_js__ = __webpack_require__(257);
 /* unused harmony reexport isTomorrow */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_132__isTuesday_index_js__ = __webpack_require__(257);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_132__isTuesday_index_js__ = __webpack_require__(258);
 /* unused harmony reexport isTuesday */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_133__isValid_index_js__ = __webpack_require__(7);
 /* unused harmony reexport isValid */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_134__isWednesday_index_js__ = __webpack_require__(258);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_134__isWednesday_index_js__ = __webpack_require__(259);
 /* unused harmony reexport isWednesday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_135__isWeekend_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_135__isWeekend_index_js__ = __webpack_require__(27);
 /* unused harmony reexport isWeekend */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_136__isWithinInterval_index_js__ = __webpack_require__(259);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_136__isWithinInterval_index_js__ = __webpack_require__(260);
 /* unused harmony reexport isWithinInterval */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_137__isYesterday_index_js__ = __webpack_require__(260);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_137__isYesterday_index_js__ = __webpack_require__(261);
 /* unused harmony reexport isYesterday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_138__lastDayOfDecade_index_js__ = __webpack_require__(261);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_138__lastDayOfDecade_index_js__ = __webpack_require__(262);
 /* unused harmony reexport lastDayOfDecade */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_139__lastDayOfISOWeek_index_js__ = __webpack_require__(262);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_139__lastDayOfISOWeek_index_js__ = __webpack_require__(263);
 /* unused harmony reexport lastDayOfISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_140__lastDayOfISOWeekYear_index_js__ = __webpack_require__(263);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_140__lastDayOfISOWeekYear_index_js__ = __webpack_require__(264);
 /* unused harmony reexport lastDayOfISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_141__lastDayOfMonth_index_js__ = __webpack_require__(96);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_141__lastDayOfMonth_index_js__ = __webpack_require__(97);
 /* unused harmony reexport lastDayOfMonth */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_142__lastDayOfQuarter_index_js__ = __webpack_require__(264);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_142__lastDayOfQuarter_index_js__ = __webpack_require__(265);
 /* unused harmony reexport lastDayOfQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_143__lastDayOfWeek_index_js__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_143__lastDayOfWeek_index_js__ = __webpack_require__(111);
 /* unused harmony reexport lastDayOfWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_144__lastDayOfYear_index_js__ = __webpack_require__(265);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_144__lastDayOfYear_index_js__ = __webpack_require__(266);
 /* unused harmony reexport lastDayOfYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_145__lightFormat_index_js__ = __webpack_require__(266);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_145__lightFormat_index_js__ = __webpack_require__(267);
 /* unused harmony reexport lightFormat */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_146__max_index_js__ = __webpack_require__(267);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_146__max_index_js__ = __webpack_require__(268);
 /* unused harmony reexport max */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_147__min_index_js__ = __webpack_require__(268);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_147__min_index_js__ = __webpack_require__(269);
 /* unused harmony reexport min */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_148__parse_index_js__ = __webpack_require__(99);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_148__parse_index_js__ = __webpack_require__(100);
 /* unused harmony reexport parse */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_149__parseISO_index_js__ = __webpack_require__(269);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_149__parseISO_index_js__ = __webpack_require__(270);
 /* unused harmony reexport parseISO */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_150__parseJSON_index_js__ = __webpack_require__(270);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_150__parseJSON_index_js__ = __webpack_require__(271);
 /* unused harmony reexport parseJSON */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_151__roundToNearestMinutes_index_js__ = __webpack_require__(271);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_151__roundToNearestMinutes_index_js__ = __webpack_require__(272);
 /* unused harmony reexport roundToNearestMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_152__set_index_js__ = __webpack_require__(272);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_152__set_index_js__ = __webpack_require__(273);
 /* unused harmony reexport set */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_153__setDate_index_js__ = __webpack_require__(273);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_153__setDate_index_js__ = __webpack_require__(274);
 /* unused harmony reexport setDate */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_154__setDay_index_js__ = __webpack_require__(274);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_154__setDay_index_js__ = __webpack_require__(275);
 /* unused harmony reexport setDay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_155__setDayOfYear_index_js__ = __webpack_require__(275);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_155__setDayOfYear_index_js__ = __webpack_require__(276);
 /* unused harmony reexport setDayOfYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_156__setHours_index_js__ = __webpack_require__(276);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_156__setHours_index_js__ = __webpack_require__(277);
 /* unused harmony reexport setHours */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_157__setISODay_index_js__ = __webpack_require__(277);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_157__setISODay_index_js__ = __webpack_require__(278);
 /* unused harmony reexport setISODay */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_158__setISOWeek_index_js__ = __webpack_require__(278);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_158__setISOWeek_index_js__ = __webpack_require__(279);
 /* unused harmony reexport setISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_159__setISOWeekYear_index_js__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_159__setISOWeekYear_index_js__ = __webpack_require__(61);
 /* unused harmony reexport setISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_160__setMilliseconds_index_js__ = __webpack_require__(279);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_160__setMilliseconds_index_js__ = __webpack_require__(280);
 /* unused harmony reexport setMilliseconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_161__setMinutes_index_js__ = __webpack_require__(280);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_161__setMinutes_index_js__ = __webpack_require__(281);
 /* unused harmony reexport setMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__ = __webpack_require__(50);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_162__setMonth_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_163__setQuarter_index_js__ = __webpack_require__(281);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_163__setQuarter_index_js__ = __webpack_require__(282);
 /* unused harmony reexport setQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_164__setSeconds_index_js__ = __webpack_require__(282);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_164__setSeconds_index_js__ = __webpack_require__(283);
 /* unused harmony reexport setSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_165__setWeek_index_js__ = __webpack_require__(283);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_165__setWeek_index_js__ = __webpack_require__(284);
 /* unused harmony reexport setWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_166__setWeekYear_index_js__ = __webpack_require__(284);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_166__setWeekYear_index_js__ = __webpack_require__(285);
 /* unused harmony reexport setWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_167__setYear_index_js__ = __webpack_require__(285);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_167__setYear_index_js__ = __webpack_require__(286);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return __WEBPACK_IMPORTED_MODULE_167__setYear_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__ = __webpack_require__(28);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return __WEBPACK_IMPORTED_MODULE_168__startOfDay_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_169__startOfDecade_index_js__ = __webpack_require__(286);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_169__startOfDecade_index_js__ = __webpack_require__(287);
 /* unused harmony reexport startOfDecade */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_170__startOfHour_index_js__ = __webpack_require__(101);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_170__startOfHour_index_js__ = __webpack_require__(102);
 /* unused harmony reexport startOfHour */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_171__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_171__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* unused harmony reexport startOfISOWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_172__startOfISOWeekYear_index_js__ = __webpack_require__(24);
 /* unused harmony reexport startOfISOWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_173__startOfMinute_index_js__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_173__startOfMinute_index_js__ = __webpack_require__(105);
 /* unused harmony reexport startOfMinute */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__ = __webpack_require__(33);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return __WEBPACK_IMPORTED_MODULE_174__startOfMonth_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_175__startOfQuarter_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_175__startOfQuarter_index_js__ = __webpack_require__(41);
 /* unused harmony reexport startOfQuarter */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_176__startOfSecond_index_js__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_176__startOfSecond_index_js__ = __webpack_require__(109);
 /* unused harmony reexport startOfSecond */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_177__startOfToday_index_js__ = __webpack_require__(287);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_177__startOfToday_index_js__ = __webpack_require__(288);
 /* unused harmony reexport startOfToday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_178__startOfTomorrow_index_js__ = __webpack_require__(288);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_178__startOfTomorrow_index_js__ = __webpack_require__(289);
 /* unused harmony reexport startOfTomorrow */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_179__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_179__startOfWeek_index_js__ = __webpack_require__(11);
 /* unused harmony reexport startOfWeek */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_180__startOfWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_180__startOfWeekYear_index_js__ = __webpack_require__(47);
 /* unused harmony reexport startOfWeekYear */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__ = __webpack_require__(44);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return __WEBPACK_IMPORTED_MODULE_181__startOfYear_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_182__startOfYesterday_index_js__ = __webpack_require__(289);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_182__startOfYesterday_index_js__ = __webpack_require__(290);
 /* unused harmony reexport startOfYesterday */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_183__sub_index_js__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_183__sub_index_js__ = __webpack_require__(98);
 /* unused harmony reexport sub */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_184__subBusinessDays_index_js__ = __webpack_require__(290);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_184__subBusinessDays_index_js__ = __webpack_require__(291);
 /* unused harmony reexport subBusinessDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_185__subDays_index_js__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_185__subDays_index_js__ = __webpack_require__(48);
 /* unused harmony reexport subDays */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_186__subHours_index_js__ = __webpack_require__(291);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_186__subHours_index_js__ = __webpack_require__(292);
 /* unused harmony reexport subHours */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_187__subISOWeekYears_index_js__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_187__subISOWeekYears_index_js__ = __webpack_require__(71);
 /* unused harmony reexport subISOWeekYears */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_188__subMilliseconds_index_js__ = __webpack_require__(26);
 /* unused harmony reexport subMilliseconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_189__subMinutes_index_js__ = __webpack_require__(292);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_189__subMinutes_index_js__ = __webpack_require__(293);
 /* unused harmony reexport subMinutes */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_190__subMonths_index_js__ = __webpack_require__(98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_190__subMonths_index_js__ = __webpack_require__(99);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return __WEBPACK_IMPORTED_MODULE_190__subMonths_index_js__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_191__subQuarters_index_js__ = __webpack_require__(293);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_191__subQuarters_index_js__ = __webpack_require__(294);
 /* unused harmony reexport subQuarters */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_192__subSeconds_index_js__ = __webpack_require__(294);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_192__subSeconds_index_js__ = __webpack_require__(295);
 /* unused harmony reexport subSeconds */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_193__subWeeks_index_js__ = __webpack_require__(295);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_193__subWeeks_index_js__ = __webpack_require__(296);
 /* unused harmony reexport subWeeks */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_194__subYears_index_js__ = __webpack_require__(296);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_194__subYears_index_js__ = __webpack_require__(297);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() { return __WEBPACK_IMPORTED_MODULE_194__subYears_index_js__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_195__toDate_index_js__ = __webpack_require__(1);
 /* unused harmony reexport toDate */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_196__constants_index_js__ = __webpack_require__(297);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_196__constants_index_js__ = __webpack_require__(298);
 /* unused harmony namespace reexport */
 // This file is generated automatically by `scripts/build/indices.js`. Please, don't change it.
 
@@ -64394,13 +64417,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /***/ }),
-/* 162 */
+/* 163 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMonths_index_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_toInteger_index_js__ = __webpack_require__(2);
@@ -64473,7 +64496,7 @@ function add(dirtyDate, duration) {
 }
 
 /***/ }),
-/* 163 */
+/* 164 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -64594,7 +64617,7 @@ function areIntervalsOverlapping(dirtyIntervalLeft, dirtyIntervalRight) {
 }
 
 /***/ }),
-/* 164 */
+/* 165 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -64676,7 +64699,7 @@ function closestIndexTo(dirtyDateToCompare, dirtyDatesArray) {
 }
 
 /***/ }),
-/* 165 */
+/* 166 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -64756,7 +64779,7 @@ function closestTo(dirtyDateToCompare, dirtyDatesArray) {
 }
 
 /***/ }),
-/* 166 */
+/* 167 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -64818,17 +64841,17 @@ function compareDesc(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 167 */
+/* 168 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isWeekend_index_js__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isWeekend_index_js__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInCalendarDays_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__addDays_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__isSameDay_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -64886,13 +64909,13 @@ function differenceInBusinessDays(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 168 */
+/* 169 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -64939,12 +64962,12 @@ function differenceInCalendarISOWeeks(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 169 */
+/* 170 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getQuarter_index_js__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getQuarter_index_js__ = __webpack_require__(67);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -64986,15 +65009,15 @@ function differenceInCalendarQuarters(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 170 */
+/* 171 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(64);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subISOWeekYears_index_js__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInCalendarISOWeekYears_index_js__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compareAsc_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subISOWeekYears_index_js__ = __webpack_require__(71);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65051,12 +65074,12 @@ function differenceInISOWeekYears(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 171 */
+/* 172 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMonths_index_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInMonths_index_js__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65090,12 +65113,12 @@ function differenceInQuarters(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 172 */
+/* 173 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInDays_index_js__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInDays_index_js__ = __webpack_require__(40);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65150,12 +65173,12 @@ function differenceInWeeks(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 173 */
+/* 174 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addHours_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addHours_index_js__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65219,7 +65242,7 @@ function eachHourOfInterval(dirtyInterval, options) {
 }
 
 /***/ }),
-/* 174 */
+/* 175 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65284,13 +65307,13 @@ function eachMonthOfInterval(dirtyInterval) {
 }
 
 /***/ }),
-/* 175 */
+/* 176 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addQuarters_index_js__ = __webpack_require__(38);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfQuarter_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addQuarters_index_js__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfQuarter_index_js__ = __webpack_require__(41);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65350,13 +65373,13 @@ function eachQuarterOfInterval(dirtyInterval) {
 }
 
 /***/ }),
-/* 176 */
+/* 177 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addWeeks_index_js__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeek_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addWeeks_index_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeek_index_js__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -65434,14 +65457,14 @@ function eachWeekOfInterval(dirtyInterval, options) {
 }
 
 /***/ }),
-/* 177 */
+/* 178 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfMonth_index_js__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfMonth_index_js__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65487,14 +65510,14 @@ function eachWeekendOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 178 */
+/* 179 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(41);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(43);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfYear_index_js__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__eachWeekendOfInterval_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfYear_index_js__ = __webpack_require__(75);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65537,7 +65560,7 @@ function eachWeekendOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 179 */
+/* 180 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65599,7 +65622,7 @@ function eachYearOfInterval(dirtyInterval) {
 }
 
 /***/ }),
-/* 180 */
+/* 181 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65644,7 +65667,7 @@ function endOfDecade(dirtyDate) {
 }
 
 /***/ }),
-/* 181 */
+/* 182 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65684,12 +65707,12 @@ function endOfHour(dirtyDate) {
 }
 
 /***/ }),
-/* 182 */
+/* 183 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfWeek_index_js__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfWeek_index_js__ = __webpack_require__(76);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65726,13 +65749,13 @@ function endOfISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 183 */
+/* 184 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -65780,7 +65803,7 @@ function endOfISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 184 */
+/* 185 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65820,7 +65843,7 @@ function endOfMinute(dirtyDate) {
 }
 
 /***/ }),
-/* 185 */
+/* 186 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65863,7 +65886,7 @@ function endOfQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 186 */
+/* 187 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65903,12 +65926,12 @@ function endOfSecond(dirtyDate) {
 }
 
 /***/ }),
-/* 187 */
+/* 188 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfDay_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__endOfDay_index_js__ = __webpack_require__(45);
 
 /**
  * @name endOfToday
@@ -65939,7 +65962,7 @@ function endOfToday() {
 }
 
 /***/ }),
-/* 188 */
+/* 189 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -65979,7 +66002,7 @@ function endOfTomorrow() {
 }
 
 /***/ }),
-/* 189 */
+/* 190 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66019,7 +66042,7 @@ function endOfYesterday() {
 }
 
 /***/ }),
-/* 190 */
+/* 191 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66111,11 +66134,11 @@ function formatDistance(token, count, options) {
 }
 
 /***/ }),
-/* 191 */
+/* 192 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildFormatLongFn_index_js__ = __webpack_require__(192);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildFormatLongFn_index_js__ = __webpack_require__(193);
 
 var dateFormats = {
   full: 'EEEE, MMMM do, y',
@@ -66152,7 +66175,7 @@ var formatLong = {
 /* harmony default export */ __webpack_exports__["a"] = (formatLong);
 
 /***/ }),
-/* 192 */
+/* 193 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66167,7 +66190,7 @@ function buildFormatLongFn(args) {
 }
 
 /***/ }),
-/* 193 */
+/* 194 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66185,11 +66208,11 @@ function formatRelative(token, _date, _baseDate, _options) {
 }
 
 /***/ }),
-/* 194 */
+/* 195 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildLocalizeFn_index_js__ = __webpack_require__(195);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildLocalizeFn_index_js__ = __webpack_require__(196);
 
 var eraValues = {
   narrow: ['B', 'A'],
@@ -66341,7 +66364,7 @@ var localize = {
 /* harmony default export */ __webpack_exports__["a"] = (localize);
 
 /***/ }),
-/* 195 */
+/* 196 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66370,12 +66393,12 @@ function buildLocalizeFn(args) {
 }
 
 /***/ }),
-/* 196 */
+/* 197 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildMatchPatternFn_index_js__ = __webpack_require__(197);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_buildMatchFn_index_js__ = __webpack_require__(198);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_buildMatchPatternFn_index_js__ = __webpack_require__(198);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_buildMatchFn_index_js__ = __webpack_require__(199);
 
 
 var matchOrdinalNumberPattern = /^(\d+)(th|st|nd|rd)?/i;
@@ -66476,7 +66499,7 @@ var match = {
 /* harmony default export */ __webpack_exports__["a"] = (match);
 
 /***/ }),
-/* 197 */
+/* 198 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66508,7 +66531,7 @@ function buildMatchPatternFn(args) {
 }
 
 /***/ }),
-/* 198 */
+/* 199 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66565,17 +66588,17 @@ function findIndex(array, predicate) {
 }
 
 /***/ }),
-/* 199 */
+/* 200 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lightFormatters_index_js__ = __webpack_require__(77);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_getUTCDayOfYear_index_js__ = __webpack_require__(200);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getUTCISOWeek_index_js__ = __webpack_require__(78);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_getUTCISOWeekYear_index_js__ = __webpack_require__(79);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_getUTCWeek_index_js__ = __webpack_require__(80);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getUTCWeekYear_index_js__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lightFormatters_index_js__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_getUTCDayOfYear_index_js__ = __webpack_require__(201);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getUTCISOWeek_index_js__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_getUTCISOWeekYear_index_js__ = __webpack_require__(80);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_getUTCWeek_index_js__ = __webpack_require__(81);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getUTCWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__addLeadingZeros_index_js__ = __webpack_require__(19);
 
 
 
@@ -67434,7 +67457,7 @@ function formatTimezone(offset, dirtyDelimiter) {
 /* harmony default export */ __webpack_exports__["a"] = (formatters);
 
 /***/ }),
-/* 200 */
+/* 201 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -67458,13 +67481,13 @@ function getUTCDayOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 201 */
+/* 202 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfUTCISOWeekYear;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getUTCISOWeekYear_index_js__ = __webpack_require__(79);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getUTCISOWeekYear_index_js__ = __webpack_require__(80);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfUTCISOWeek_index_js__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67482,14 +67505,14 @@ function startOfUTCISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 202 */
+/* 203 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = startOfUTCWeekYear;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getUTCWeekYear_index_js__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getUTCWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfUTCWeek_index_js__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67513,12 +67536,12 @@ function startOfUTCWeekYear(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 203 */
+/* 204 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__formatDistance_index_js__ = __webpack_require__(83);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__formatDistance_index_js__ = __webpack_require__(84);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67634,12 +67657,12 @@ function formatDistanceToNow(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 204 */
+/* 205 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__formatDistanceStrict_index_js__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__formatDistanceStrict_index_js__ = __webpack_require__(87);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -67724,12 +67747,12 @@ function formatDistanceToNowStrict(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 205 */
+/* 206 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locale_en_US_index_js__ = __webpack_require__(18);
 
 var defaultFormat = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
 /**
@@ -67818,14 +67841,14 @@ function formatDuration(duration) {
 }
 
 /***/ }),
-/* 206 */
+/* 207 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(19);
 
 
 
@@ -67935,14 +67958,14 @@ function formatISO(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 207 */
+/* 208 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(19);
 
 
 
@@ -68035,7 +68058,7 @@ function formatISO9075(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 208 */
+/* 209 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68088,14 +68111,14 @@ function formatISODuration(duration) {
 }
 
 /***/ }),
-/* 209 */
+/* 210 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 
 
@@ -68183,14 +68206,14 @@ function formatRFC3339(dirtyDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 210 */
+/* 211 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_addLeadingZeros_index_js__ = __webpack_require__(19);
 
 
 
@@ -68239,17 +68262,17 @@ function formatRFC7231(dirtyDate) {
 }
 
 /***/ }),
-/* 211 */
+/* 212 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__format_index_js__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__format_index_js__ = __webpack_require__(77);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__locale_en_US_index_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__subMilliseconds_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68344,7 +68367,7 @@ function formatRelative(dirtyDate, dirtyBaseDate, dirtyOptions) {
 }
 
 /***/ }),
-/* 212 */
+/* 213 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68384,14 +68407,14 @@ function fromUnixTime(dirtyUnixTime) {
 }
 
 /***/ }),
-/* 213 */
+/* 214 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(43);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInCalendarDays_index_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfYear_index_js__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInCalendarDays_index_js__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68428,13 +68451,13 @@ function getDayOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 214 */
+/* 215 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isLeapYear_index_js__ = __webpack_require__(90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isLeapYear_index_js__ = __webpack_require__(91);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68473,7 +68496,7 @@ function getDaysInYear(dirtyDate) {
 }
 
 /***/ }),
-/* 215 */
+/* 216 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68513,7 +68536,7 @@ function getDecade(dirtyDate) {
 }
 
 /***/ }),
-/* 216 */
+/* 217 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68552,13 +68575,13 @@ function getHours(dirtyDate) {
 }
 
 /***/ }),
-/* 217 */
+/* 218 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68600,7 +68623,7 @@ function getISOWeeksInYear(dirtyDate) {
 }
 
 /***/ }),
-/* 218 */
+/* 219 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68639,7 +68662,7 @@ function getMilliseconds(dirtyDate) {
 }
 
 /***/ }),
-/* 219 */
+/* 220 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68678,7 +68701,7 @@ function getMinutes(dirtyDate) {
 }
 
 /***/ }),
-/* 220 */
+/* 221 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68717,7 +68740,7 @@ function getMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 221 */
+/* 222 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68819,7 +68842,7 @@ function getOverlappingDaysInIntervals(dirtyIntervalLeft, dirtyIntervalRight) {
 }
 
 /***/ }),
-/* 222 */
+/* 223 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68858,12 +68881,12 @@ function getSeconds(dirtyDate) {
 }
 
 /***/ }),
-/* 223 */
+/* 224 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getTime_index_js__ = __webpack_require__(93);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getTime_index_js__ = __webpack_require__(94);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -68895,14 +68918,14 @@ function getUnixTime(dirtyDate) {
 }
 
 /***/ }),
-/* 224 */
+/* 225 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getDate_index_js__ = __webpack_require__(87);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getDay_index_js__ = __webpack_require__(88);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getDate_index_js__ = __webpack_require__(88);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getDay_index_js__ = __webpack_require__(89);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -68974,14 +68997,14 @@ function getWeekOfMonth(date, dirtyOptions) {
 }
 
 /***/ }),
-/* 225 */
+/* 226 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarWeeks_index_js__ = __webpack_require__(67);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lastDayOfMonth_index_js__ = __webpack_require__(96);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarWeeks_index_js__ = __webpack_require__(68);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lastDayOfMonth_index_js__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__startOfMonth_index_js__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -69025,7 +69048,7 @@ function getWeeksInMonth(date, options) {
 }
 
 /***/ }),
-/* 226 */
+/* 227 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69064,22 +69087,22 @@ function getYear(dirtyDate) {
 }
 
 /***/ }),
-/* 227 */
+/* 228 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInYears_index_js__ = __webpack_require__(72);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(39);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__differenceInHours_index_js__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__differenceInMinutes_index_js__ = __webpack_require__(71);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__differenceInSeconds_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compareAsc_index_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__differenceInYears_index_js__ = __webpack_require__(73);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__differenceInMonths_index_js__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__differenceInDays_index_js__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__differenceInHours_index_js__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__differenceInMinutes_index_js__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__differenceInSeconds_index_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lib_requiredArgs_index_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__sub_index_js__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__sub_index_js__ = __webpack_require__(98);
 
 
 
@@ -69164,7 +69187,7 @@ function intervalToDuration(_ref) {
 }
 
 /***/ }),
-/* 228 */
+/* 229 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69204,7 +69227,7 @@ function isAfter(dirtyDate, dirtyDateToCompare) {
 }
 
 /***/ }),
-/* 229 */
+/* 230 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69244,7 +69267,7 @@ function isBefore(dirtyDate, dirtyDateToCompare) {
 }
 
 /***/ }),
-/* 230 */
+/* 231 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69294,7 +69317,7 @@ function isDate(value) {
 }
 
 /***/ }),
-/* 231 */
+/* 232 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69337,7 +69360,7 @@ function isEqual(dirtyLeftDate, dirtyRightDate) {
 }
 
 /***/ }),
-/* 232 */
+/* 233 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69376,7 +69399,7 @@ function isExists(year, month, day) {
 }
 
 /***/ }),
-/* 233 */
+/* 234 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69413,7 +69436,7 @@ function isFirstDayOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 234 */
+/* 235 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69450,7 +69473,7 @@ function isFriday(dirtyDate) {
 }
 
 /***/ }),
-/* 235 */
+/* 236 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -69491,14 +69514,14 @@ function isFuture(dirtyDate) {
 }
 
 /***/ }),
-/* 236 */
+/* 237 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__endOfDay_index_js__ = __webpack_require__(44);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__endOfDay_index_js__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__endOfMonth_index_js__ = __webpack_require__(43);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -69533,12 +69556,12 @@ function isLastDayOfMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 237 */
+/* 238 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parse_index_js__ = __webpack_require__(99);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parse_index_js__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isValid_index_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -69843,17 +69866,17 @@ function isMatch(dateString, formatString, dirtyOptions) {
 }
 
 /***/ }),
-/* 238 */
+/* 239 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getUTCWeekYear_index_js__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_setUTCDay_index_js__ = __webpack_require__(239);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_setUTCISODay_index_js__ = __webpack_require__(240);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_setUTCISOWeek_index_js__ = __webpack_require__(241);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_setUTCWeek_index_js__ = __webpack_require__(242);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_startOfUTCISOWeek_index_js__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_startOfUTCWeek_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_getUTCWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_setUTCDay_index_js__ = __webpack_require__(240);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_setUTCISODay_index_js__ = __webpack_require__(241);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_setUTCISOWeek_index_js__ = __webpack_require__(242);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_setUTCWeek_index_js__ = __webpack_require__(243);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_startOfUTCISOWeek_index_js__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__lib_startOfUTCWeek_index_js__ = __webpack_require__(35);
 
 
 
@@ -71359,7 +71382,7 @@ var parsers = {
 /* harmony default export */ __webpack_exports__["a"] = (parsers);
 
 /***/ }),
-/* 239 */
+/* 240 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -71395,7 +71418,7 @@ function setUTCDay(dirtyDate, dirtyDay, dirtyOptions) {
 }
 
 /***/ }),
-/* 240 */
+/* 241 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -71427,14 +71450,14 @@ function setUTCISODay(dirtyDate, dirtyDay) {
 }
 
 /***/ }),
-/* 241 */
+/* 242 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = setUTCISOWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getUTCISOWeek_index_js__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getUTCISOWeek_index_js__ = __webpack_require__(79);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71452,14 +71475,14 @@ function setUTCISOWeek(dirtyDate, dirtyISOWeek) {
 }
 
 /***/ }),
-/* 242 */
+/* 243 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = setUTCWeek;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getUTCWeek_index_js__ = __webpack_require__(80);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getUTCWeek_index_js__ = __webpack_require__(81);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71477,7 +71500,7 @@ function setUTCWeek(dirtyDate, dirtyWeek, options) {
 }
 
 /***/ }),
-/* 243 */
+/* 244 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -71514,7 +71537,7 @@ function isMonday(dirtyDate) {
 }
 
 /***/ }),
-/* 244 */
+/* 245 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -71555,12 +71578,12 @@ function isPast(dirtyDate) {
 }
 
 /***/ }),
-/* 245 */
+/* 246 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfISOWeekYear_index_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71602,12 +71625,12 @@ function isSameISOWeekYear(dirtyDateLeft, dirtyDateRight) {
 }
 
 /***/ }),
-/* 246 */
+/* 247 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameHour_index_js__ = __webpack_require__(100);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameHour_index_js__ = __webpack_require__(101);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71644,12 +71667,12 @@ function isThisHour(dirtyDate) {
 }
 
 /***/ }),
-/* 247 */
+/* 248 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameISOWeek_index_js__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameISOWeek_index_js__ = __webpack_require__(103);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71687,12 +71710,12 @@ function isThisISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 248 */
+/* 249 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameMinute_index_js__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameMinute_index_js__ = __webpack_require__(104);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71729,12 +71752,12 @@ function isThisMinute(dirtyDate) {
 }
 
 /***/ }),
-/* 249 */
+/* 250 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameMonth_index_js__ = __webpack_require__(105);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameMonth_index_js__ = __webpack_require__(106);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71770,12 +71793,12 @@ function isThisMonth(dirtyDate) {
 }
 
 /***/ }),
-/* 250 */
+/* 251 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameQuarter_index_js__ = __webpack_require__(106);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameQuarter_index_js__ = __webpack_require__(107);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71811,12 +71834,12 @@ function isThisQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 251 */
+/* 252 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameSecond_index_js__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameSecond_index_js__ = __webpack_require__(108);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71853,12 +71876,12 @@ function isThisSecond(dirtyDate) {
 }
 
 /***/ }),
-/* 252 */
+/* 253 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameWeek_index_js__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71904,12 +71927,12 @@ function isThisWeek(dirtyDate, options) {
 }
 
 /***/ }),
-/* 253 */
+/* 254 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameYear_index_js__ = __webpack_require__(109);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameYear_index_js__ = __webpack_require__(110);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -71945,7 +71968,7 @@ function isThisYear(dirtyDate) {
 }
 
 /***/ }),
-/* 254 */
+/* 255 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -71982,12 +72005,12 @@ function isThursday(dirtyDate) {
 }
 
 /***/ }),
-/* 255 */
+/* 256 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72023,13 +72046,13 @@ function isToday(dirtyDate) {
 }
 
 /***/ }),
-/* 256 */
+/* 257 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__isSameDay_index_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72066,7 +72089,7 @@ function isTomorrow(dirtyDate) {
 }
 
 /***/ }),
-/* 257 */
+/* 258 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72103,7 +72126,7 @@ function isTuesday(dirtyDate) {
 }
 
 /***/ }),
-/* 258 */
+/* 259 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72140,7 +72163,7 @@ function isWednesday(dirtyDate) {
 }
 
 /***/ }),
-/* 259 */
+/* 260 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72238,13 +72261,13 @@ function isWithinInterval(dirtyDate, dirtyInterval) {
 }
 
 /***/ }),
-/* 260 */
+/* 261 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subDays_index_js__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__isSameDay_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__subDays_index_js__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72281,7 +72304,7 @@ function isYesterday(dirtyDate) {
 }
 
 /***/ }),
-/* 261 */
+/* 262 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72323,12 +72346,12 @@ function lastDayOfDecade(dirtyDate) {
 }
 
 /***/ }),
-/* 262 */
+/* 263 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lastDayOfWeek_index_js__ = __webpack_require__(110);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lastDayOfWeek_index_js__ = __webpack_require__(111);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72365,13 +72388,13 @@ function lastDayOfISOWeek(dirtyDate) {
 }
 
 /***/ }),
-/* 263 */
+/* 264 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getISOWeekYear_index_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfISOWeek_index_js__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72419,7 +72442,7 @@ function lastDayOfISOWeekYear(dirtyDate) {
 }
 
 /***/ }),
-/* 264 */
+/* 265 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72465,7 +72488,7 @@ function lastDayOfQuarter(dirtyDate) {
 }
 
 /***/ }),
-/* 265 */
+/* 266 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72507,16 +72530,16 @@ function lastDayOfYear(dirtyDate) {
 }
 
 /***/ }),
-/* 266 */
+/* 267 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_format_lightFormatters_index_js__ = __webpack_require__(77);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_format_lightFormatters_index_js__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_getTimezoneOffsetInMilliseconds_index_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__isValid_index_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__subMilliseconds_index_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -72639,7 +72662,7 @@ function cleanEscapedString(input) {
 }
 
 /***/ }),
-/* 267 */
+/* 268 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72713,7 +72736,7 @@ function max(dirtyDatesArray) {
 }
 
 /***/ }),
-/* 268 */
+/* 269 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -72787,7 +72810,7 @@ function min(dirtyDatesArray) {
 }
 
 /***/ }),
-/* 269 */
+/* 270 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73086,7 +73109,7 @@ function validateTimezone(_hours, minutes) {
 }
 
 /***/ }),
-/* 270 */
+/* 271 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73146,7 +73169,7 @@ function parseJSON(argument) {
 }
 
 /***/ }),
-/* 271 */
+/* 272 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73209,13 +73232,13 @@ function roundToNearestMinutes(dirtyDate, options) {
 }
 
 /***/ }),
-/* 272 */
+/* 273 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__setMonth_index_js__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__setMonth_index_js__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
@@ -73306,7 +73329,7 @@ function set(dirtyDate, values) {
 }
 
 /***/ }),
-/* 273 */
+/* 274 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73349,12 +73372,12 @@ function setDate(dirtyDate, dirtyDayOfMonth) {
 }
 
 /***/ }),
-/* 274 */
+/* 275 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__addDays_index_js__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -73417,7 +73440,7 @@ function setDay(dirtyDate, dirtyDay, dirtyOptions) {
 }
 
 /***/ }),
-/* 275 */
+/* 276 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73461,7 +73484,7 @@ function setDayOfYear(dirtyDate, dirtyDayOfYear) {
 }
 
 /***/ }),
-/* 276 */
+/* 277 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73504,15 +73527,15 @@ function setHours(dirtyDate, dirtyHours) {
 }
 
 /***/ }),
-/* 277 */
+/* 278 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__addDays_index_js__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__getISODay_index_js__ = __webpack_require__(91);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__addDays_index_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__getISODay_index_js__ = __webpack_require__(92);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73554,14 +73577,14 @@ function setISODay(dirtyDate, dirtyDay) {
 }
 
 /***/ }),
-/* 278 */
+/* 279 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getISOWeek_index_js__ = __webpack_require__(92);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__getISOWeek_index_js__ = __webpack_require__(93);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73602,7 +73625,7 @@ function setISOWeek(dirtyDate, dirtyISOWeek) {
 }
 
 /***/ }),
-/* 279 */
+/* 280 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73645,7 +73668,7 @@ function setMilliseconds(dirtyDate, dirtyMilliseconds) {
 }
 
 /***/ }),
-/* 280 */
+/* 281 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73688,14 +73711,14 @@ function setMinutes(dirtyDate, dirtyMinutes) {
 }
 
 /***/ }),
-/* 281 */
+/* 282 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setMonth_index_js__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__setMonth_index_js__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -73734,7 +73757,7 @@ function setQuarter(dirtyDate, dirtyQuarter) {
 }
 
 /***/ }),
-/* 282 */
+/* 283 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73777,12 +73800,12 @@ function setSeconds(dirtyDate, dirtySeconds) {
 }
 
 /***/ }),
-/* 283 */
+/* 284 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getWeek_index_js__ = __webpack_require__(94);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__getWeek_index_js__ = __webpack_require__(95);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -73845,13 +73868,13 @@ function setWeek(dirtyDate, dirtyWeek, dirtyOptions) {
 }
 
 /***/ }),
-/* 284 */
+/* 285 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__differenceInCalendarDays_index_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__startOfWeekYear_index_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__toDate_index_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__lib_toInteger_index_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__lib_requiredArgs_index_js__ = __webpack_require__(0);
@@ -73925,7 +73948,7 @@ function setWeekYear(dirtyDate, dirtyWeekYear, dirtyOptions) {
 }
 
 /***/ }),
-/* 285 */
+/* 286 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73973,7 +73996,7 @@ function setYear(dirtyDate, dirtyYear) {
 }
 
 /***/ }),
-/* 286 */
+/* 287 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74015,12 +74038,12 @@ function startOfDecade(dirtyDate) {
 }
 
 /***/ }),
-/* 287 */
+/* 288 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__startOfDay_index_js__ = __webpack_require__(28);
 
 /**
  * @name startOfToday
@@ -74051,7 +74074,7 @@ function startOfToday() {
 }
 
 /***/ }),
-/* 288 */
+/* 289 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74091,7 +74114,7 @@ function startOfTomorrow() {
 }
 
 /***/ }),
-/* 289 */
+/* 290 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74131,13 +74154,13 @@ function startOfYesterday() {
 }
 
 /***/ }),
-/* 290 */
+/* 291 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addBusinessDays_index_js__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addBusinessDays_index_js__ = __webpack_require__(58);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74168,13 +74191,13 @@ function subBusinessDays(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 291 */
+/* 292 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addHours_index_js__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addHours_index_js__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74209,13 +74232,13 @@ function subHours(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 292 */
+/* 293 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMinutes_index_js__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addMinutes_index_js__ = __webpack_require__(62);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74250,13 +74273,13 @@ function subMinutes(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 293 */
+/* 294 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addQuarters_index_js__ = __webpack_require__(38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addQuarters_index_js__ = __webpack_require__(39);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74291,13 +74314,13 @@ function subQuarters(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 294 */
+/* 295 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addSeconds_index_js__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addSeconds_index_js__ = __webpack_require__(63);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74332,13 +74355,13 @@ function subSeconds(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 295 */
+/* 296 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export default */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addWeeks_index_js__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74373,13 +74396,13 @@ function subWeeks(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 296 */
+/* 297 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = subYears;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_toInteger_index_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addYears_index_js__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__addYears_index_js__ = __webpack_require__(64);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_requiredArgs_index_js__ = __webpack_require__(0);
 
 
@@ -74414,7 +74437,7 @@ function subYears(dirtyDate, dirtyAmount) {
 }
 
 /***/ }),
-/* 297 */
+/* 298 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74437,10 +74460,10 @@ var maxTime = Math.pow(10, 8) * 24 * 60 * 60 * 1000;
 var minTime = -maxTime;
 
 /***/ }),
-/* 298 */
+/* 299 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -74451,7 +74474,7 @@ exports.push([module.i, ".mx-icon-left:before,.mx-icon-right:before,.mx-icon-dou
 
 
 /***/ }),
-/* 299 */
+/* 300 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -74497,7 +74520,7 @@ var singleton = null;
 var	singletonCounter = 0;
 var	stylesInsertedAtTop = [];
 
-var	fixUrls = __webpack_require__(300);
+var	fixUrls = __webpack_require__(301);
 
 module.exports = function(list, options) {
 	if (typeof DEBUG !== "undefined" && DEBUG) {
@@ -74810,7 +74833,7 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
-/* 300 */
+/* 301 */
 /***/ (function(module, exports) {
 
 
@@ -74905,7 +74928,7 @@ module.exports = function (css) {
 
 
 /***/ }),
-/* 301 */
+/* 302 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -75801,19 +75824,19 @@ if (false) {
 }
 
 /***/ }),
-/* 302 */
+/* 303 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(303)
+  __webpack_require__(304)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(305)
+var __vue_script__ = __webpack_require__(306)
 /* template */
-var __vue_template__ = __webpack_require__(306)
+var __vue_template__ = __webpack_require__(307)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -75852,17 +75875,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 303 */
+/* 304 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(304);
+var content = __webpack_require__(305);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("2b174bf8", content, false, {});
+var update = __webpack_require__(5)("2b174bf8", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -75878,10 +75901,10 @@ if(false) {
 }
 
 /***/ }),
-/* 304 */
+/* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -75892,7 +75915,7 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 305 */
+/* 306 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -76290,7 +76313,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 306 */
+/* 307 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -76814,19 +76837,19 @@ if (false) {
 }
 
 /***/ }),
-/* 307 */
+/* 308 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(308)
+  __webpack_require__(309)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(310)
+var __vue_script__ = __webpack_require__(311)
 /* template */
-var __vue_template__ = __webpack_require__(311)
+var __vue_template__ = __webpack_require__(312)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -76865,17 +76888,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 308 */
+/* 309 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(309);
+var content = __webpack_require__(310);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("9ff39e74", content, false, {});
+var update = __webpack_require__(5)("9ff39e74", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -76891,10 +76914,10 @@ if(false) {
 }
 
 /***/ }),
-/* 309 */
+/* 310 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -76905,15 +76928,15 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 310 */
+/* 311 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -77412,7 +77435,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 311 */
+/* 312 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -78409,19 +78432,19 @@ if (false) {
 }
 
 /***/ }),
-/* 312 */
+/* 313 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(313)
+  __webpack_require__(314)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(315)
+var __vue_script__ = __webpack_require__(316)
 /* template */
-var __vue_template__ = __webpack_require__(316)
+var __vue_template__ = __webpack_require__(317)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -78460,17 +78483,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 313 */
+/* 314 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(314);
+var content = __webpack_require__(315);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("403c82aa", content, false, {});
+var update = __webpack_require__(5)("403c82aa", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -78486,10 +78509,10 @@ if(false) {
 }
 
 /***/ }),
-/* 314 */
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -78500,15 +78523,15 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 315 */
+/* 316 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -78757,7 +78780,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   //console.log(data);
                   this.modal = 1;
                   this.desactivar = 1;
-                  this.titleModal = 'Informacion completa de la categoría';
+                  this.titleModal = 'Información completa de la categoría';
                   this.accion = 3;
                   this.category_id = data['id'];
                   this.name_category = data['name_category'];
@@ -78911,7 +78934,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 316 */
+/* 317 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -79442,19 +79465,19 @@ if (false) {
 }
 
 /***/ }),
-/* 317 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(318)
+  __webpack_require__(319)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(320)
+var __vue_script__ = __webpack_require__(321)
 /* template */
-var __vue_template__ = __webpack_require__(321)
+var __vue_template__ = __webpack_require__(322)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -79493,17 +79516,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 318 */
+/* 319 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(319);
+var content = __webpack_require__(320);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("077e5bb9", content, false, {});
+var update = __webpack_require__(5)("077e5bb9", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -79519,10 +79542,10 @@ if(false) {
 }
 
 /***/ }),
-/* 319 */
+/* 320 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -79533,7 +79556,7 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 320 */
+/* 321 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -79996,7 +80019,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 });
 
 /***/ }),
-/* 321 */
+/* 322 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -80700,19 +80723,19 @@ if (false) {
 }
 
 /***/ }),
-/* 322 */
+/* 323 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(323)
+  __webpack_require__(324)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(325)
+var __vue_script__ = __webpack_require__(326)
 /* template */
-var __vue_template__ = __webpack_require__(326)
+var __vue_template__ = __webpack_require__(327)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -80751,17 +80774,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 323 */
+/* 324 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(324);
+var content = __webpack_require__(325);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("69ec7384", content, false, {});
+var update = __webpack_require__(5)("69ec7384", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -80777,10 +80800,10 @@ if(false) {
 }
 
 /***/ }),
-/* 324 */
+/* 325 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -80791,7 +80814,7 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 
 /***/ }),
-/* 325 */
+/* 326 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -80970,7 +80993,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       stock_product: '',
       start_product: '',
       sale_product: '',
-      imagenMiniatura: 'imagen.jpg',
+      imagenMiniatura: 'logo.png',
       imagen_old: '',
       ruta: 'img/products/',
       img_product: '',
@@ -81130,7 +81153,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                   this.nombre_img = '';
                   this.img_product = '';
                   this.ruta = 'img/products/';
-                  this.imagenMiniatura = 'imagen.jpg';
+                  this.imagenMiniatura = 'logo.png';
 
                   break;
                 };
@@ -81341,7 +81364,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 326 */
+/* 327 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -82138,17 +82161,17 @@ if (false) {
 }
 
 /***/ }),
-/* 327 */
+/* 328 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(328)
+  __webpack_require__(329)
 }
 var normalizeComponent = __webpack_require__(3)
 /* script */
-var __vue_script__ = __webpack_require__(330)
+var __vue_script__ = __webpack_require__(331)
 /* template */
 var __vue_template__ = __webpack_require__(332)
 /* template functional */
@@ -82189,17 +82212,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 328 */
+/* 329 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(329);
+var content = __webpack_require__(330);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("50474f52", content, false, {});
+var update = __webpack_require__(5)("50474f52", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -82215,10 +82238,10 @@ if(false) {
 }
 
 /***/ }),
-/* 329 */
+/* 330 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -82229,19 +82252,234 @@ exports.push([module.i, "\n.modal-content{\n    width:100% ! important;\n    pos
 
 
 /***/ }),
-/* 330 */
+/* 331 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__ = __webpack_require__(331);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__ = __webpack_require__(21);
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -83003,6 +83241,16 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         },
         monthBeforeYear: false
       },
+      id: 1,
+      name_additional: '',
+      price_additional: '',
+      description_additional: '',
+      addAddition: '',
+      roomMove: '',
+      move: '',
+      answer: '',
+      number_update_ticket: '',
+      total_reception: 0,
       option: 0,
       listSales: [],
       newSale: 0,
@@ -83015,9 +83263,11 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       total: '',
       name_product: '',
       sale_product: 0,
-      cantidad_product: 0,
+      cantidad_product: 1,
       factura: 0,
       number_check: '',
+      number_update_reception: '',
+      number_reception: '',
       name_room: 'Clase de habitación',
       type_id: 0,
       type_room: 0,
@@ -83025,6 +83275,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       stateRoom: 'Disponible',
       cc_client: '',
       arrayUsuarioCliente: [],
+      additional: [],
       client_id: 0,
       temperature_exit_client: 0,
       temperature_entry_client: 0,
@@ -83051,7 +83302,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       address_client: '',
       city_client: '',
       nationality_client: ''
-    }, _defineProperty(_ref, 'number', ''), _defineProperty(_ref, 'price', ''), _defineProperty(_ref, 'frozen', ''), _defineProperty(_ref, 'state', ''), _defineProperty(_ref, 'price_air', ''), _defineProperty(_ref, 'name_acomp', ''), _defineProperty(_ref, 'firstSurname_acomp', ''), _defineProperty(_ref, 'secondSurname_acomp', ''), _defineProperty(_ref, 'cedula_acomp', ''), _defineProperty(_ref, 'birth_date_acomp', new Date()), _defineProperty(_ref, 'listAcomp', []), _defineProperty(_ref, 'listProduct', []), _defineProperty(_ref, 'arrayroom', []), _defineProperty(_ref, 'client', []), _defineProperty(_ref, 'arrayRoom', []), _defineProperty(_ref, 'arrayProducts', []), _defineProperty(_ref, 'dataRoom', []), _defineProperty(_ref, 'rooms', ''), _defineProperty(_ref, 'opcion', 'Elige una opción'), _defineProperty(_ref, 'modal', 0), _defineProperty(_ref, 'titleModal', ''), _defineProperty(_ref, 'accion', 0), _defineProperty(_ref, 'rooms_id', 0), _defineProperty(_ref, 'add', 0), _defineProperty(_ref, 'desactivar', 0), _defineProperty(_ref, 'condition', 1), _defineProperty(_ref, 'search', ''), _defineProperty(_ref, 'valor', 'state'), _defineProperty(_ref, 'arrayError', []), _defineProperty(_ref, 'pagination', {
+    }, _defineProperty(_ref, 'number', ''), _defineProperty(_ref, 'price', ''), _defineProperty(_ref, 'frozen', ''), _defineProperty(_ref, 'state', ''), _defineProperty(_ref, 'price_air', ''), _defineProperty(_ref, 'name_acomp', ''), _defineProperty(_ref, 'firstSurname_acomp', ''), _defineProperty(_ref, 'secondSurname_acomp', ''), _defineProperty(_ref, 'cedula_acomp', ''), _defineProperty(_ref, 'birth_date_acomp', new Date()), _defineProperty(_ref, 'listAcomp', []), _defineProperty(_ref, 'listProduct', []), _defineProperty(_ref, 'arrayroom', []), _defineProperty(_ref, 'client', []), _defineProperty(_ref, 'arrayRoom', []), _defineProperty(_ref, 'arrayProducts', []), _defineProperty(_ref, 'dataRoom', []), _defineProperty(_ref, 'listRoomFree', []), _defineProperty(_ref, 'arrayAddition', []), _defineProperty(_ref, 'listAdditional', []), _defineProperty(_ref, 'rooms', ''), _defineProperty(_ref, 'opcion', 'Elige una opción'), _defineProperty(_ref, 'modal', 0), _defineProperty(_ref, 'titleModal', ''), _defineProperty(_ref, 'accion', 0), _defineProperty(_ref, 'rooms_id', 0), _defineProperty(_ref, 'add', 0), _defineProperty(_ref, 'add2', 0), _defineProperty(_ref, 'add3', 0), _defineProperty(_ref, 'desactivar', 0), _defineProperty(_ref, 'condition', 1), _defineProperty(_ref, 'search', ''), _defineProperty(_ref, 'valor', 'state'), _defineProperty(_ref, 'arrayError', []), _defineProperty(_ref, 'pagination', {
       'total': 0,
       'current_page': 0,
       'per_page': 0,
@@ -83098,18 +83349,40 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
     totalNewSaleRoom: function totalNewSaleRoom() {
       var option = 2;
       return this.totalSales(option);
+    },
+    totalNewSaleFacture: function totalNewSaleFacture() {
+      var option = 3;
+      return this.totalSales(option);
+    },
+
+    totalNewSaleAdditional: function totalNewSaleAdditional() {
+      var option = 4;
+      return this.totalSales(option);
     }
 
   },
 
   methods: {
+    FormAdditional: function FormAdditional() {
+      if (this.price_additional === '' || this.description_additional === '') {
+        Swal.fire('Debes Completar los campos');
+      } else {
+        this.additional = {
+          'id': this.id,
+          'name_additional': 'Otro',
+          'price_additional': this.price_additional,
+          'description_additional': this.description_additional
+        },
+        // console.log(this.additional);
+        this.addAddition = 0;
+        this.addAdditional(this.additional);
+      }
+    },
     addSaleRoom: function addSaleRoom() {
       var me = this;
       var url = 'sale/register';
       axios.post(url, {
-
         'sale': this.listProduct
-
       }).then(function (response) {
         Swal.fire({
           position: 'center',
@@ -83126,6 +83399,25 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         console.log(error);
       });
     },
+    moveRoom: function moveRoom() {
+      var me = this;
+      var url = 'room/updatefacture';
+      axios.put(url, {
+
+        'id': me.roomMove.id,
+        'number_facture': me.number_facture,
+        'room_id': me.rooms_id
+
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+      me.closeModal('Move');
+      me.closeModal('modal');
+      me.factura = 0;
+      me.listRoomsActive(1, this.search, this.valor);
+    },
     listProductActive: function listProductActive(page, search) {
       var me = this;
       var valor = 'name_product';
@@ -83135,6 +83427,17 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         me.arrayProducts = respuesta.products.data;
         me.pagination = respuesta.pagination;
         // console.log(me.arrayProducts);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    listAdditionActive: function listAdditionActive(search) {
+      var me = this;
+      var url = 'additional/active?search=' + search;
+      axios.get(url).then(function (response) {
+        //  var respuesta= response.data;
+        me.arrayAddition = response.data;
+        //console.log(me.arrayAddition);
       }).catch(function (error) {
         console.log(error);
       });
@@ -83194,6 +83497,34 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         console.log(error);
       });
     },
+    search_reception: function search_reception() {
+      var me = this;
+      var url = 'counter/searchReception';
+      axios.get(url).then(function (response) {
+        var respuesta = response.data;
+        me.number_update_reception = respuesta[0].number_reception;
+        var end = respuesta[0].end_reception;
+        me.number_reception = me.number_update_reception + end;
+        //  me.arrayRoom = respuesta.room.data;
+        // console.log(me.number_reception);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    search_bill: function search_bill() {
+      var me = this;
+      var url = 'counter/searchTicket';
+      axios.get(url).then(function (response) {
+        var respuesta = response.data;
+        me.number_update_ticket = respuesta[0].number_ticket;
+        var end = respuesta[0].end_ticket;
+        me.number_ticket = me.number_update_ticket + end;
+        //  me.arrayRoom = respuesta.room.data;
+        // console.log(me.number_ticket);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
     cambiarPagina: function cambiarPagina(page, search, valor) {
       var me = this;
       //Actualiza la página actual
@@ -83209,7 +83540,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         me.arrayUsuarioCliente = respuesta.client;
         // console.log(me.arrayUsuarioCliente);
         if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
-          me.closeModal();
+          me.closeModal('modal');
           var swalWithBootstrapButtons = Swal.mixin({
             customClass: {
               confirmButton: 'btn btn-success',
@@ -83238,7 +83569,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
             }
           });
         } else {
-          me.closeModal();
+          me.closeModal('modal');
           me.openModal('room', 'certificate', me.arrayUsuarioCliente);
         }
 
@@ -83275,7 +83606,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
           showConfirmButton: false,
           timer: 1500
         });
-        me.closeModal();
+        me.closeModal('modal');
         me.search_client(me.cc_client);
       }).catch(function (error) {
         var respuesta = error.response.data;
@@ -83322,25 +83653,49 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       switch (option) {
         case 1:
           {
-            var total_reception = 0;
+            this.total_reception = 0;
             var sales = this.check;
             for (var i = 0; i < sales.length; i++) {
               var item = sales[i]['total_sales'];
-              total_reception += item;
+              this.total_reception += item;
             }
-            return total_reception;
+            return this.total_reception;
             break;
           }
 
         case 2:
           {
-            var total_reception = 0;
+            this.total_reception = 0;
             var sales = this.listProduct;
             for (var i = 0; i < sales.length; i++) {
               var item = sales[i]['sale_product'] * sales[i]['cantidad_product'];
-              total_reception += item;
+              this.total_reception += item;
             }
-            return total_reception;
+            return this.total_reception;
+            break;
+          }
+
+        case 3:
+          {
+            this.total_reception = 0;
+            var sales = this.listSales;
+            for (var i = 0; i < sales.length; i++) {
+              var item = sales[i]['total_sales'];
+              this.total_reception += item;
+            }
+            return this.total_reception;
+            break;
+          }
+
+        case 4:
+          {
+            this.total_reception = 0;
+            var sales = this.listSales;
+            for (var i = 0; i < sales.length; i++) {
+              var item = sales[i]['total_sales'];
+              this.total_reception += item;
+            }
+            return this.total_reception;
             break;
           }
       }
@@ -83348,16 +83703,15 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
     openModal: function openModal(model, accion) {
       var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
-
       switch (model) {
         case "room":
           {
-
             switch (accion) {
               case "create":
                 {
                   this.search_check();
                   this.modal = 1;
+                  this.add = 0;
                   this.stateRoom = 'Disponible';
                   this.desactivar = 0;
                   this.titleModal = 'Ingreso de huésped';
@@ -83373,8 +83727,9 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
 
                   // console.log(data);
                   this.factura = 1;
-                  // this.stateRoom = 'Ocupada'
+                  this.search_bill();
                   this.eleminar = 1;
+                  this.add = 0;
                   this.desactivar = 0;
                   this.titleModal = 'Información';
                   this.accion = 2;
@@ -83404,7 +83759,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
                   this.search_certificate();
                   //console.log(data);
                   this.modal = 1;
-                  this.desactivar = 1;
+                  this.add = 0, this.desactivar = 1;
                   this.stateRoom = 'certificate';
                   this.titleModal = 'Acta de entrada';
                   this.accion = 4;
@@ -83443,6 +83798,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
                 {
                   //console.log(data);
                   this.modal = 1;
+                  this.add = 0;
                   this.desactivar = 1;
                   this.stateRoom = 'register';
                   this.titleModal = 'Registro de nuevo huésped';
@@ -83468,6 +83824,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
                 {
                   this.add = 1;
                   this.modal = 0;
+                  this.factura = 0;
                   this.titleModal = 'Listado de Acompañantes';
 
                   break;
@@ -83475,7 +83832,8 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
 
               case "sale":
                 {
-
+                  this.add2 = 1;
+                  this.newSale = 1;
                   this.factura = 2;
                   this.titleModal = 'Productos';
                   this.listProduct = [];
@@ -83486,7 +83844,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
               case "products":
                 {
 
-                  this.add = 1;
+                  this.add2 = 1;
                   this.newSale = 1;
                   this.titleModal = 'Productos';
                   this.arrayProducts = [];
@@ -83500,8 +83858,8 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
 
               case "reception":
                 {
-
-                  this.add = 1;
+                  this.search_reception();
+                  this.add2 = 1;
                   this.newSale = 2;
                   this.titleModal = 'Factura recepción';
                   this.check = this.check;
@@ -83511,20 +83869,60 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
 
                   break;
                 };
+
+              case "move":
+                {
+                  this.newSale = 0;
+                  this.modal = 3;
+                  this.add2 = 1;
+                  this.move = 1;
+                  this.titleModal = 'Trasladar habitación';
+                  this.searchRoomMove();
+
+                  break;
+                };
+
+              case "additional":
+                {
+                  this.add3 = 1;
+                  this.titleModal = 'Adicionales';
+
+                  break;
+                };
             }
           }
       }
     },
-    closeModal: function closeModal() {
-      this.modal = 0;
-      this.search = '';
-      // this.arrayError = [];
-      this.listRoomsActive(1, this.search, this.valor);
-    },
-    closeModalAcomp: function closeModalAcomp() {
-      this.add = 0;
-      this.modal = 1;
-      this.titleModal = 'Acta de entrada';
+    closeModal: function closeModal(model) {
+      switch (model) {
+        case "modal":
+          this.modal = 0;
+          this.search = '';
+          // this.arrayError = [];
+          this.listRoomsActive(1, this.search, this.valor);
+          break;
+
+        case "acomp":
+          this.add = 0;
+          this.modal = 1;
+          this.titleModal = 'Acta de entrada';
+          this.check = [];
+          break;
+
+        case "Move":
+          this.add2 = 0;
+          this.move = 0;
+          this.modal = 0;
+          break;
+
+        case "product":
+          this.add2 = 0;
+          break;
+
+        case "additional":
+          this.add3 = 0;
+          break;
+      }
     },
     updateCertificate: function updateCertificate() {
       var me = this;
@@ -83554,6 +83952,20 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         console.log(error.response.data);
       });
     },
+    updateReception: function updateReception() {
+      var me = this;
+      var url = 'counter/update';
+      axios.put(url, {
+
+        'option': 4,
+        'number_reception': this.number_update_reception
+
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
     stateBusy: function stateBusy() {
 
       var me = this;
@@ -83575,7 +83987,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
           showConfirmButton: false,
           timer: 1500
         });
-        me.closeModal();
+        me.closeModal('modal');
         me.updateCustomers();
         me.listRoomsActive(1, this.search, this.valor);
       }).catch(function (error) {
@@ -83584,45 +83996,160 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         // console.log(error.response.data);
       });
     },
-    registerBill: function registerBill() {
+    saleNewReception: function saleNewReception() {
+      var _this = this;
 
       var me = this;
-      var url = 'customers/register?page=' + page + '&search=' + search + "&valor=" + valor;
+      var data = this.check;
+      if (data.length == 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'No tienes productos para facturar!'
+        });
+      } else {
+        var swalWithBootstrapButtons = Swal.mixin({
+          customClass: {
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-danger'
+          },
+          buttonsStyling: false
+        });
+
+        swalWithBootstrapButtons.fire({
+          title: 'Está seguro?',
+          text: "Va a facturar estos productos por recepción!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Si, facturar',
+          cancelButtonText: 'No, Cancelar!',
+          reverseButtons: true
+        }).then(function (result) {
+          if (result.value) {
+
+            var _me = _this;
+
+            axios.put('sale/update', {
+              'sale': _this.check,
+              'number_reception': _this.number_reception
+            }).then(function (response) {
+              _me.registerCheckbooks();
+              _me.updateReception();
+              _me.check = [];
+              var room = [];
+              room = _me.dataRoom;
+              _me.openModal('room', 'edit', room);
+            }).catch(function (error) {
+              console.log(error);
+            });
+            swalWithBootstrapButtons.fire('Facturado!', 'Productos fueron facturados por recepción.', 'success');
+          } else if (
+          /* Read more about handling dismissals below */
+          result.dismiss === Swal.DismissReason.cancel) {
+            swalWithBootstrapButtons.fire('Cancelado', 'Tus productos siguen cargados en la habitación :)', 'error');
+          }
+        });
+      }
+    },
+    searchRoomMove: function searchRoomMove() {
+      var me = this;
+      var url = 'room/move';
+      axios.get(url).then(function (response) {
+        me.listRoomFree = response.data;
+        //  me.listSale = respuesta[0].number_certificate;
+        //  me.arrayRoom = respuesta.room.data;
+        // console.log(me.listRoomFree);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    registerBill: function registerBill(answer) {
+      var answer = this.answer;
+      // console.log(answer);
+      var me = this;
+      var url = 'bill/register';
       axios.post(url, {
 
-        'cedula_client': this.cedula_client,
-        'name_client': this.name_client,
-        'firstSurname_client': this.firstSurname_client,
-        'secondSurname_client': this.secondSurname_client,
-        'birth_date_client': this.birth_date_client,
-        'gender_client': this.gender_client,
-        'age_client': this.age_client,
-        'address_client': this.address_client,
-        'city_client': this.city_client,
-        'nationality_client': this.nationality_client,
-        'state_client': this.state_client,
-        'phone_client': this.phone_client,
-        'email_client': this.email_client
+        'customer_id': 1,
+        'room_id': this.rooms_id,
+        'certificate_id': 1,
+        'taxe_id': null,
+        'number_bill': this.number_ticket,
+        'faker_number_bill': this.number_certificate,
+        'date_entry_bill': null,
+        'date_exit_bill': null,
+        'dian_bill': answer,
+        'total_bill': this.total_reception,
+        'state_bill': 1
 
       }).then(function (response) {
         Swal.fire({
           position: 'center',
           icon: 'success',
-          title: 'Tu huésped fue registrado con éxito',
+          title: 'se creo la factura con éxito',
           showConfirmButton: false,
           timer: 1500
         });
-        me.closeModal();
-        me.search_client(me.cc_client);
       }).catch(function (error) {
         var respuesta = error.response.data;
         me.arrayError = respuesta.errors;
         console.log(error.response.data);
       });
     },
-    stateFree: function stateFree() {
-      var _this = this;
+    registerCheckbooks: function registerCheckbooks() {
 
+      var me = this;
+      var url = 'checkbook/register';
+      axios.post(url, {
+
+        'customer_id': null,
+        'taxe_id': null,
+        'number_checkbooks': this.number_reception,
+        'faker_number_checkbooks': this.number_reception,
+        'date_exit_checkbooks': null,
+        'dian_checkbooks': 'No',
+        'total_checkbooks': this.total_reception,
+        'state_checkbooks': 0
+
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    question: function question() {
+      var _this2 = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+      swalWithBootstrapButtons.fire({
+        title: 'Desea factura fÍsica?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Si, generar factura',
+        cancelButtonText: 'No, generar factura',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          _this2.stateFree(_this2.answer = 'Yes');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          _this2.stateFree(_this2.answer = 'No');
+        }
+      });
+    },
+    stateFree: function stateFree(answer) {
+      var _this3 = this;
+
+      var answer = this.answer;
+      // console.log(answer);
       var swalWithBootstrapButtons = Swal.mixin({
         customClass: {
           confirmButton: 'btn btn-success',
@@ -83641,12 +84168,12 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
         reverseButtons: true
       }).then(function (result) {
         if (result.value) {
-
-          var me = _this;
+          _this3.registerBill(answer);
+          var me = _this3;
           var url = 'room/statefree';
           axios.put(url, {
 
-            'id': _this.rooms_id
+            'id': _this3.rooms_id
             // 'client_id' : 1,
 
           }).then(function (response) {
@@ -83685,15 +84212,37 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
       this.listAcomp.splice(index, 1);
     },
     addProduct: function addProduct(product) {
-      console.log(product);
-
-      this.listProduct.push({ product_id: product.id, name_product: product.name_product, sale_product: product.sale_product, cantidad_product: this.cantidad_product,
-        total: product.sale_product * this.cantidad_product, url_img: product.img_product, number_facture: this.number_facture });
+      // console.log(product);
+      this.listProduct.push({
+        product_id: product.id,
+        name_product: product.name_product,
+        sale_product: product.sale_product,
+        cantidad_product: this.cantidad_product,
+        total: product.sale_product * this.cantidad_product,
+        url_img: product.img_product,
+        number_facture: this.number_facture
+      });
+    },
+    addAdditional: function addAdditional(additional) {
+      // console.log(additional);
+      this.listAdditional.push({
+        additional_id: additional.id,
+        name_additional: additional.name_additional,
+        price_additional: additional.price_additional,
+        description_additional: additional.description_additional,
+        total: additional.price_additional,
+        number_facture: this.number_facture
+      });
     },
     deleteProduct: function deleteProduct(product) {
 
       var index = this.listProduct.indexOf(product);
       this.listProduct.splice(index, 1);
+    },
+    deleteAddition: function deleteAddition(additional) {
+      // console.log(additional);
+      var index = this.listAdditional.indexOf(additional);
+      this.listAdditional.splice(index, 1);
     },
     updateCustomers: function updateCustomers(page, search, valor) {
 
@@ -83744,7 +84293,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
           showConfirmButton: false,
           timer: 1500
         });
-        me.closeModal();
+        me.closeModal('modal');
       }).catch(function (error) {
         var respuesta = error.response.data;
         me.arrayError = respuesta.errors;
@@ -83764,15 +84313,6 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
     this.listRoomsActive(1, this.search, this.valor);
   }
 });
-
-/***/ }),
-/* 331 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-var r=Array.prototype.map,t=Array.isArray,n=Object.prototype.toString;function e(r){return!!(""===r||r&&r.charCodeAt&&r.substr)}function o(r){return t?t(r):"[object Array]"===n.call(r)}function a(r){return r&&"[object Object]"===n.call(r)}function i(r,t){var n;for(n in r=r||{},t=t||{})t.hasOwnProperty(n)&&null==r[n]&&(r[n]=t[n]);return r}function s(t,n,e){if(!t)return[];if(r&&t.map===r)return t.map(n,e);var o,a=[],i=0;for(i=0,o=t.length;i<o;i++)a[i]=n.call(e,t[i],i,t);return a}var c={settings:{currency:{symbol:"$",format:"%s%v",decimal:".",thousand:",",precision:2,grouping:3},number:{precision:0,grouping:3,thousand:",",decimal:"."}}};function u(r,t){return void 0===t&&(t=0),r=Math.round(Math.abs(r)),isNaN(r)?t:r}var l=function r(t,n){if(o(t))return s(t,function(t){return r(t,n)});if("number"==typeof(t=t||0))return t;n=n||c.settings.number.decimal;var e=new RegExp("[^0-9-"+n+"]",["g"]),a=parseFloat((""+t).replace(/\((?=\d+)(.*)\)/,"-$1").replace(e,"").replace(n,"."));return isNaN(a)?0:a},p=function(r,t){t=u(t,c.settings.number.precision);var n=Number(l(r)+"e"+t),e=Math.round(n);return Number(e+"e-"+t).toFixed(t)},f={name:"currency",symbol:"",thousandsSeparator:".",fractionCount:0,fractionSeparator:",",symbolPosition:"front",symbolSpacing:!0,avoidEmptyDecimals:void 0},m={install:function(r,t){var n=function(t){null==t&&(t={});var n=i(t,f),m=n.name,y=function(r,t){if(null==r)return{};var n,e,o={},a=Object.keys(r);for(e=0;e<a.length;e++)t.indexOf(n=a[e])>=0||(o[n]=r[n]);return o}(n,["name"]),d=function(r,t,n,f,m,d,v,b){var g=i({symbol:t,thousandsSeparator:n,fractionCount:f,fractionSeparator:m,symbolPosition:d,symbolSpacing:v,avoidEmptyDecimals:b},y);"object"==typeof t&&(g=i(t,y));var h=0,S="-"===String(r).charAt(0);S&&(r=String(r).slice(1));var A,C=parseFloat(r);return isNaN(C)||(h=C),A="front"===g.symbolPosition?g.symbolSpacing?"%s %v":"%s%v":g.symbolSpacing?"%v %s":"%v%s",g.fractionCount>0&&(r=p(r,g.fractionCount)),h=function r(t,n,f,m,y,d,v){if(o(t))return s(t,function(t){return r(t,n,f,m,y,d,v)});t=l(t);var b=i(a(n)?n:{symbol:n,precision:f,thousand:m,decimal:y,format:d,avoidEmptyDecimals:v},c.settings.currency),g=function(r){var t=c.settings.currency.format;return"function"==typeof r&&(r=r()),e(r)&&r.match("%v")?{pos:r,neg:r.replace("-","").replace("%v","-%v"),zero:r}:r&&r.pos&&r.pos.match("%v")?r:e(t)?c.settings.currency.format={pos:t,neg:t.replace("%v","-%v"),zero:t}:t}(b.format);return(t>0?g.pos:t<0?g.neg:g.zero).replace("%s",b.symbol).replace("%v",function r(t,n,e,f,m){if(o(t))return s(t,function(t){return r(t,n,e,f,m)});t=l(t);var y=i(a(n)?n:{precision:n,thousand:e,decimal:f},c.settings.number),d=u(y.precision),v=t<0?"-":"",b=parseInt(p(Math.abs(t||0),d),10)+"",g=b.length>3?b.length%3:0,h="";return d&&(h=y.decimal+p(Math.abs(t),d).split(".")[1],void 0!==m&&parseInt(p(Math.abs(t||0),1),10)==t&&(h=""===m?"":y.decimal+m)),v+(g?b.substr(0,g)+y.thousand:"")+b.substr(g).replace(/(\d{3})(?=\d)/g,"$1"+y.thousand)+h}(Math.abs(t),u(b.precision),b.thousand,b.decimal,b.avoidEmptyDecimals))}(r,{format:A,symbol:g.symbol,precision:g.fractionCount,thousand:g.thousandsSeparator,decimal:g.fractionSeparator,avoidEmptyDecimals:g.avoidEmptyDecimals}),S&&(h="-"+h),h};r.filter(m,d),r.prototype["$"+m]={setConfig:function(r){y=i(r,f)},getConfig:function(){return y},format:d}};Array.isArray(t)?t.forEach(function(r){return n(r)}):n(t)}};/* harmony default export */ __webpack_exports__["a"] = (m);
-//# sourceMappingURL=vue-currency-filter.module.js.map
-
 
 /***/ }),
 /* 332 */
@@ -84235,7 +84775,7 @@ var render = function() {
                                 staticClass: "btn btn-danger  text-white",
                                 on: {
                                   click: function($event) {
-                                    return _vm.closeModalAcomp()
+                                    return _vm.closeModal("acomp")
                                   }
                                 }
                               },
@@ -84286,7 +84826,7 @@ var render = function() {
                             attrs: { type: "button" },
                             on: {
                               click: function($event) {
-                                return _vm.closeModal()
+                                return _vm.closeModal("modal")
                               }
                             }
                           },
@@ -86183,7 +86723,7 @@ var render = function() {
                             staticClass: "btn btn-danger  text-white",
                             on: {
                               click: function($event) {
-                                return _vm.closeModal()
+                                return _vm.closeModal("modal")
                               }
                             }
                           },
@@ -86260,7 +86800,7 @@ var render = function() {
                       on: {
                         click: function($event) {
                           _vm.factura = 0
-                          _vm.closeModal()
+                          _vm.closeModal("modal")
                         }
                       }
                     },
@@ -86274,16 +86814,36 @@ var render = function() {
                     ? _c(
                         "a",
                         {
-                          staticClass: "btn btn-info shadow text-white",
+                          staticClass: "btn btn-primary shadow text-white",
                           on: {
                             click: function($event) {
-                              return _vm.stateFree()
+                              return _vm.question()
                             }
                           }
                         },
                         [
                           _c("i", { staticClass: "fas fa-money-check-alt" }),
                           _vm._v(" Facturar\n                        ")
+                        ]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.accion == 2
+                    ? _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-warning shadow text-black",
+                          on: {
+                            click: function($event) {
+                              return _vm.openModal("room", "move")
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "fas fa-exchange-alt" }),
+                          _vm._v(
+                            " Trasladar habitación\n                        "
+                          )
                         ]
                       )
                     : _vm._e()
@@ -86403,6 +86963,23 @@ var render = function() {
                             _vm._v(
                               " Venta Extra\n                              "
                             )
+                          ]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "button",
+                          {
+                            staticClass: "btn btn-info",
+                            attrs: { type: "button" },
+                            on: {
+                              click: function($event) {
+                                return _vm.openModal("room", "additional")
+                              }
+                            }
+                          },
+                          [
+                            _c("i", { staticClass: "fas fa-plus-circle" }),
+                            _vm._v(" Adicional\n                              ")
                           ]
                         )
                       ]
@@ -86606,6 +87183,253 @@ var render = function() {
                           0
                         )
                       ]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "table",
+                      {
+                        staticClass: "table table-hover  table-sm text-center"
+                      },
+                      [
+                        _c("thead", [
+                          _c(
+                            "tr",
+                            { staticClass: "d-flex justify-content-end" },
+                            [
+                              _c("th", [_vm._v("total")]),
+                              _vm._v(" "),
+                              _c("th", [
+                                _vm._v(
+                                  _vm._s(
+                                    _vm._f("currency")(_vm.totalNewSaleFacture)
+                                  )
+                                )
+                              ])
+                            ]
+                          )
+                        ])
+                      ]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("hr"),
+                  _vm._v(" "),
+                  _vm._m(13),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "row" }, [
+                    _c(
+                      "table",
+                      {
+                        staticClass:
+                          "table table-bordered table-striped table-sm"
+                      },
+                      [
+                        _c("thead", [
+                          _c("tr", [
+                            _c("th", { staticClass: "text-center" }, [
+                              _vm._v("Producto")
+                            ]),
+                            _vm._v(" "),
+                            _c("th", { staticClass: "text-center" }, [
+                              _vm._v("Factura")
+                            ]),
+                            _vm._v(" "),
+                            _c("th", { staticClass: "text-center" }, [
+                              _vm._v("total")
+                            ]),
+                            _vm._v(" "),
+                            _c("th", { staticClass: "text-center" }, [
+                              _c(
+                                "span",
+                                {
+                                  staticClass: "custom-control custom-checkbox"
+                                },
+                                [
+                                  _c(
+                                    "a",
+                                    {
+                                      staticClass: "btn btn-primary",
+                                      attrs: { href: "#" },
+                                      on: {
+                                        click: function($event) {
+                                          return _vm.selectAll()
+                                        }
+                                      }
+                                    },
+                                    [_vm._v("Seleccionar Todo")]
+                                  )
+                                ]
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "span",
+                                {
+                                  staticClass: "custom-control custom-checkbox"
+                                },
+                                [
+                                  _c(
+                                    "a",
+                                    {
+                                      staticClass: "btn btn-success",
+                                      attrs: { href: "#" },
+                                      on: {
+                                        click: function($event) {
+                                          return _vm.openModal(
+                                            "room",
+                                            "reception"
+                                          )
+                                        }
+                                      }
+                                    },
+                                    [_vm._v("Generar factura")]
+                                  )
+                                ]
+                              )
+                            ])
+                          ])
+                        ]),
+                        _vm._v(" "),
+                        _c(
+                          "tbody",
+                          _vm._l(_vm.listAdditional, function(additional) {
+                            return _c(
+                              "tr",
+                              {
+                                staticClass: "text-center",
+                                attrs: { Key: additional.id }
+                              },
+                              [
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      additional.name_additional
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(
+                                      additional.number_facture
+                                    )
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _vm._v(
+                                    _vm._s(_vm._f("currency")(additional.total))
+                                  )
+                                ]),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  {
+                                    staticClass: "d-flex justify-content-center"
+                                  },
+                                  [
+                                    _c(
+                                      "span",
+                                      {
+                                        staticClass:
+                                          "custom-control custom-checkbox"
+                                      },
+                                      [
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model",
+                                              value: _vm.check,
+                                              expression: "check"
+                                            }
+                                          ],
+                                          staticClass:
+                                            "custom-control-input prueba",
+                                          attrs: {
+                                            type: "checkbox",
+                                            id: additional.id
+                                          },
+                                          domProps: {
+                                            value: additional,
+                                            checked: Array.isArray(_vm.check)
+                                              ? _vm._i(_vm.check, additional) >
+                                                -1
+                                              : _vm.check
+                                          },
+                                          on: {
+                                            change: function($event) {
+                                              var $$a = _vm.check,
+                                                $$el = $event.target,
+                                                $$c = $$el.checked
+                                                  ? true
+                                                  : false
+                                              if (Array.isArray($$a)) {
+                                                var $$v = additional,
+                                                  $$i = _vm._i($$a, $$v)
+                                                if ($$el.checked) {
+                                                  $$i < 0 &&
+                                                    (_vm.check = $$a.concat([
+                                                      $$v
+                                                    ]))
+                                                } else {
+                                                  $$i > -1 &&
+                                                    (_vm.check = $$a
+                                                      .slice(0, $$i)
+                                                      .concat(
+                                                        $$a.slice($$i + 1)
+                                                      ))
+                                                }
+                                              } else {
+                                                _vm.check = $$c
+                                              }
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c(
+                                          "label",
+                                          {
+                                            staticClass: "custom-control-label",
+                                            attrs: { for: additional.id }
+                                          },
+                                          [_vm._v("facturar por recepción")]
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          }),
+                          0
+                        )
+                      ]
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "table",
+                      {
+                        staticClass: "table table-hover  table-sm text-center"
+                      },
+                      [
+                        _c("thead", [
+                          _c(
+                            "tr",
+                            { staticClass: "d-flex justify-content-end" },
+                            [
+                              _c("th", [_vm._v("total")]),
+                              _vm._v(" "),
+                              _c("th", [
+                                _vm._v(
+                                  _vm._s(
+                                    _vm._f("currency")(_vm.totalNewSaleFacture)
+                                  )
+                                )
+                              ])
+                            ]
+                          )
+                        ])
+                      ]
                     )
                   ])
                 ])
@@ -86618,7 +87442,522 @@ var render = function() {
         "div",
         {
           staticClass: "modal fade",
-          class: { mostrar: _vm.add },
+          class: { mostrar: _vm.add2 },
+          attrs: { tabindex: "-1" }
+        },
+        [
+          _c(
+            "div",
+            {
+              staticClass: "modal-dialog modal-dialog-scrollable modal-lg",
+              attrs: { role: "document" }
+            },
+            [
+              _c(
+                "div",
+                { staticClass: "modal-content container bg-container-modal" },
+                [
+                  _c("div", { staticClass: "text-center" }, [
+                    _c("h3", {
+                      staticClass: "modal-title degraded-orange",
+                      domProps: { textContent: _vm._s(_vm.titleModal) }
+                    })
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "div",
+                    { staticClass: "modal-body" },
+                    [
+                      _vm.newSale == 2
+                        ? [
+                            _c("div", { staticClass: "row" }, [
+                              _c("div", {
+                                staticClass:
+                                  "col-md-6 mb-2 certificate  input-group"
+                              }),
+                              _vm._v(" "),
+                              _c(
+                                "div",
+                                {
+                                  staticClass:
+                                    "col-md-6 mb-2 certificate  input-group"
+                                },
+                                [
+                                  _c(
+                                    "label",
+                                    { attrs: { for: "text-input " } },
+                                    [_vm._v("Código")]
+                                  ),
+                                  _vm._v(" "),
+                                  _c("h2", {
+                                    domProps: {
+                                      textContent: _vm._s(_vm.number_reception)
+                                    }
+                                  })
+                                ]
+                              )
+                            ])
+                          ]
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "row" }, [
+                        _c(
+                          "div",
+                          { staticClass: "col-md-12" },
+                          [
+                            _vm.newSale == 1
+                              ? [
+                                  _c("div", { staticClass: "input-group" }, [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: _vm.search,
+                                          expression: "search"
+                                        }
+                                      ],
+                                      staticClass: "form-control",
+                                      attrs: {
+                                        type: "text",
+                                        placeholder: "Producto a buscar"
+                                      },
+                                      domProps: { value: _vm.search },
+                                      on: {
+                                        keyup: function($event) {
+                                          return _vm.listProductActive(
+                                            1,
+                                            _vm.search,
+                                            _vm.valor
+                                          )
+                                        },
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.search = $event.target.value
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _vm._m(14)
+                                  ])
+                                ]
+                              : _vm._e()
+                          ],
+                          2
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "div",
+                          { staticClass: "col" },
+                          [
+                            _c(
+                              "table",
+                              {
+                                staticClass:
+                                  "table table-hover  table-sm text-center"
+                              },
+                              [
+                                _vm.newSale == 1 || _vm.newSale == 2
+                                  ? [_vm._m(15)]
+                                  : _vm._e(),
+                                _vm._v(" "),
+                                _vm.newSale == 1
+                                  ? [
+                                      _c(
+                                        "tbody",
+                                        {
+                                          staticClass:
+                                            "bg-white text-center table-bordered"
+                                        },
+                                        _vm._l(_vm.arrayProducts, function(
+                                          product
+                                        ) {
+                                          return _c("tr", { key: product.id }, [
+                                            _c("td", {
+                                              domProps: {
+                                                textContent: _vm._s(
+                                                  product.name_product
+                                                )
+                                              }
+                                            }),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _vm._v(
+                                                "Precio : " +
+                                                  _vm._s(
+                                                    _vm._f("currency")(
+                                                      product.sale_product
+                                                    )
+                                                  ) +
+                                                  " "
+                                              )
+                                            ]),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _c("input", {
+                                                directives: [
+                                                  {
+                                                    name: "model",
+                                                    rawName: "v-model",
+                                                    value: _vm.cantidad_product,
+                                                    expression:
+                                                      "cantidad_product"
+                                                  }
+                                                ],
+                                                attrs: { type: "number" },
+                                                domProps: {
+                                                  value: _vm.cantidad_product
+                                                },
+                                                on: {
+                                                  input: function($event) {
+                                                    if (
+                                                      $event.target.composing
+                                                    ) {
+                                                      return
+                                                    }
+                                                    _vm.cantidad_product =
+                                                      $event.target.value
+                                                  }
+                                                }
+                                              })
+                                            ]),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _vm._v(
+                                                _vm._s(
+                                                  _vm._f("currency")(
+                                                    product.sale_product *
+                                                      _vm.cantidad_product
+                                                  )
+                                                )
+                                              )
+                                            ]),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _c(
+                                                "a",
+                                                {
+                                                  staticClass:
+                                                    "btn btn-success ",
+                                                  attrs: {
+                                                    href: "#",
+                                                    title: "Agregar"
+                                                  },
+                                                  on: {
+                                                    click: function($event) {
+                                                      return _vm.addProduct(
+                                                        product
+                                                      )
+                                                    }
+                                                  }
+                                                },
+                                                [
+                                                  _c("i", {
+                                                    staticClass:
+                                                      "fas fa-trash-alt"
+                                                  }),
+                                                  _vm._v(
+                                                    " Agregar\n                                  "
+                                                  )
+                                                ]
+                                              )
+                                            ])
+                                          ])
+                                        }),
+                                        0
+                                      )
+                                    ]
+                                  : _vm._e(),
+                                _vm._v(" "),
+                                _vm.newSale == 2
+                                  ? [
+                                      _c(
+                                        "tbody",
+                                        {
+                                          staticClass:
+                                            "bg-white text-center table-bordered"
+                                        },
+                                        _vm._l(_vm.check, function(product) {
+                                          return _c("tr", { key: product.id }, [
+                                            _c("td", {
+                                              domProps: {
+                                                textContent: _vm._s(
+                                                  product.name_product
+                                                )
+                                              }
+                                            }),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _vm._v(
+                                                "Precio : " +
+                                                  _vm._s(
+                                                    _vm._f("currency")(
+                                                      product.price_unit_sales
+                                                    )
+                                                  ) +
+                                                  " "
+                                              )
+                                            ]),
+                                            _vm._v(" "),
+                                            _c("td", {
+                                              domProps: {
+                                                textContent: _vm._s(
+                                                  product.quantity_sales
+                                                )
+                                              }
+                                            }),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _vm._v(
+                                                _vm._s(
+                                                  _vm._f("currency")(
+                                                    product.total_sales
+                                                  )
+                                                ) + " "
+                                              )
+                                            ])
+                                          ])
+                                        }),
+                                        0
+                                      )
+                                    ]
+                                  : _vm._e()
+                              ],
+                              2
+                            ),
+                            _vm._v(" "),
+                            _vm.newSale == 2
+                              ? [
+                                  _c(
+                                    "table",
+                                    {
+                                      staticClass:
+                                        "table table-hover  table-sm text-center"
+                                    },
+                                    [
+                                      _c("thead", [
+                                        _c(
+                                          "tr",
+                                          {
+                                            staticClass:
+                                              "d-flex justify-content-end"
+                                          },
+                                          [
+                                            _c("th", [_vm._v("total")]),
+                                            _vm._v(" "),
+                                            _c("th", [
+                                              _vm._v(
+                                                _vm._s(
+                                                  _vm._f("currency")(
+                                                    _vm.totalNewSale
+                                                  )
+                                                )
+                                              )
+                                            ])
+                                          ]
+                                        )
+                                      ])
+                                    ]
+                                  )
+                                ]
+                              : _vm._e()
+                          ],
+                          2
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _vm.move == 1
+                        ? [
+                            _vm._m(16),
+                            _vm._v(" "),
+                            _c("hr"),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "row p-4" },
+                              _vm._l(_vm.listRoomFree, function(room) {
+                                return _c(
+                                  "div",
+                                  {
+                                    key: room.id,
+                                    staticClass: "form-check col-sm-3"
+                                  },
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: _vm.roomMove,
+                                          expression: "roomMove"
+                                        }
+                                      ],
+                                      staticClass: "form-check-input",
+                                      attrs: {
+                                        type: "radio",
+                                        name: "exampleRadios",
+                                        id: room.id
+                                      },
+                                      domProps: {
+                                        value: room,
+                                        checked: _vm._q(_vm.roomMove, room)
+                                      },
+                                      on: {
+                                        change: function($event) {
+                                          _vm.roomMove = room
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c(
+                                      "label",
+                                      {
+                                        staticClass: "form-check-label",
+                                        attrs: { for: room.id }
+                                      },
+                                      [
+                                        _c("i", {
+                                          staticClass:
+                                            "fas fa-bed text-success fa-2x"
+                                        }),
+                                        _c("span", {
+                                          staticClass: "p-1 fa-2x",
+                                          domProps: {
+                                            textContent: _vm._s(room.number)
+                                          }
+                                        })
+                                      ]
+                                    )
+                                  ]
+                                )
+                              }),
+                              0
+                            )
+                          ]
+                        : _vm._e()
+                    ],
+                    2
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "div",
+                    { staticClass: "row modal-footer" },
+                    [
+                      _vm.newSale == 1 || _vm.newSale == 2
+                        ? [
+                            _c("div", { staticClass: "col-lg-2" }, [
+                              _c(
+                                "a",
+                                {
+                                  staticClass: "btn btn-danger  text-white",
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.closeModal("product")
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("i", {
+                                    staticClass: "fas fa-times-circle"
+                                  }),
+                                  _vm._v(" Cerrar\n                        ")
+                                ]
+                              )
+                            ])
+                          ]
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.modal == 3
+                        ? [
+                            _c(
+                              "div",
+                              {
+                                staticClass:
+                                  "col-lg-12 d-flex justify-content-between"
+                              },
+                              [
+                                _c(
+                                  "a",
+                                  {
+                                    staticClass: "btn btn-danger  text-white",
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.closeModal("Move")
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass: "fas fa-times-circle"
+                                    }),
+                                    _vm._v(" Cerrar\n                        ")
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "a",
+                                  {
+                                    staticClass: "btn btn-success  text-white",
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.moveRoom()
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass: "fas fa-exchange-alt"
+                                    }),
+                                    _vm._v(
+                                      " Trasladar\n                        "
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          ]
+                        : _vm._e(),
+                      _vm._v(" "),
+                      _vm.newSale == 2
+                        ? [
+                            _c("div", { staticClass: "col-lg-2" }, [
+                              _c(
+                                "a",
+                                {
+                                  staticClass: "btn btn-success text-white",
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.saleNewReception()
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("i", {
+                                    staticClass: "fas fa-money-check-alt"
+                                  }),
+                                  _vm._v(" Facturar\n                        ")
+                                ]
+                              )
+                            ])
+                          ]
+                        : _vm._e()
+                    ],
+                    2
+                  )
+                ]
+              )
+            ]
+          )
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "modal fade",
+          class: { mostrar: _vm.add3 },
           attrs: { tabindex: "-1" }
         },
         [
@@ -86642,52 +87981,39 @@ var render = function() {
                   _vm._v(" "),
                   _c("div", { staticClass: "modal-body" }, [
                     _c("div", { staticClass: "row" }, [
-                      _c(
-                        "div",
-                        { staticClass: "col-md-12" },
-                        [
-                          _vm.newSale == 1
-                            ? [
-                                _c("div", { staticClass: "input-group" }, [
-                                  _c("input", {
-                                    directives: [
-                                      {
-                                        name: "model",
-                                        rawName: "v-model",
-                                        value: _vm.search,
-                                        expression: "search"
-                                      }
-                                    ],
-                                    staticClass: "form-control",
-                                    attrs: {
-                                      type: "text",
-                                      placeholder: "Producto a buscar"
-                                    },
-                                    domProps: { value: _vm.search },
-                                    on: {
-                                      keyup: function($event) {
-                                        return _vm.listProductActive(
-                                          1,
-                                          _vm.search,
-                                          _vm.valor
-                                        )
-                                      },
-                                      input: function($event) {
-                                        if ($event.target.composing) {
-                                          return
-                                        }
-                                        _vm.search = $event.target.value
-                                      }
-                                    }
-                                  }),
-                                  _vm._v(" "),
-                                  _vm._m(13)
-                                ])
-                              ]
-                            : _vm._e()
-                        ],
-                        2
-                      ),
+                      _c("div", { staticClass: "col-md-12" }, [
+                        _c("div", { staticClass: "input-group" }, [
+                          _c("input", {
+                            directives: [
+                              {
+                                name: "model",
+                                rawName: "v-model",
+                                value: _vm.search,
+                                expression: "search"
+                              }
+                            ],
+                            staticClass: "form-control",
+                            attrs: {
+                              type: "text",
+                              placeholder: "Adicional a buscar"
+                            },
+                            domProps: { value: _vm.search },
+                            on: {
+                              keyup: function($event) {
+                                return _vm.listAdditionActive(_vm.search)
+                              },
+                              input: function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.search = $event.target.value
+                              }
+                            }
+                          }),
+                          _vm._v(" "),
+                          _vm._m(17)
+                        ])
+                      ]),
                       _vm._v(" "),
                       _c(
                         "div",
@@ -86700,198 +88026,401 @@ var render = function() {
                                 "table table-hover  table-sm text-center"
                             },
                             [
-                              _vm._m(14),
+                              _vm._m(18),
                               _vm._v(" "),
-                              _vm.newSale == 1
+                              _c(
+                                "tbody",
+                                {
+                                  staticClass:
+                                    "bg-white text-center table-bordered"
+                                },
+                                _vm._l(_vm.arrayAddition, function(addition) {
+                                  return _c("tr", { key: addition.id }, [
+                                    _c("td", {
+                                      domProps: {
+                                        textContent: _vm._s(
+                                          addition.name_additional
+                                        )
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("td", [
+                                      _vm._v(
+                                        "Precio : " +
+                                          _vm._s(
+                                            _vm._f("currency")(
+                                              addition.price_additional
+                                            )
+                                          ) +
+                                          " "
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", [
+                                      _vm._v(
+                                        _vm._s(
+                                          _vm._f("currency")(
+                                            addition.price_additional
+                                          )
+                                        )
+                                      )
+                                    ]),
+                                    _vm._v(" "),
+                                    _c("td", [
+                                      _c(
+                                        "a",
+                                        {
+                                          staticClass: "btn btn-success ",
+                                          attrs: {
+                                            href: "#",
+                                            title: "Agregar"
+                                          },
+                                          on: {
+                                            click: function($event) {
+                                              return _vm.addAdditional(addition)
+                                            }
+                                          }
+                                        },
+                                        [
+                                          _c("i", {
+                                            staticClass: "fas fa-trash-alt"
+                                          }),
+                                          _vm._v(
+                                            " Agregar\n                              "
+                                          )
+                                        ]
+                                      )
+                                    ])
+                                  ])
+                                }),
+                                0
+                              )
+                            ]
+                          ),
+                          _vm._v(" "),
+                          _c(
+                            "div",
+                            { staticClass: "row text-right" },
+                            [
+                              _vm.addAddition == 0
                                 ? [
-                                    _c(
-                                      "tbody",
-                                      {
-                                        staticClass:
-                                          "bg-white text-center table-bordered"
-                                      },
-                                      _vm._l(_vm.arrayProducts, function(
-                                        product
-                                      ) {
-                                        return _c("tr", { key: product.id }, [
-                                          _c("td", {
-                                            domProps: {
-                                              textContent: _vm._s(
-                                                product.name_product
-                                              )
+                                    _c("div", { staticClass: "col" }, [
+                                      _c(
+                                        "a",
+                                        {
+                                          staticClass: "btn btn-success",
+                                          attrs: { href: "#" },
+                                          on: {
+                                            click: function($event) {
+                                              _vm.addAddition = 1
                                             }
-                                          }),
-                                          _vm._v(" "),
-                                          _c("td", [
-                                            _vm._v(
-                                              "Precio : " +
-                                                _vm._s(
-                                                  _vm._f("currency")(
-                                                    product.sale_product
-                                                  )
-                                                ) +
-                                                " "
-                                            )
-                                          ]),
-                                          _vm._v(" "),
-                                          _c("td", [
-                                            _c("input", {
-                                              directives: [
-                                                {
-                                                  name: "model",
-                                                  rawName: "v-model",
-                                                  value: _vm.cantidad_product,
-                                                  expression: "cantidad_product"
-                                                }
-                                              ],
-                                              attrs: { type: "number" },
-                                              domProps: {
-                                                value: _vm.cantidad_product
-                                              },
-                                              on: {
-                                                input: function($event) {
-                                                  if ($event.target.composing) {
-                                                    return
-                                                  }
-                                                  _vm.cantidad_product =
-                                                    $event.target.value
-                                                }
-                                              }
-                                            })
-                                          ]),
-                                          _vm._v(" "),
-                                          _c("td", {
-                                            domProps: {
-                                              textContent: _vm._s(
-                                                product.sale_product *
-                                                  _vm.cantidad_product
-                                              )
-                                            }
-                                          }),
-                                          _vm._v(" "),
-                                          _c("td", [
-                                            _c(
-                                              "a",
-                                              {
-                                                staticClass: "btn btn-success ",
-                                                attrs: {
-                                                  href: "#",
-                                                  title: "Agregar"
-                                                },
-                                                on: {
-                                                  click: function($event) {
-                                                    return _vm.addProduct(
-                                                      product
-                                                    )
-                                                  }
-                                                }
-                                              },
-                                              [
-                                                _c("i", {
-                                                  staticClass:
-                                                    "fas fa-trash-alt"
-                                                }),
-                                                _vm._v(
-                                                  " Agregar\n                                  "
-                                                )
-                                              ]
-                                            )
-                                          ])
-                                        ])
-                                      }),
-                                      0
-                                    )
+                                          }
+                                        },
+                                        [
+                                          _c("i", {
+                                            staticClass: "fas fa-plus-circle"
+                                          })
+                                        ]
+                                      )
+                                    ])
                                   ]
                                 : _vm._e(),
                               _vm._v(" "),
-                              _vm.newSale == 2
+                              _vm.addAddition == 1
                                 ? [
-                                    _c(
-                                      "tbody",
-                                      {
-                                        staticClass:
-                                          "bg-white text-center table-bordered"
-                                      },
-                                      _vm._l(_vm.check, function(product) {
-                                        return _c("tr", { key: product.id }, [
-                                          _c("td", {
-                                            domProps: {
-                                              textContent: _vm._s(
-                                                product.name_product
+                                    _c("div", { staticClass: "col" }, [
+                                      _c(
+                                        "form",
+                                        {
+                                          staticClass:
+                                            "form-horizontal additional",
+                                          attrs: {
+                                            action: "",
+                                            method: "post",
+                                            enctype: "multipart/form-data"
+                                          }
+                                        },
+                                        [
+                                          _c(
+                                            "div",
+                                            { staticClass: "row text-left" },
+                                            [
+                                              _c(
+                                                "div",
+                                                {
+                                                  staticClass: "col-lg-6 mb-2"
+                                                },
+                                                [
+                                                  _c(
+                                                    "label",
+                                                    {
+                                                      attrs: {
+                                                        for: "text-input "
+                                                      }
+                                                    },
+                                                    [_vm._v("Nombre adicional")]
+                                                  ),
+                                                  _vm._v(" "),
+                                                  _c("input", {
+                                                    directives: [
+                                                      {
+                                                        name: "model",
+                                                        rawName: "v-model",
+                                                        value:
+                                                          _vm.name_additional,
+                                                        expression:
+                                                          "name_additional"
+                                                      }
+                                                    ],
+                                                    staticClass: "form-control",
+                                                    attrs: {
+                                                      type: "text",
+                                                      disabled: "",
+                                                      placeholder: "Otro"
+                                                    },
+                                                    domProps: {
+                                                      value: _vm.name_additional
+                                                    },
+                                                    on: {
+                                                      input: function($event) {
+                                                        if (
+                                                          $event.target
+                                                            .composing
+                                                        ) {
+                                                          return
+                                                        }
+                                                        _vm.name_additional =
+                                                          $event.target.value
+                                                      }
+                                                    }
+                                                  })
+                                                ]
+                                              ),
+                                              _vm._v(" "),
+                                              _c(
+                                                "div",
+                                                {
+                                                  staticClass: "col-lg-6 mb-2"
+                                                },
+                                                [
+                                                  _c(
+                                                    "label",
+                                                    {
+                                                      attrs: {
+                                                        for: "text-input "
+                                                      }
+                                                    },
+                                                    [_vm._v("Precio")]
+                                                  ),
+                                                  _vm._v(" "),
+                                                  _c("input", {
+                                                    directives: [
+                                                      {
+                                                        name: "model",
+                                                        rawName: "v-model",
+                                                        value:
+                                                          _vm.price_additional,
+                                                        expression:
+                                                          "price_additional"
+                                                      }
+                                                    ],
+                                                    staticClass: "form-control",
+                                                    attrs: { type: "number" },
+                                                    domProps: {
+                                                      value:
+                                                        _vm.price_additional
+                                                    },
+                                                    on: {
+                                                      input: function($event) {
+                                                        if (
+                                                          $event.target
+                                                            .composing
+                                                        ) {
+                                                          return
+                                                        }
+                                                        _vm.price_additional =
+                                                          $event.target.value
+                                                      }
+                                                    }
+                                                  })
+                                                ]
+                                              ),
+                                              _vm._v(" "),
+                                              _c(
+                                                "div",
+                                                {
+                                                  staticClass: "col-lg-12 mb-2"
+                                                },
+                                                [
+                                                  _c(
+                                                    "label",
+                                                    {
+                                                      attrs: {
+                                                        for: "text-input "
+                                                      }
+                                                    },
+                                                    [_vm._v("Descripción")]
+                                                  ),
+                                                  _vm._v(" "),
+                                                  _c("textarea", {
+                                                    directives: [
+                                                      {
+                                                        name: "model",
+                                                        rawName: "v-model",
+                                                        value:
+                                                          _vm.description_additional,
+                                                        expression:
+                                                          "description_additional"
+                                                      }
+                                                    ],
+                                                    staticClass: "form-control",
+                                                    attrs: {
+                                                      cols: "30",
+                                                      rows: "4"
+                                                    },
+                                                    domProps: {
+                                                      value:
+                                                        _vm.description_additional
+                                                    },
+                                                    on: {
+                                                      input: function($event) {
+                                                        if (
+                                                          $event.target
+                                                            .composing
+                                                        ) {
+                                                          return
+                                                        }
+                                                        _vm.description_additional =
+                                                          $event.target.value
+                                                      }
+                                                    }
+                                                  })
+                                                ]
                                               )
-                                            }
-                                          }),
+                                            ]
+                                          ),
                                           _vm._v(" "),
-                                          _c("td", [
-                                            _vm._v(
-                                              "Precio : " +
-                                                _vm._s(
-                                                  _vm._f("currency")(
-                                                    product.price_unit_sales
-                                                  )
-                                                ) +
-                                                " "
-                                            )
-                                          ]),
-                                          _vm._v(" "),
-                                          _c("td", {
-                                            domProps: {
-                                              textContent: _vm._s(
-                                                product.quantity_sales
-                                              )
-                                            }
-                                          }),
-                                          _vm._v(" "),
-                                          _c("td", [
-                                            _vm._v(
-                                              _vm._s(
-                                                _vm._f("currency")(
-                                                  product.total_sales
-                                                )
-                                              ) + " "
+                                          _c("div", [
+                                            _c(
+                                              "a",
+                                              {
+                                                staticClass:
+                                                  "btn btn-success btn-block",
+                                                attrs: { href: "#" },
+                                                on: {
+                                                  click: function($event) {
+                                                    return _vm.FormAdditional()
+                                                  }
+                                                }
+                                              },
+                                              [_vm._v("Agregar adiccional")]
                                             )
                                           ])
-                                        ])
-                                      }),
-                                      0
-                                    )
+                                        ]
+                                      )
+                                    ])
                                   ]
                                 : _vm._e()
                             ],
                             2
                           ),
                           _vm._v(" "),
-                          _vm.newSale == 2
+                          _vm.listAdditional.length != 0
                             ? [
+                                _c("hr"),
+                                _vm._v(" "),
+                                _vm._m(19),
+                                _vm._v(" "),
                                 _c(
                                   "table",
                                   {
                                     staticClass:
-                                      "table table-hover  table-sm text-center"
+                                      "table table-bordered table-striped table-sm"
                                   },
                                   [
-                                    _c("thead", [
-                                      _c(
-                                        "tr",
-                                        {
-                                          staticClass:
-                                            "d-flex justify-content-end"
-                                        },
-                                        [
-                                          _c("th", [_vm._v("total")]),
-                                          _vm._v(" "),
-                                          _c("th", [
-                                            _vm._v(
-                                              _vm._s(
-                                                _vm._f("currency")(
-                                                  _vm.totalNewSale
+                                    _vm._m(20),
+                                    _vm._v(" "),
+                                    _c(
+                                      "tbody",
+                                      _vm._l(_vm.listAdditional, function(
+                                        additional
+                                      ) {
+                                        return _c(
+                                          "tr",
+                                          {
+                                            staticClass: "text-center",
+                                            attrs: {
+                                              Key: additional.additional_id
+                                            }
+                                          },
+                                          [
+                                            _c("td", {
+                                              domProps: {
+                                                textContent: _vm._s(
+                                                  additional.name_additional
+                                                )
+                                              }
+                                            }),
+                                            _vm._v(" "),
+                                            _c("td", {
+                                              domProps: {
+                                                textContent: _vm._s(
+                                                  additional.number_facture
+                                                )
+                                              }
+                                            }),
+                                            _vm._v(" "),
+                                            _c("td", [
+                                              _vm._v(
+                                                _vm._s(
+                                                  _vm._f("currency")(
+                                                    additional.total
+                                                  )
                                                 )
                                               )
+                                            ]),
+                                            _vm._v(" "),
+                                            _c(
+                                              "td",
+                                              {
+                                                staticClass:
+                                                  "d-flex justify-content-center"
+                                              },
+                                              [
+                                                _c(
+                                                  "a",
+                                                  {
+                                                    staticClass:
+                                                      "btn btn-danger btn-sm",
+                                                    attrs: {
+                                                      href: "#",
+                                                      title: "Inactivo"
+                                                    },
+                                                    on: {
+                                                      click: function($event) {
+                                                        return _vm.deleteAddition(
+                                                          additional
+                                                        )
+                                                      }
+                                                    }
+                                                  },
+                                                  [
+                                                    _c("i", {
+                                                      staticClass:
+                                                        "fas fa-trash-alt"
+                                                    }),
+                                                    _vm._v(
+                                                      " Eliminar\n                                "
+                                                    )
+                                                  ]
+                                                )
+                                              ]
                                             )
-                                          ])
-                                        ]
-                                      )
-                                    ])
+                                          ]
+                                        )
+                                      }),
+                                      0
+                                    )
                                   ]
                                 )
                               ]
@@ -86902,32 +88431,25 @@ var render = function() {
                     ])
                   ]),
                   _vm._v(" "),
-                  _c(
-                    "div",
-                    { staticClass: "row modal-footer" },
-                    [
-                      _c("div", { staticClass: "col-lg-2" }, [
-                        _c(
-                          "a",
-                          {
-                            staticClass: "btn btn-danger  text-white",
-                            on: {
-                              click: function($event) {
-                                return _vm.closeModalAcomp()
-                              }
+                  _c("div", { staticClass: "row modal-footer" }, [
+                    _c("div", { staticClass: "col-lg-2" }, [
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-danger  text-white",
+                          on: {
+                            click: function($event) {
+                              return _vm.closeModal("additional")
                             }
-                          },
-                          [
-                            _c("i", { staticClass: "fas fa-times-circle" }),
-                            _vm._v(" Cerrar")
-                          ]
-                        )
-                      ]),
-                      _vm._v(" "),
-                      _vm.newSale == 2 ? [_vm._m(15)] : _vm._e()
-                    ],
-                    2
-                  )
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "fas fa-times-circle" }),
+                          _vm._v(" Cerrar\n                    ")
+                        ]
+                      )
+                    ])
+                  ])
                 ]
               )
             ]
@@ -86950,6 +88472,9 @@ var render = function() {
                       on: {
                         click: function($event) {
                           _vm.factura = 0
+                          _vm.search = ""
+                          _vm.closeModal("product")
+                          _vm.arrayProducts = []
                         }
                       }
                     },
@@ -87002,7 +88527,7 @@ var render = function() {
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "row mb-4" }, [
-                    _vm._m(16),
+                    _vm._m(21),
                     _vm._v(" "),
                     _c(
                       "div",
@@ -87038,7 +88563,7 @@ var render = function() {
                           "table table-bordered table-striped table-sm"
                       },
                       [
-                        _vm._m(17),
+                        _vm._m(22),
                         _vm._v(" "),
                         _c(
                           "tbody",
@@ -87082,6 +88607,17 @@ var render = function() {
                                       "d-flex justify-content-between"
                                   },
                                   [
+                                    _c("span", [
+                                      _vm._v(
+                                        _vm._s(
+                                          _vm._f("currency")(
+                                            product.sale_product *
+                                              product.cantidad_product
+                                          )
+                                        )
+                                      )
+                                    ]),
+                                    _vm._v(" "),
                                     _c(
                                       "a",
                                       {
@@ -87287,8 +88823,18 @@ var staticRenderFns = [
     return _c(
       "div",
       { staticClass: "col-md-12 mb-2 text-center certificate" },
-      [_c("h3", [_vm._v("Ventas adiccionales")])]
+      [_c("h3", [_vm._v("Productos consumidos")])]
     )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row mb-4 mt-3" }, [
+      _c("div", { staticClass: "col-md-12 mb-2 text-center certificate" }, [
+        _c("h4", [_vm._v("Adiccionales")])
+      ])
+    ])
   },
   function() {
     var _vm = this
@@ -87320,10 +88866,61 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-lg-2" }, [
-      _c("a", { staticClass: "btn btn-success text-white" }, [
-        _c("i", { staticClass: "fas fa-money-check-alt" }),
-        _vm._v(" Facturar")
+    return _c("div", { staticClass: "row text-center" }, [
+      _c("div", { staticClass: "col" }, [
+        _c("h4", [_vm._v("Elige la habitación")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Producto")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Precio C/u")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("subtotal")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("total")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row text-center" }, [
+      _c("div", { staticClass: "col" }, [
+        _c("h4", [_vm._v("Adicionales que se cargaran a la habitación")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", { staticClass: "text-center" }, [_vm._v("Producto")]),
+        _vm._v(" "),
+        _c("th", { staticClass: "text-center" }, [_vm._v("Factura")]),
+        _vm._v(" "),
+        _c("th", { staticClass: "text-center" }, [_vm._v("total")]),
+        _vm._v(" "),
+        _c("th", { staticClass: "text-center" }, [_vm._v("Opción")])
       ])
     ])
   },
@@ -87425,7 +89022,7 @@ var content = __webpack_require__(335);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("73f69eb3", content, false, {});
+var update = __webpack_require__(5)("73f69eb3", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -87444,7 +89041,7 @@ if(false) {
 /* 335 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -87460,10 +89057,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -89257,7 +90854,7 @@ var content = __webpack_require__(340);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(6)("7f694abc", content, false, {});
+var update = __webpack_require__(5)("7f694abc", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -89276,7 +90873,7 @@ if(false) {
 /* 340 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(5)(false);
+exports = module.exports = __webpack_require__(4)(false);
 // imports
 
 
@@ -89292,10 +90889,10 @@ exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
 //
 //
@@ -90294,6 +91891,2716 @@ if (false) {
 
 /***/ }),
 /* 343 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(344)
+}
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(346)
+/* template */
+var __vue_template__ = __webpack_require__(347)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/assets/js/components/Checkbook.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-4ca0bb4a", Component.options)
+  } else {
+    hotAPI.reload("data-v-4ca0bb4a", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 344 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(345);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(5)("7eeb66a2", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-4ca0bb4a\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Checkbook.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-4ca0bb4a\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Checkbook.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 345 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(4)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n.certificate label {\n   font-size: 30px;\n   padding-right: 10px;\n}\n.certificate h2{\n   color: rgb(235, 23, 23);\n   font-size: 40px;\n}\n.form_certificate{\n  overflow: auto;\n}\n\n\n\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 346 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__ = __webpack_require__(21);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+
+Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
+    symbol: '$', // El símbolo, por ejemplo €
+    thousandsSeparator: ',', // Separador de miles
+    fractionCount: 2, // ¿Cuántos decimales mostrar?
+    fractionSeparator: '.', // Separador de decimales
+    symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+    symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+});
+//    import moment from 'moment';
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7
+                },
+                monthBeforeYear: false
+            },
+            name_checkbook: '',
+            total_checkbooks: '',
+            desactivar: 0,
+            arrayCheckbook: [],
+            arrayLinksActive: [],
+            checkbook: '',
+            number_checkbooks: '',
+            modal: 0,
+            titleModal: '',
+            arrayDetalle: [],
+            accion: 0,
+            checkbook_id: 0,
+            search: '',
+            valor: 'number_checkbooks',
+            arrayError: [],
+            error: [],
+            pagination: {
+                'total': 0,
+                'current_page': 0,
+                'per_page': 0,
+                'last_page': 0,
+                'from': 0,
+                'to': 0
+            },
+            offset: 3
+        };
+    },
+
+    computed: {
+        //muestra la pagina activa
+        isActived: function isActived() {
+            return this.pagination.current_page;
+        },
+        //Calcula las paginas
+        pagesNumber: function pagesNumber() {
+            if (!this.pagination.to) {
+                return [];
+            }
+
+            var from = this.pagination.current_page - this.offset;
+            if (from < 1) {
+                from = 1;
+            }
+
+            var to = from + this.offset * 2;
+            if (to >= this.pagination.last_page) {
+                to = this.pagination.last_page;
+            }
+
+            var pagesArray = [];
+            while (from <= to) {
+                pagesArray.push(from);
+                from++;
+            }
+            return pagesArray;
+        }
+    },
+
+    methods: {
+        listCheckbooks: function listCheckbooks(page, search, valor) {
+            var me = this;
+            var url = 'checkbook?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayCheckbook = respuesta.checkbooks.data;
+                me.pagination = respuesta.pagination;
+                // console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        detalleCheckbooks: function detalleCheckbooks(number_checkbooks) {
+            var me = this;
+            var url = 'checkbook/listcheckbooks?number_checkbooks=' + number_checkbooks;
+            axios.get(url).then(function (response) {
+                me.arrayDetalle = response.data;
+                // me.arrayDetalle = respuesta.checkbooks.data;
+                // console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        cambiarPagina: function cambiarPagina(page, search, valor) {
+            var me = this;
+            //Actualiza la página actual
+            me.pagination.current_page = page;
+            //Envia la petición para visualizar la data de esa página
+            me.listCheckbooks(page, search, valor);
+        },
+        openModal: function openModal(model, accion) {
+            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+            switch (model) {
+                case "checkbook":
+                    {
+
+                        switch (accion) {
+
+                            case "ver":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.titleModal = 'Detalle de la factura';
+                                    this.accion = 3;
+                                    this.checkbook_id = '';
+                                    this.number_checkbooks = data['number_checkbooks'];
+                                    this.total_checkbooks = data['total_checkbooks'];
+                                    this.detalleCheckbooks(this.number_checkbooks);
+                                    break;
+                                }
+                        }
+                    }
+            }
+        },
+        closeModal: function closeModal() {
+            this.modal = 0;
+            this.arrayError = [];
+            this.listCheckbooks(1, this.search, this.valor);
+        }
+    },
+
+    mounted: function mounted() {
+
+        this.listCheckbooks(1, this.search, this.valor);
+    }
+});
+
+/***/ }),
+/* 347 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container-fluid" }, [
+    _c("div", { staticClass: "card" }, [
+      _vm._m(0),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c("div", { staticClass: "form-group row" }, [
+          _c("div", { staticClass: "col-md-6" }, [
+            _c("div", { staticClass: "input-group" }, [
+              _c(
+                "select",
+                {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.valor,
+                      expression: "valor"
+                    }
+                  ],
+                  staticClass: "form-control col-md-3",
+                  on: {
+                    change: function($event) {
+                      var $$selectedVal = Array.prototype.filter
+                        .call($event.target.options, function(o) {
+                          return o.selected
+                        })
+                        .map(function(o) {
+                          var val = "_value" in o ? o._value : o.value
+                          return val
+                        })
+                      _vm.valor = $event.target.multiple
+                        ? $$selectedVal
+                        : $$selectedVal[0]
+                    }
+                  }
+                },
+                [
+                  _c("option", { attrs: { value: "number_checkbooks" } }, [
+                    _vm._v("Factura")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.search,
+                    expression: "search"
+                  }
+                ],
+                staticClass: "form-control",
+                attrs: { type: "text", placeholder: "Texto a buscar" },
+                domProps: { value: _vm.search },
+                on: {
+                  keyup: function($event) {
+                    return _vm.listCheckbooks(1, _vm.search, _vm.valor)
+                  },
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.search = $event.target.value
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _vm._m(1)
+            ])
+          ])
+        ]),
+        _vm._v(" "),
+        _c(
+          "table",
+          { staticClass: "table table-bordered table-striped table-sm" },
+          [
+            _vm._m(2),
+            _vm._v(" "),
+            _c(
+              "tbody",
+              _vm._l(_vm.arrayCheckbook, function(checkbook) {
+                return _c(
+                  "tr",
+                  { staticClass: "text-center", attrs: { Key: checkbook.id } },
+                  [
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(checkbook.number_checkbooks)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", [
+                      _vm._v(
+                        _vm._s(_vm._f("currency")(checkbook.total_checkbooks))
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn  btn-outline-info btn-sm p-1",
+                          attrs: { href: "#", title: "Ver" },
+                          on: {
+                            click: function($event) {
+                              return _vm.openModal(
+                                "checkbook",
+                                "ver",
+                                checkbook
+                              )
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "far fa-eye" }),
+                          _vm._v(
+                            " Ver Detalle\n                                  "
+                          )
+                        ]
+                      )
+                    ])
+                  ]
+                )
+              }),
+              0
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c("nav", [
+          _c(
+            "ul",
+            { staticClass: "pagination" },
+            [
+              _vm.pagination.current_page > 1
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page - 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Anterior")]
+                    )
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm._l(_vm.pagesNumber, function(page) {
+                return _c(
+                  "li",
+                  {
+                    key: page,
+                    staticClass: "page-item",
+                    class: [page == _vm.isActived ? "active" : ""]
+                  },
+                  [
+                    _c("a", {
+                      staticClass: "page-link",
+                      attrs: { href: "#" },
+                      domProps: { textContent: _vm._s(page) },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.cambiarPagina(page, _vm.search, _vm.valor)
+                        }
+                      }
+                    })
+                  ]
+                )
+              }),
+              _vm._v(" "),
+              _vm.pagination.current_page < _vm.pagination.last_page
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page + 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Siguiente")]
+                    )
+                  ])
+                : _vm._e()
+            ],
+            2
+          )
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        class: { mostrar: _vm.modal },
+        attrs: { tabindex: "-1" }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-dialog-scrollable modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c(
+              "div",
+              { staticClass: "modal-content container bg-container-modal" },
+              [
+                _c("div", { staticClass: "text-center" }, [
+                  _c("h3", {
+                    staticClass: "modal-title degraded-orange",
+                    domProps: { textContent: _vm._s(_vm.titleModal) }
+                  })
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", {
+                      staticClass: "col-md-6 mb-2 certificate  input-group"
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "col-md-6 mb-2 certificate  input-group" },
+                      [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Factura")
+                        ]),
+                        _vm._v(" "),
+                        _c("h2", {
+                          domProps: {
+                            textContent: _vm._s(_vm.number_checkbooks)
+                          }
+                        })
+                      ]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", { staticClass: "col" }, [
+                      _c(
+                        "table",
+                        {
+                          staticClass: "table table-hover  table-sm text-center"
+                        },
+                        [
+                          _vm._m(3),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            {
+                              staticClass: "bg-white text-center table-bordered"
+                            },
+                            _vm._l(_vm.arrayDetalle, function(product) {
+                              return _c("tr", { key: product.id }, [
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(product.name_product)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _vm._v(
+                                    "Precio : " +
+                                      _vm._s(
+                                        _vm._f("currency")(
+                                          product.price_unit_sales
+                                        )
+                                      ) +
+                                      " "
+                                  )
+                                ]),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _vm._v(
+                                    _vm._s(
+                                      _vm._f("currency")(product.quantity_sales)
+                                    )
+                                  )
+                                ]),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(product.total_sales)
+                                  }
+                                })
+                              ])
+                            }),
+                            0
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "table",
+                        {
+                          staticClass: "table table-hover  table-sm text-center"
+                        },
+                        [
+                          _c("thead", [
+                            _c(
+                              "tr",
+                              { staticClass: "d-flex justify-content-end" },
+                              [
+                                _c("th", [_vm._v("total")]),
+                                _vm._v(" "),
+                                _c("th", [
+                                  _vm._v(
+                                    _vm._s(
+                                      _vm._f("currency")(_vm.total_checkbooks)
+                                    )
+                                  )
+                                ])
+                              ]
+                            )
+                          ])
+                        ]
+                      )
+                    ])
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row modal-footer" }, [
+                  _c("div", { staticClass: "col-lg-2" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-danger  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.closeModal()
+                          }
+                        }
+                      },
+                      [
+                        _c("i", { staticClass: "fas fa-times-circle" }),
+                        _vm._v(" Cerrar\n                        ")
+                      ]
+                    )
+                  ])
+                ])
+              ]
+            )
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "card-header" }, [
+      _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
+      _vm._v(" Ventas Recepción\n                ")
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Factura")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("total")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Detalles factura")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Producto")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Precio C/u")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("cantidad")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("total")])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-4ca0bb4a", module.exports)
+  }
+}
+
+/***/ }),
+/* 348 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(349)
+}
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(351)
+/* template */
+var __vue_template__ = __webpack_require__(352)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/assets/js/components/Ticket.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-23bf9a03", Component.options)
+  } else {
+    hotAPI.reload("data-v-23bf9a03", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 349 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(350);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(5)("76495a15", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-23bf9a03\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Ticket.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-23bf9a03\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Ticket.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 350 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(4)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n.certificate label {\n   font-size: 30px;\n   padding-right: 10px;\n}\n.certificate h2{\n   color: rgb(235, 23, 23);\n   font-size: 40px;\n}\n.form_certificate{\n  overflow: auto;\n}\n\n\n\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 351 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue2_datepicker__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vue2_datepicker_index_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vue2_datepicker_locale_es__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__ = __webpack_require__(21);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+
+Vue.use(__WEBPACK_IMPORTED_MODULE_3_vue_currency_filter__["a" /* default */], {
+    symbol: '$', // El símbolo, por ejemplo €
+    thousandsSeparator: ',', // Separador de miles
+    fractionCount: 2, // ¿Cuántos decimales mostrar?
+    fractionSeparator: '.', // Separador de decimales
+    symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+    symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+});
+//    import moment from 'moment';
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            lang: {
+                formatLocale: {
+                    firstDayOfWeek: 7
+                },
+                monthBeforeYear: false
+            },
+            name_bill: '',
+            total_bills: '',
+            desactivar: 0,
+            arrayBill: [],
+            arrayLinksActive: [],
+            bill: '',
+            number_bill: '',
+            modal: 0,
+            titleModal: '',
+            arrayDetalleBills: [],
+            arrayDetalleSales: [],
+            accion: 0,
+            bill_id: 0,
+            search: '',
+            valor: 'number_bill',
+            arrayError: [],
+            error: [],
+            pagination: {
+                'total': 0,
+                'current_page': 0,
+                'per_page': 0,
+                'last_page': 0,
+                'from': 0,
+                'to': 0
+            },
+            offset: 3
+        };
+    },
+
+    computed: {
+        //muestra la pagina activa
+        isActived: function isActived() {
+            return this.pagination.current_page;
+        },
+        //Calcula las paginas
+        pagesNumber: function pagesNumber() {
+            if (!this.pagination.to) {
+                return [];
+            }
+
+            var from = this.pagination.current_page - this.offset;
+            if (from < 1) {
+                from = 1;
+            }
+
+            var to = from + this.offset * 2;
+            if (to >= this.pagination.last_page) {
+                to = this.pagination.last_page;
+            }
+
+            var pagesArray = [];
+            while (from <= to) {
+                pagesArray.push(from);
+                from++;
+            }
+            return pagesArray;
+        }
+    },
+
+    methods: {
+        listBills: function listBills(page, search, valor) {
+            var me = this;
+            var url = 'bill?page=' + page + '&search=' + search + "&valor=" + valor;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayBill = respuesta.bills.data;
+                me.pagination = respuesta.pagination;
+                // console.log(response);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        detalleBills: function detalleBills(number_bill) {
+            var me = this;
+            var url = 'bill/listbills?number_bill=' + number_bill;
+            axios.get(url).then(function (response) {
+                var respuesta = response.data;
+                me.arrayDetalleBills = respuesta.bills;
+                me.arrayDetalleSales = respuesta.sales;
+                // me.arrayDetalle = respuesta.bills.data;
+                //console.log(me.arrayDetalleBills);
+            }).catch(function (error) {
+                console.log(error);
+            });
+        },
+        cambiarPagina: function cambiarPagina(page, search, valor) {
+            var me = this;
+            //Actualiza la página actual
+            me.pagination.current_page = page;
+            //Envia la petición para visualizar la data de esa página
+            me.listBills(page, search, valor);
+        },
+        openModal: function openModal(model, accion) {
+            var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+            switch (model) {
+                case "bill":
+                    {
+
+                        switch (accion) {
+
+                            case "ver":
+                                {
+
+                                    //console.log(data);
+                                    this.modal = 1;
+                                    this.desactivar = 1;
+                                    this.titleModal = 'Detalle de la factura';
+                                    this.accion = 3;
+                                    this.bill_id = '';
+                                    this.number_bill = data['number_bill'];
+                                    this.total_bills = data['total_bill'];
+                                    this.detalleBills(this.number_bill);
+                                    break;
+                                }
+                        }
+                    }
+            }
+        },
+        closeModal: function closeModal() {
+            this.modal = 0;
+            this.arrayError = [];
+            this.listBills(1, this.search, this.valor);
+        }
+    },
+
+    mounted: function mounted() {
+
+        this.listBills(1, this.search, this.valor);
+    }
+});
+
+/***/ }),
+/* 352 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container-fluid" }, [
+    _c("div", { staticClass: "card" }, [
+      _vm._m(0),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c("div", { staticClass: "form-group row" }, [
+          _c("div", { staticClass: "col-md-6" }, [
+            _c("div", { staticClass: "input-group" }, [
+              _c(
+                "select",
+                {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.valor,
+                      expression: "valor"
+                    }
+                  ],
+                  staticClass: "form-control col-md-3",
+                  on: {
+                    change: function($event) {
+                      var $$selectedVal = Array.prototype.filter
+                        .call($event.target.options, function(o) {
+                          return o.selected
+                        })
+                        .map(function(o) {
+                          var val = "_value" in o ? o._value : o.value
+                          return val
+                        })
+                      _vm.valor = $event.target.multiple
+                        ? $$selectedVal
+                        : $$selectedVal[0]
+                    }
+                  }
+                },
+                [
+                  _c("option", { attrs: { value: "number_bill" } }, [
+                    _vm._v("Factura")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.search,
+                    expression: "search"
+                  }
+                ],
+                staticClass: "form-control",
+                attrs: { type: "text", placeholder: "Texto a buscar" },
+                domProps: { value: _vm.search },
+                on: {
+                  keyup: function($event) {
+                    return _vm.listBills(1, _vm.search, _vm.valor)
+                  },
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.search = $event.target.value
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _vm._m(1)
+            ])
+          ])
+        ]),
+        _vm._v(" "),
+        _c(
+          "table",
+          { staticClass: "table table-bordered table-striped table-sm" },
+          [
+            _vm._m(2),
+            _vm._v(" "),
+            _c(
+              "tbody",
+              _vm._l(_vm.arrayBill, function(bill) {
+                return _c(
+                  "tr",
+                  { staticClass: "text-center", attrs: { Key: bill.id } },
+                  [
+                    _c("td", {
+                      domProps: { textContent: _vm._s(bill.number_bill) }
+                    }),
+                    _vm._v(" "),
+                    _c("td", [
+                      _vm._v(_vm._s(_vm._f("currency")(bill.total_bills)))
+                    ]),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "a",
+                        {
+                          staticClass: "btn  btn-warning btn-sm p-1",
+                          attrs: { href: "#", title: "Ver" },
+                          on: {
+                            click: function($event) {
+                              return _vm.openModal("bill", "ver", bill)
+                            }
+                          }
+                        },
+                        [
+                          _c("i", { staticClass: "far fa-eye" }),
+                          _vm._v(
+                            " Ver Detalle\n                                  "
+                          )
+                        ]
+                      )
+                    ])
+                  ]
+                )
+              }),
+              0
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c("nav", [
+          _c(
+            "ul",
+            { staticClass: "pagination" },
+            [
+              _vm.pagination.current_page > 1
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page - 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Anterior")]
+                    )
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm._l(_vm.pagesNumber, function(page) {
+                return _c(
+                  "li",
+                  {
+                    key: page,
+                    staticClass: "page-item",
+                    class: [page == _vm.isActived ? "active" : ""]
+                  },
+                  [
+                    _c("a", {
+                      staticClass: "page-link",
+                      attrs: { href: "#" },
+                      domProps: { textContent: _vm._s(page) },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.cambiarPagina(page, _vm.search, _vm.valor)
+                        }
+                      }
+                    })
+                  ]
+                )
+              }),
+              _vm._v(" "),
+              _vm.pagination.current_page < _vm.pagination.last_page
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page + 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Siguiente")]
+                    )
+                  ])
+                : _vm._e()
+            ],
+            2
+          )
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        class: { mostrar: _vm.modal },
+        attrs: { tabindex: "-1" }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-dialog-scrollable modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c(
+              "div",
+              { staticClass: "modal-content container bg-container-modal" },
+              [
+                _c("div", { staticClass: "text-center" }, [
+                  _c("h3", {
+                    staticClass: "modal-title degraded-orange",
+                    domProps: { textContent: _vm._s(_vm.titleModal) }
+                  })
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", {
+                      staticClass: "col-md-6 mb-2 certificate  input-group"
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "col-md-6 mb-2 certificate  input-group" },
+                      [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Factura")
+                        ]),
+                        _vm._v(" "),
+                        _c("h2", {
+                          domProps: { textContent: _vm._s(_vm.number_bill) }
+                        })
+                      ]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "row" }, [
+                    _c("div", { staticClass: "col" }, [
+                      _c(
+                        "table",
+                        {
+                          staticClass: "table table-hover  table-sm text-center"
+                        },
+                        [
+                          _vm._m(3),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            {
+                              staticClass: "bg-white text-center table-bordered"
+                            },
+                            _vm._l(_vm.arrayDetalleSales, function(product) {
+                              return _c("tr", { key: product.id }, [
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(product.name_product)
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _vm._v(
+                                    "Precio : " +
+                                      _vm._s(
+                                        _vm._f("currency")(
+                                          product.price_unit_sales
+                                        )
+                                      ) +
+                                      " "
+                                  )
+                                ]),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _vm._v(
+                                    _vm._s(
+                                      _vm._f("currency")(product.quantity_sales)
+                                    )
+                                  )
+                                ]),
+                                _vm._v(" "),
+                                _c("td", {
+                                  domProps: {
+                                    textContent: _vm._s(product.total_sales)
+                                  }
+                                })
+                              ])
+                            }),
+                            0
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "table",
+                        {
+                          staticClass: "table table-hover  table-sm text-center"
+                        },
+                        [
+                          _c("thead", [
+                            _c(
+                              "tr",
+                              { staticClass: "d-flex justify-content-end" },
+                              [
+                                _c("th", [_vm._v("total")]),
+                                _vm._v(" "),
+                                _c("th", [
+                                  _vm._v(
+                                    _vm._s(_vm._f("currency")(_vm.total_bill))
+                                  )
+                                ])
+                              ]
+                            )
+                          ])
+                        ]
+                      )
+                    ])
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row modal-footer" }, [
+                  _c("div", { staticClass: "col-lg-2" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "btn btn-danger  text-white",
+                        on: {
+                          click: function($event) {
+                            return _vm.closeModal()
+                          }
+                        }
+                      },
+                      [
+                        _c("i", { staticClass: "fas fa-times-circle" }),
+                        _vm._v(" Cerrar\n                        ")
+                      ]
+                    )
+                  ])
+                ])
+              ]
+            )
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "card-header" }, [
+      _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
+      _vm._v(" Ventas habitación\n                ")
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Factura")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("total")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Detalles factura")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Producto")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Precio C/u")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("cantidad")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("total")])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-23bf9a03", module.exports)
+  }
+}
+
+/***/ }),
+/* 353 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(354)
+}
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(356)
+/* template */
+var __vue_template__ = __webpack_require__(357)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/assets/js/components/Additional.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-bdc04bc4", Component.options)
+  } else {
+    hotAPI.reload("data-v-bdc04bc4", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 354 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(355);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(5)("10c6c389", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-bdc04bc4\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Additional.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-bdc04bc4\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./Additional.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 355 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(4)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-content{\nwidth:100% ! important;\nposition:  absolute ! important;\n}\n.mostrar{\ndisplay:  list-item ! important;  \nopacity:  1 ! important;\nposition:  absolute ! important;\nbackground-color: #3c29297a !important;\n}\n\n\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 356 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue_currency_filter__ = __webpack_require__(21);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+Vue.use(__WEBPACK_IMPORTED_MODULE_0_vue_currency_filter__["a" /* default */], {
+  symbol: '$', // El símbolo, por ejemplo €
+  thousandsSeparator: ',', // Separador de miles
+  fractionCount: 2, // ¿Cuántos decimales mostrar?
+  fractionSeparator: '.', // Separador de decimales
+  symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+  symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+});
+//    import moment from 'moment';
+/* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      name_additional: '',
+      price_additional: '',
+      description_additional: '',
+      desactivar: 0,
+      arrayAdditional: [],
+      arrayLinksActive: [],
+      additional: '',
+      modal: 0,
+      titleModal: '',
+      accion: 0,
+      additional_id: 0,
+      search: '',
+      valor: 'name_additional',
+      arrayError: [],
+      error: [],
+      pagination: {
+        'total': 0,
+        'current_page': 0,
+        'per_page': 0,
+        'last_page': 0,
+        'from': 0,
+        'to': 0
+      },
+      offset: 3
+    };
+  },
+
+  computed: {
+    //muestra la pagina activa
+    isActived: function isActived() {
+      return this.pagination.current_page;
+    },
+    //Calcula las paginas
+    pagesNumber: function pagesNumber() {
+      if (!this.pagination.to) {
+        return [];
+      }
+
+      var from = this.pagination.current_page - this.offset;
+      if (from < 1) {
+        from = 1;
+      }
+
+      var to = from + this.offset * 2;
+      if (to >= this.pagination.last_page) {
+        to = this.pagination.last_page;
+      }
+
+      var pagesArray = [];
+      while (from <= to) {
+        pagesArray.push(from);
+        from++;
+      }
+      return pagesArray;
+    }
+  },
+
+  methods: {
+    listAdditionals: function listAdditionals(page, search, valor) {
+      var me = this;
+      var url = 'additional?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.get(url).then(function (response) {
+        var respuesta = response.data;
+        me.arrayAdditional = respuesta.additionals.data;
+        me.pagination = respuesta.pagination;
+        // console.log(respuesta);
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    cambiarPagina: function cambiarPagina(page, search, valor) {
+      var me = this;
+      //Actualiza la página actual
+      me.pagination.current_page = page;
+      //Envia la petición para visualizar la data de esa página
+      me.listAdditionals(page, search, valor);
+    },
+    openModal: function openModal(model, accion) {
+      var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+
+      switch (model) {
+        case "additional":
+          {
+
+            switch (accion) {
+              case "create":
+                {
+                  this.modal = 1;
+                  this.desactivar = 0;
+                  this.titleModal = 'Registrar una nueva adicional';
+                  this.accion = 1;
+                  this.name_additional = '';
+                  this.description_additional = '';
+                  this.price_additional = '';
+
+                  break;
+                };
+
+              case "editar":
+                {
+
+                  //console.log(data);
+                  this.modal = 1;
+                  this.desactivar = 0;
+                  this.titleModal = 'Editar adicional';
+                  this.accion = 2;
+                  this.additional_id = data['id'];
+                  this.name_additional = data['name_additional'];
+                  this.description_additional = data['description_additional'];
+                  this.price_additional = data['price_additional'];
+
+                  break;
+                };
+
+              case "ver":
+                {
+
+                  //console.log(data);
+                  this.modal = 1;
+                  this.desactivar = 1;
+                  this.titleModal = 'Información completa de la adicional';
+                  this.accion = 3;
+                  this.additional_id = data['id'];
+                  this.name_additional = data['name_additional'];
+                  this.description_additional = data['description_additional'];
+                  this.price_additional = data['price_additional'];
+
+                  break;
+                }
+            }
+          }
+      }
+    },
+    closeModal: function closeModal() {
+      this.modal = 0;
+      this.arrayError = [];
+      this.listAdditionals(1, this.search, this.valor);
+    },
+    registerAdditional: function registerAdditional(page, search, valor) {
+
+      var me = this;
+      var url = 'additional/register?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.post(url, {
+
+        'name_additional': this.name_additional,
+        'description_additional': this.description_additional,
+        'price_additional': this.price_additional
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Tu adicional fue Registrada con Éxito',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    updateAdditional: function updateAdditional(page, search, valor) {
+
+      var me = this;
+      var url = 'additional/update?page=' + page + '&search=' + search + "&valor=" + valor;
+      axios.put(url, {
+        'id': this.additional_id,
+        'name_additional': this.name_additional,
+        'description_additional': this.description_additional,
+        'price_additional': this.price_additional
+
+      }).then(function (response) {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'adicional Actualizada con Éxito',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        me.closeModal();
+      }).catch(function (error) {
+        var respuesta = error.response.data;
+        me.arrayError = respuesta.errors;
+        console.log(error.response.data);
+      });
+    },
+    activarAdditional: function activarAdditional(id) {
+      var _this = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: 'Está seguro?',
+        text: "Va a Activar ésta adicional!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, Activala',
+        cancelButtonText: 'No, Cancelar!',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          var me = _this;
+
+          axios.put('additional/activo', {
+            'id': id
+          }).then(function (response) {
+            me.listAdditionals(1, '', 'valor');
+          }).catch(function (error) {
+            console.log(error);
+          });
+
+          swalWithBootstrapButtons.fire('Activado!', 'Tu adicional quedó Activada.', 'success');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire('Cancelado', 'Tu adicional sigue Desactivada :)', 'error');
+        }
+      });
+    },
+    desactivarAdditional: function desactivarAdditional(id) {
+      var _this2 = this;
+
+      var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-success',
+          cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: 'Está seguro?',
+        text: "Va a desactivar ésta adicional!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, Desactivala',
+        cancelButtonText: 'No, Cancelar!',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.value) {
+
+          var me = _this2;
+
+          axios.put('additional/inactivo', {
+            'id': id
+          }).then(function (response) {
+            me.listAdditionals(1, '', 'valor');
+          }).catch(function (error) {
+            console.log(error);
+          });
+
+          swalWithBootstrapButtons.fire('Desativado!', 'Tu adicional quedó desativada.', 'success');
+        } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire('Cancelado', 'Tu adicional está a salvo :)', 'error');
+        }
+      });
+    }
+  },
+
+  mounted: function mounted() {
+
+    this.listAdditionals(1, this.search, this.valor);
+  }
+});
+
+/***/ }),
+/* 357 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container-fluid" }, [
+    _c("div", { staticClass: "card" }, [
+      _c("div", { staticClass: "card-header" }, [
+        _c("i", { staticClass: "fas fa-chevron-right fa5x" }),
+        _vm._v(" Adicionales\n                    "),
+        _c(
+          "button",
+          {
+            staticClass: "btn btn-success",
+            attrs: { type: "button" },
+            on: {
+              click: function($event) {
+                return _vm.openModal("additional", "create")
+              }
+            }
+          },
+          [
+            _c("i", { staticClass: "fas fa-plus-circle" }),
+            _vm._v(" Nuevo adicional\n                    ")
+          ]
+        )
+      ]),
+      _vm._v(" "),
+      _c("div", { staticClass: "card-body" }, [
+        _c("div", { staticClass: "form-group row" }, [
+          _c("div", { staticClass: "col-md-6" }, [
+            _c("div", { staticClass: "input-group" }, [
+              _c(
+                "select",
+                {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.valor,
+                      expression: "valor"
+                    }
+                  ],
+                  staticClass: "form-control col-md-3",
+                  on: {
+                    change: function($event) {
+                      var $$selectedVal = Array.prototype.filter
+                        .call($event.target.options, function(o) {
+                          return o.selected
+                        })
+                        .map(function(o) {
+                          var val = "_value" in o ? o._value : o.value
+                          return val
+                        })
+                      _vm.valor = $event.target.multiple
+                        ? $$selectedVal
+                        : $$selectedVal[0]
+                    }
+                  }
+                },
+                [
+                  _c("option", { attrs: { value: "name_additional" } }, [
+                    _vm._v("Nombre")
+                  ])
+                ]
+              ),
+              _vm._v(" "),
+              _c("input", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.search,
+                    expression: "search"
+                  }
+                ],
+                staticClass: "form-control",
+                attrs: { type: "text", placeholder: "Texto a buscar" },
+                domProps: { value: _vm.search },
+                on: {
+                  keyup: function($event) {
+                    return _vm.listAdditionals(1, _vm.search, _vm.valor)
+                  },
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.search = $event.target.value
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _vm._m(0)
+            ])
+          ])
+        ]),
+        _vm._v(" "),
+        _c(
+          "table",
+          { staticClass: "table table-bordered table-striped table-sm" },
+          [
+            _vm._m(1),
+            _vm._v(" "),
+            _c(
+              "tbody",
+              _vm._l(_vm.arrayAdditional, function(additional) {
+                return _c(
+                  "tr",
+                  { staticClass: "text-center", attrs: { Key: additional.id } },
+                  [
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(additional.name_additional)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("td", [
+                      _vm._v(
+                        _vm._s(_vm._f("currency")(additional.price_additional))
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("td", {
+                      domProps: {
+                        textContent: _vm._s(additional.description_additional)
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "td",
+                      [
+                        _c(
+                          "a",
+                          {
+                            staticClass: "btn  btn-outline-info btn-sm p-1",
+                            attrs: { href: "#", title: "Ver" },
+                            on: {
+                              click: function($event) {
+                                return _vm.openModal(
+                                  "additional",
+                                  "ver",
+                                  additional
+                                )
+                              }
+                            }
+                          },
+                          [_c("i", { staticClass: "far fa-eye" })]
+                        ),
+                        _vm._v(" "),
+                        _c("span", [_vm._v(" ")]),
+                        _vm._v(" "),
+                        _c(
+                          "a",
+                          {
+                            staticClass: "btn btn-outline-warning btn-sm p-1",
+                            attrs: { href: "#", title: "Editar" },
+                            on: {
+                              click: function($event) {
+                                return _vm.openModal(
+                                  "additional",
+                                  "editar",
+                                  additional
+                                )
+                              }
+                            }
+                          },
+                          [_c("i", { staticClass: "fas fa-user-edit" })]
+                        ),
+                        _vm._v(" "),
+                        _c("span", [_vm._v(" ")]),
+                        _vm._v(" "),
+                        additional.condition_additional
+                          ? [
+                              _c(
+                                "button",
+                                {
+                                  staticClass:
+                                    "btn btn-outline-success btn-sm p-1",
+                                  attrs: { title: "Activo" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.desactivarAdditional(
+                                        additional.id
+                                      )
+                                    }
+                                  }
+                                },
+                                [_c("i", { staticClass: "fas fa-check p-1" })]
+                              )
+                            ]
+                          : [
+                              _c(
+                                "a",
+                                {
+                                  staticClass: "btn btn-outline-danger btn-sm",
+                                  attrs: { href: "#", title: "Inactivo" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.activarAdditional(
+                                        additional.id
+                                      )
+                                    }
+                                  }
+                                },
+                                [_c("i", { staticClass: "fas fa-times" })]
+                              )
+                            ]
+                      ],
+                      2
+                    )
+                  ]
+                )
+              }),
+              0
+            )
+          ]
+        ),
+        _vm._v(" "),
+        _c("nav", [
+          _c(
+            "ul",
+            { staticClass: "pagination" },
+            [
+              _vm.pagination.current_page > 1
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page - 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Anterior")]
+                    )
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm._l(_vm.pagesNumber, function(page) {
+                return _c(
+                  "li",
+                  {
+                    key: page,
+                    staticClass: "page-item",
+                    class: [page == _vm.isActived ? "active" : ""]
+                  },
+                  [
+                    _c("a", {
+                      staticClass: "page-link",
+                      attrs: { href: "#" },
+                      domProps: { textContent: _vm._s(page) },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.cambiarPagina(page, _vm.search, _vm.valor)
+                        }
+                      }
+                    })
+                  ]
+                )
+              }),
+              _vm._v(" "),
+              _vm.pagination.current_page < _vm.pagination.last_page
+                ? _c("li", { staticClass: "page-item" }, [
+                    _c(
+                      "a",
+                      {
+                        staticClass: "page-link",
+                        attrs: { href: "#" },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.cambiarPagina(
+                              _vm.pagination.current_page + 1,
+                              _vm.search,
+                              _vm.valor
+                            )
+                          }
+                        }
+                      },
+                      [_vm._v("Siguiente")]
+                    )
+                  ])
+                : _vm._e()
+            ],
+            2
+          )
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        class: { mostrar: _vm.modal },
+        staticStyle: { display: "none" },
+        attrs: {
+          tabindex: "-1",
+          role: "dialog",
+          "aria-labelledby": "myModalLabel",
+          "aria-hidden": "true"
+        }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass: "modal-dialog modal-primary modal-lg",
+            attrs: { role: "document" }
+          },
+          [
+            _c("div", { staticClass: "modal-content" }, [
+              _c("div", { staticClass: "modal-header" }, [
+                _c("h4", {
+                  staticClass: "modal-title",
+                  domProps: { textContent: _vm._s(_vm.titleModal) }
+                }),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    staticClass: "close",
+                    attrs: { type: "button" },
+                    on: {
+                      click: function($event) {
+                        return _vm.closeModal()
+                      }
+                    }
+                  },
+                  [
+                    _c("span", { attrs: { "aria-hidden": "true" } }, [
+                      _vm._v("×")
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "modal-body" }, [
+                _c(
+                  "form",
+                  {
+                    staticClass: "form-horizontal additional",
+                    attrs: {
+                      action: "",
+                      method: "post",
+                      enctype: "multipart/form-data"
+                    }
+                  },
+                  [
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-lg-6 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Nombre")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.name_additional,
+                              expression: "name_additional"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "text",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.name_additional },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.name_additional = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-6 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Precio")
+                        ]),
+                        _vm._v(" "),
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.price_additional,
+                              expression: "price_additional"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            type: "number",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.price_additional },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.price_additional = $event.target.value
+                            }
+                          }
+                        })
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-lg-12 mb-2" }, [
+                        _c("label", { attrs: { for: "text-input " } }, [
+                          _vm._v("Descripción")
+                        ]),
+                        _vm._v(" "),
+                        _c("textarea", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.description_additional,
+                              expression: "description_additional"
+                            }
+                          ],
+                          staticClass: "form-control",
+                          attrs: {
+                            cols: "30",
+                            rows: "4",
+                            placeholder: "",
+                            disabled: _vm.desactivar == 1
+                          },
+                          domProps: { value: _vm.description_additional },
+                          on: {
+                            input: function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.description_additional = $event.target.value
+                            }
+                          }
+                        })
+                      ])
+                    ])
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "modal-footer" },
+                [
+                  _c(
+                    "a",
+                    {
+                      staticClass: "btn btn-danger  text-white",
+                      on: {
+                        click: function($event) {
+                          return _vm.closeModal()
+                        }
+                      }
+                    },
+                    [_vm._v("Cerrar")]
+                  ),
+                  _vm._v(" "),
+                  _vm.accion == 1
+                    ? _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-success  text-white",
+                          on: {
+                            click: function($event) {
+                              return _vm.registerAdditional()
+                            }
+                          }
+                        },
+                        [_vm._v("Registrar")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.accion == 2
+                    ? _c(
+                        "a",
+                        {
+                          staticClass: "btn btn-success  text-white",
+                          on: {
+                            click: function($event) {
+                              return _vm.updateAdditional()
+                            }
+                          }
+                        },
+                        [_vm._v("Actualizar")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c("hr"),
+                  _vm._v(" "),
+                  _vm.arrayError
+                    ? [
+                        _c("div", [
+                          _c(
+                            "ul",
+                            { staticClass: "list-unstyled  alert-danger  row" },
+                            _vm._l(_vm.arrayError, function(error) {
+                              return _c("li", {
+                                staticClass:
+                                  "col-sm-12 col-md-6 col-lg-6 pull-left",
+                                domProps: { textContent: _vm._s(error[0]) }
+                              })
+                            }),
+                            0
+                          )
+                        ])
+                      ]
+                    : _vm._e()
+                ],
+                2
+              )
+            ])
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      { staticClass: "btn btn-primary", attrs: { type: "submit" } },
+      [_c("i", { staticClass: "fa fa-search" }), _vm._v(" Buscar")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("thead", [
+      _c("tr", [
+        _c("th", [_vm._v("Nombre")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Precio")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Descripción")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Opciones")])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-bdc04bc4", module.exports)
+  }
+}
+
+/***/ }),
+/* 358 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin

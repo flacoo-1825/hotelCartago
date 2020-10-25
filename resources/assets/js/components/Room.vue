@@ -131,7 +131,7 @@
                             <div class="modal-footer">
                                 <a  class="btn btn-danger  text-white" @click="closeModal()">Cerrar</a>
                                 <a  class="btn btn-success  text-white"  @click="registerRoom()" v-if="accion==1">Registrar</a>
-                                <a  class="btn btn-success  text-white" @click="updateroom()" v-if="accion==2">Actualizar</a>
+                                <a  class="btn btn-success  text-white" @click="updateRoom()" v-if="accion==2">Actualizar</a>
                                 <hr>
                                 <template v-if="arrayError">
                                     <div >
@@ -155,6 +155,15 @@
 
 
 <script>
+  import VueCurrencyFilter from 'vue-currency-filter'
+    Vue.use(VueCurrencyFilter, {
+      symbol: '$', // El símbolo, por ejemplo €
+      thousandsSeparator: ',', // Separador de miles
+      fractionCount: 2, // ¿Cuántos decimales mostrar?
+      fractionSeparator: '.', // Separador de decimales
+      symbolPosition: 'front', // Posición del símbolo. Puede ser al inicio ('front') o al final ('') es decir, si queremos que sea al final, en lugar de front ponemos una cadena vacía ''
+      symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
+    })
 
   export default {
 
@@ -162,6 +171,7 @@
         return {
             name_room : 'Clase de habitación',
             type_id:0,
+            habitacion_id : 0,
             type_room : 0,
             number : '',
             price : '',
@@ -221,7 +231,7 @@
             }
             return pagesArray;             
 
-        }
+        },
     },
 
 
@@ -295,7 +305,7 @@
                           this.desactivar = 0;
                           this.titleModal = 'Editar habitación';
                           this.accion = 2;
-                          this.habitacion_id = data['rooms_id'];
+                          this.habitacion_id = data['id'];
                           this.type_room =  data['type_room_id'];
                           this.number =  data['number'];
                           this.price =  data['price'];
@@ -316,7 +326,7 @@
                           this.desactivar = 1;
                           this.titleModal = 'Información completa de la habitación';
                           this.accion = 3;
-                          this.habitacion_id = data['rooms_id'];
+                          this.habitacion_id = data['id'];
                           this.type_room =  data['type_room'];
                           this.number =  data['number'];
                           this.price =  data['price'];
@@ -433,7 +443,7 @@
                           axios.put('room/activo',{
                               'id': id
                           }).then(function (response) {
-                              me.listRoom(1,'','valor');
+                              me.listRooms(1,'','valor');
                            
                           }).catch(function (error) {
                               console.log(error);

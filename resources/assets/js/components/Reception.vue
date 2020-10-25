@@ -113,7 +113,7 @@
                       </div>
                       <div class="row modal-footer">
                         <div class="col-lg-2">
-                          <a class="btn btn-danger  text-white" @click="closeModalAcomp()">Cerrar</a>
+                          <a class="btn btn-danger  text-white" @click="closeModal('acomp')">Cerrar</a>
                         </div>       
                       </div>
                       <!-- /.modal-content -->
@@ -128,7 +128,7 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title" v-text="titleModal"></h4>
-                                <button type="button" class="close" @click="closeModal()">
+                                <button type="button" class="close" @click="closeModal('modal')">
                                 <span aria-hidden="true">×</span>
                                 </button>
                             </div>
@@ -434,7 +434,7 @@
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <a  class="btn btn-danger  text-white" @click="closeModal()">Cerrar</a>
+                                <a  class="btn btn-danger  text-white" @click="closeModal('modal')">Cerrar</a>
                                 <a  class="btn btn-success  text-white"  @click="search_client(cc_client)" v-if="accion==1">Ingresar</a>
                                 <a  class="btn btn-success  text-white" @click="registerCustomers()" v-if="accion==3">Registrar</a>
                                 <a  class="btn btn-success  text-white" @click="stateBusy()" v-if="accion==4">Hospedar</a>
@@ -459,11 +459,14 @@
                     <div class="card-header">
                         <i class="fas fa-chevron-right fa5x"></i> Factura
                         <span>
-                            <button type="button" class="btn btn-danger"  @click="factura=0;closeModal()">
+                            <button type="button" class="btn btn-danger"  @click="factura=0;closeModal('modal')">
                               <i class="fas fa-times-circle"></i> Cerrar
                             </button>
-                            <a  class="btn btn-info shadow text-white" @click="stateFree()" v-if="accion==2">
+                            <a  class="btn btn-primary shadow text-white" @click="question()" v-if="accion==2">
                               <i class="fas fa-money-check-alt"></i> Facturar
+                            </a>
+                            <a  class="btn btn-warning shadow text-black" @click="openModal('room','move')" v-if="accion==2">
+                              <i class="fas fa-exchange-alt"></i> Trasladar habitación
                             </a>
                         </span>
                     </div>
@@ -513,11 +516,14 @@
                           <hr>
                           <div class="row mb-4 mt-3">
                               <div class="col-md-12 mb-2 text-center certificate">
-                                  <h3>Ventas adiccionales</h3>
+                                  <h3>Productos consumidos</h3>
                               </div>
                               <div class="col-md-12 mb-2 text-right certificate">
                                   <button type="button" class="btn btn-success"  @click="openModal('room','sale')">
                                     <i class="fas fa-cash-register"></i> Venta Extra
+                                  </button>
+                                  <button type="button" class="btn btn-info"  @click="openModal('room','additional')">
+                                    <i class="fas fa-plus-circle"></i> Adicional
                                   </button>
                               </div>
                           </div>
@@ -555,31 +561,84 @@
                                   </tr>
                               </tbody>
                             </table>
-                            <!-- <nav>
-                                <ul class="pagination">
-                                  <li class="page-item" v-if="pagination.current_page > 1">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1,search,valor)">Anterior</a>
-                                  </li>
-                                  <li class="page-item" v-for="page in pagesNumber" :key="page" :class="[page == isActived ? 'active' : '']">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(page,search,valor)" v-text="page"></a>
-                                  </li>
-                                  <li class="page-item" v-if="pagination.current_page < pagination.last_page">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1,search,valor)">Siguiente</a>
-                                  </li>
-                                </ul>
-                            </nav> -->
+                            <table class="table table-hover  table-sm text-center" >
+                                <thead >
+                                  <tr class="d-flex justify-content-end">
+                                    <th>total</th>
+                                    <th>{{totalNewSaleFacture | currency}}</th>
+                                  </tr>
+                                </thead>
+                              </table>
+                          </div>
+                          <hr>
+                          <div class="row mb-4 mt-3">
+                              <div class="col-md-12 mb-2 text-center certificate">
+                                  <h4>Adiccionales</h4>
+                              </div>
+                          </div>
+                          <div class="row">
+                            <table class="table table-bordered table-striped table-sm">
+                              <thead >
+                                  <tr>
+                                      <th class="text-center">Producto</th>
+                                      <th class="text-center">Factura</th>
+                                      <th class="text-center">total</th>
+                                      <th class="text-center">
+                                        <span class="custom-control custom-checkbox">
+                                          <a href="#" @click="selectAll()" class="btn btn-primary">Seleccionar Todo</a>
+                                        </span>
+                                        <span class="custom-control custom-checkbox">
+                                          <a href="#" class="btn btn-success" @click="openModal('room','reception')" >Generar factura</a>
+                                        </span>
+                                      </th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr class="text-center" v-for="additional in listAdditional" :Key="additional.id">
+                                    <td v-text="additional.name_additional">
+                                    </td>
+                                    <td  v-text="additional.number_facture"></td>
+                                    <!-- <td  v-text="additional.quantity_sales"></td> -->
+                                    <td>{{additional.total | currency}}</td>
+                                    <td class="d-flex justify-content-center">
+                                        <span class="custom-control custom-checkbox">
+                                          <input type="checkbox" class="custom-control-input prueba" :value="additional"  :id="additional.id" v-model="check" >
+                                          <label :for="additional.id"  class="custom-control-label" >facturar por recepción</label>
+                                        </span>
+                                    </td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                            <table class="table table-hover  table-sm text-center" >
+                                <thead >
+                                  <tr class="d-flex justify-content-end">
+                                    <th>total</th>
+                                    <th>{{totalNewSaleFacture | currency}}</th>
+                                  </tr>
+                                </thead>
+                              </table>
                           </div>
                         </div>
                     </div>
           </div>
         </template>
-        <div class="modal fade" tabindex="-1" :class="{'mostrar' : add}" >
+        <div class="modal fade" tabindex="-1" :class="{'mostrar' : add2}" >
                   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
                     <div class="modal-content container bg-container-modal">
                       <div class="text-center">
                         <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
                       </div>
                       <div class="modal-body">
+                        <template v-if="newSale==2">
+                          <div class="row">
+                            <div class="col-md-6 mb-2 certificate  input-group">
+                            </div>
+                            <div class="col-md-6 mb-2 certificate  input-group">
+                                <label for="text-input ">Código</label>
+                                <h2 v-text="number_reception"></h2>
+                            </div>
+                          </div>
+                        </template>
                         <div class="row">
                           <div class="col-md-12">
                             <template v-if="newSale==1">
@@ -591,14 +650,16 @@
                           </div>
                           <div class="col">
                             <table class="table table-hover  table-sm text-center" >
-                              <thead >
-                                <tr>
-                                  <th>Producto</th>
-                                  <th>Precio C/u</th>
-                                  <th>cantidad</th>
-                                  <th>total</th>
-                                </tr>
-                              </thead>
+                              <template v-if="newSale==1 || newSale==2">
+                                <thead >
+                                  <tr>
+                                    <th>Producto</th>
+                                    <th>Precio C/u</th>
+                                    <th>cantidad</th>
+                                    <th>total</th>
+                                  </tr>
+                                </thead>
+                              </template>
                               <template v-if="newSale==1">
                                 <tbody class="bg-white text-center table-bordered">
                                   <tr v-for="product in arrayProducts " :key="product.id">
@@ -607,7 +668,7 @@
                                     <td>
                                       <input type="number" v-model="cantidad_product">
                                     </td>
-                                    <td v-text="product.sale_product*cantidad_product"></td>
+                                    <td>{{product.sale_product*cantidad_product | currency}}</td>
                                     <!-- <td v-text:format="dateformat(acomp.birth_date_acomp)"></td> -->
                                     <td>
                                       <a href="#" class="btn btn-success "  title="Agregar" @click="addProduct(product)" >
@@ -640,14 +701,46 @@
                             </template>
                           </div>
                         </div>
+                        <template v-if="move==1">
+                          <div class="row text-center">
+                            <div class="col">
+                              <h4>Elige la habitación</h4>
+                            </div>
+                          </div>
+                          <hr>
+                          <div class="row p-4">
+                                <div class="form-check col-sm-3" v-for="room in listRoomFree" :key="room.id">
+                                  <input class="form-check-input" type="radio" name="exampleRadios" :id="room.id" :value="room" v-model = "roomMove">
+                                  <label class="form-check-label" :for="room.id">
+                                    <i class="fas fa-bed text-success fa-2x"></i><span class="p-1 fa-2x" v-text="room.number"></span>
+                                  </label>
+                                </div>
+                          </div>
+                        </template>
                       </div>
                       <div class="row modal-footer">
+                        <template v-if="newSale==1 || newSale==2">
                           <div class="col-lg-2">
-                            <a class="btn btn-danger  text-white" @click="closeModalAcomp()"><i class="fas fa-times-circle"></i> Cerrar</a>
+                            <a class="btn btn-danger  text-white" @click="closeModal('product')">
+                              <i class="fas fa-times-circle"></i> Cerrar
+                            </a>
                           </div>   
+                        </template>
+                        <template v-if="modal==3">
+                          <div class="col-lg-12 d-flex justify-content-between">
+                            <a class="btn btn-danger  text-white" @click="closeModal('Move')">
+                              <i class="fas fa-times-circle"></i> Cerrar
+                            </a>
+                            <a class="btn btn-success  text-white" @click="moveRoom()">
+                              <i class="fas fa-exchange-alt"></i> Trasladar
+                            </a>
+                          </div>   
+                        </template>
                         <template v-if="newSale==2">
                           <div class="col-lg-2">
-                            <a class="btn btn-success text-white"><i class="fas fa-money-check-alt"></i> Facturar</a>
+                            <a class="btn btn-success text-white" @click="saleNewReception()">
+                              <i class="fas fa-money-check-alt"></i> Facturar
+                            </a>
                           </div> 
                         </template>  
                       </div>
@@ -656,12 +749,133 @@
                   <!-- /.modal-dialog -->
                   </div>
         </div>
+        <div class="modal fade" tabindex="-1" :class="{'mostrar' : add3}" >
+            <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+              <div class="modal-content container bg-container-modal">
+                  <div class="text-center">
+                    <h3 class="modal-title degraded-orange" v-text="titleModal"></h3>
+                  </div>
+                  <div class="modal-body">
+                    <div class="row">
+                      <div class="col-md-12">
+                          <div class="input-group">
+                            <input type="text" v-model="search" @keyup="listAdditionActive(search)"  class="form-control" placeholder="Adicional a buscar">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
+                          </div>
+                      </div>
+                      <div class="col">
+                        <table class="table table-hover  table-sm text-center" >
+                            <thead >
+                              <tr>
+                                <th>Producto</th>
+                                <th>Precio C/u</th>
+                                <th>subtotal</th>
+                                <th>total</th>
+                              </tr>
+                            </thead>
+                            <tbody class="bg-white text-center table-bordered">
+                              <tr v-for="addition in arrayAddition " :key="addition.id">
+                                <td v-text="addition.name_additional"></td>
+                                <td  >Precio : {{addition.price_additional | currency}} </td>
+                                <td>{{addition.price_additional | currency}}</td>
+                                <td>
+                                  <a href="#" class="btn btn-success "  title="Agregar" @click="addAdditional(addition)" >
+                                    <i class="fas fa-trash-alt"></i> Agregar
+                                  </a>
+                                </td>
+                              </tr>
+                            </tbody>
+                        </table>
+                        <div class="row text-right">
+                          <template v-if="addAddition==0">
+                            <div class="col">
+                              <a class="btn btn-success" @click="addAddition=1" href="#"><i class="fas fa-plus-circle"></i></a>
+                            </div>
+                          </template>
+                          <template v-if="addAddition==1">
+                            <div class="col">
+                              <form action="" method="post" enctype="multipart/form-data" class="form-horizontal additional">
+                                  <div class="row text-left">
+                                      <div class="col-lg-6 mb-2">
+                                          <label for="text-input ">Nombre adicional</label>
+                                          <input type="text" class="form-control" disabled placeholder="Otro" v-model="name_additional">
+                                      </div>
+                                      <div class="col-lg-6 mb-2">
+                                          <label for="text-input ">Precio</label>
+                                          <input type="number" class="form-control" v-model="price_additional">
+                                      </div>
+                                      <div class="col-lg-12 mb-2">
+                                          <label for="text-input ">Descripción</label>
+                                          <textarea  cols="30" rows="4" class="form-control" v-model="description_additional"></textarea>
+                                      </div>
+                                  </div>
+                                  <div>
+                                    <a href="#" class="btn btn-success btn-block" @click="FormAdditional()">Agregar adiccional</a>
+                                  </div>
+                              </form>
+                            </div>
+                          </template>
+                        </div>
+                        <template v-if="listAdditional.length!=0">
+                          <hr>
+                          <div class="row text-center">
+                            <div class="col">
+                              <h4>Adicionales que se cargaran a la habitación</h4>
+                            </div>
+                          </div>
+                          <table class="table table-bordered table-striped table-sm">
+                            <thead >
+                                <tr>
+                                    <th class="text-center">Producto</th>
+                                    <th class="text-center">Factura</th>
+                                    <th class="text-center">total</th>
+                                    <th class="text-center">Opción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center" v-for="additional in listAdditional" :Key="additional.additional_id">
+                                  <td v-text="additional.name_additional">
+                                  </td>
+                                  <td  v-text="additional.number_facture"></td>
+                                  <!-- <td  v-text="additional.quantity_sales"></td> -->
+                                  <td>{{additional.total | currency}}</td>
+                                  <td class="d-flex justify-content-center">
+                                    <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteAddition(additional)"><i class="fas fa-trash-alt">
+                                      </i> Eliminar
+                                    </a> 
+                                  </td>
+                                </tr>
+                            </tbody>
+                          </table>
+                        </template>
+                         
+                        <!-- <table class="table table-hover  table-sm text-center" >
+                          <thead >
+                            <tr class="d-flex justify-content-end">
+                              <th>total</th>
+                              <th>{{totalNewSaleAdditional | currency}}</th>
+                            </tr>
+                          </thead>
+                        </table> -->
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row modal-footer">
+                      <div class="col-lg-2">
+                        <a class="btn btn-danger  text-white" @click="closeModal('additional')">
+                          <i class="fas fa-times-circle"></i> Cerrar
+                        </a>
+                      </div>   
+                  </div>
+              </div>
+            </div>  
+        </div>
         <template v-if="factura==2">
           <div class="card">
                     <div class="card-header">
                         <i class="fas fa-chevron-right fa5x"></i>
                         <span>
-                            <button type="button" class="btn btn-danger"  @click="factura=0">
+                            <button type="button" class="btn btn-danger"  @click="factura=0;search='';closeModal('product');arrayProducts=[]">
                               <i class="fas fa-times-circle"></i> Cerrar
                             </button>
                             <a  class="btn btn-info shadow text-white" @click="addSaleRoom()" v-if="accion==2">
@@ -708,6 +922,7 @@
                                     <td>{{product.sale_product | currency}}</td>
                                     <td  v-text="product.cantidad_product"></td>
                                     <td class="d-flex justify-content-between">
+                                        <span>{{product.sale_product*product.cantidad_product | currency}}</span>
                                         <a href="#" class="btn btn-danger btn-sm" title="Inactivo"  @click="deleteProduct(product)"><i class="fas fa-trash-alt">
                                           </i> Eliminar
                                         </a>
@@ -729,7 +944,7 @@
           </div>
         </template>
     </div>
-            <!--closed here Data-->
+            
   
 </template>
 
@@ -758,6 +973,16 @@
                     },
                     monthBeforeYear: false,
             },
+            id : 1,
+            name_additional : '',
+            price_additional : '',
+            description_additional : '',
+            addAddition : '',
+            roomMove : '',
+            move : '',
+            answer : '',
+            number_update_ticket : '',
+            total_reception : 0,
             option : 0,
             listSales : [],
             newSale: 0,
@@ -770,9 +995,11 @@
             total : '',
             name_product : '',
             sale_product : 0,
-            cantidad_product : 0,
+            cantidad_product : 1,
             factura : 0,
             number_check : '',
+            number_update_reception : '',
+            number_reception : '',
             name_room : 'Clase de habitación',
             type_id:0,
             type_room : 0,
@@ -780,6 +1007,7 @@
             stateRoom : 'Disponible',
             cc_client: '',
             arrayUsuarioCliente : [],
+            additional : [],
             client_id : 0,
             temperature_exit_client : 0,
             temperature_entry_client : 0,
@@ -823,6 +1051,9 @@
             arrayRoom : [],
             arrayProducts : [],
             dataRoom : [],
+            listRoomFree : [],
+            arrayAddition : [],
+            listAdditional : [],
             rooms : '',
             opcion : 'Elige una opción',
             modal : 0,
@@ -830,6 +1061,8 @@
             accion : 0,
             rooms_id : 0,
             add : 0,
+            add2 : 0,
+            add3 : 0,
             desactivar : 0,
             condition : 1,
             search:'',
@@ -886,19 +1119,41 @@
             var option = 2;
             return this.totalSales(option);
         },
+        totalNewSaleFacture: function(){
+            var option = 3;
+            return this.totalSales(option);
+        },
+
+        totalNewSaleAdditional: function(){
+            var option = 4;
+            return this.totalSales(option);
+        },
 
     },
 
 
     methods : {
-
+        FormAdditional(){
+            if (this.price_additional === '' || this.description_additional === '') {
+              Swal.fire('Debes Completar los campos')
+             
+            }else{
+                this.additional = {
+                'id' : this.id,
+                'name_additional' : 'Otro',
+                'price_additional' :this.price_additional,
+                'description_additional' : this.description_additional,
+              },
+              // console.log(this.additional);
+              this.addAddition = 0;
+              this.addAdditional(this.additional);
+            }
+        },
         addSaleRoom(){
             let me = this;
             var url  = 'sale/register';
             axios.post(url,{
-
-                        'sale' : this.listProduct,
-
+                'sale' : this.listProduct,
             }).then(function (response) {
                 Swal.fire({
                   position: 'center',
@@ -916,7 +1171,27 @@
                     console.log(error);
               });
         },
-      
+        moveRoom(){
+          let me=this;
+          var url = 'room/updatefacture';
+          axios.put(url,{
+
+                      'id' : me.roomMove.id,
+                      'number_facture' : me.number_facture,
+                      'room_id' : me.rooms_id
+
+          })
+            .catch(function (error) {
+                  var respuesta = error.response.data;
+                  me.arrayError = respuesta.errors;
+                  console.log(error.response.data);
+            });
+           me.closeModal('Move');
+           me.closeModal('modal');
+           me.factura = 0;
+           me.listRoomsActive(1,this.search,this.valor);
+
+        },
         listProductActive(page,search){
           let me=this;
           var valor = 'name_product'
@@ -926,6 +1201,20 @@
                me.arrayProducts = respuesta.products.data;
                me.pagination= respuesta.pagination;
               // console.log(me.arrayProducts);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
+
+        listAdditionActive(search){
+          let me=this;
+          var url = 'additional/active?search='+ search;
+          axios.get(url).then(function (response) {
+              //  var respuesta= response.data;
+               me.arrayAddition = response.data;
+              //console.log(me.arrayAddition);
 
           })
             .catch(function (error) {
@@ -1000,6 +1289,38 @@
               });
         },
 
+        search_reception(){
+          let me=this;
+          var url = 'counter/searchReception';
+          axios.get(url).then(function (response) {
+               var respuesta= response.data;
+               me.number_update_reception = respuesta[0].number_reception;
+               var end = respuesta[0].end_reception;
+               me.number_reception = me.number_update_reception+end;
+              //  me.arrayRoom = respuesta.room.data;
+              // console.log(me.number_reception);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
+        search_bill(){
+          let me=this;
+          var url = 'counter/searchTicket';
+          axios.get(url).then(function (response) {
+               var respuesta= response.data;
+               me.number_update_ticket = respuesta[0].number_ticket;
+               var end = respuesta[0].end_ticket;
+               me.number_ticket = me.number_update_ticket+end;
+              //  me.arrayRoom = respuesta.room.data;
+              // console.log(me.number_ticket);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
         cambiarPagina(page,search,valor){
           let me = this;
           //Actualiza la página actual
@@ -1016,7 +1337,7 @@
                     me.arrayUsuarioCliente = respuesta.client;
                     // console.log(me.arrayUsuarioCliente);
                     if (me.arrayUsuarioCliente.name_client === 'Usuario no registrado') {
-                         me.closeModal();
+                         me.closeModal('modal');
                          const swalWithBootstrapButtons = Swal.mixin({
                           customClass: {
                             confirmButton: 'btn btn-success',
@@ -1049,7 +1370,7 @@
                                   }
                               })
                     }else{
-                        me.closeModal();
+                        me.closeModal('modal');
                         me.openModal('room','certificate',me.arrayUsuarioCliente);
                     }
                    
@@ -1063,44 +1384,44 @@
         
         registerCustomers(page,search,valor){
 
-                let me = this;
-                var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
-                axios.post(url,{
+            let me = this;
+            var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
+            axios.post(url,{
 
-                            'cedula_client' :    this.cedula_client,
-                            'name_client' :    this.name_client,
-                            'firstSurname_client' :   this.firstSurname_client,
-                            'secondSurname_client'    : this.secondSurname_client,
-                            'birth_date_client'    : this.birth_date_client,
-                            'gender_client'    : this.gender_client,
-                            'age_client'    : this.age_client,
-                            'address_client'    : this.address_client,
-                            'city_client'    : this.city_client,
-                            'nationality_client'    : this.nationality_client,
-                            'state_client'    : this.state_client,
-                            'phone_client'    : this.phone_client,
-                            'email_client'    : this.email_client,
-                    
-                           
+                        'cedula_client' :    this.cedula_client,
+                        'name_client' :    this.name_client,
+                        'firstSurname_client' :   this.firstSurname_client,
+                        'secondSurname_client'    : this.secondSurname_client,
+                        'birth_date_client'    : this.birth_date_client,
+                        'gender_client'    : this.gender_client,
+                        'age_client'    : this.age_client,
+                        'address_client'    : this.address_client,
+                        'city_client'    : this.city_client,
+                        'nationality_client'    : this.nationality_client,
+                        'state_client'    : this.state_client,
+                        'phone_client'    : this.phone_client,
+                        'email_client'    : this.email_client,
+                
+                        
 
-                }).then(function (response) {
-                    Swal.fire({
-                      position: 'center',
-                      icon: 'success',
-                      title: 'Tu huésped fue registrado con éxito',
-                      showConfirmButton: false,
-                      timer: 1500
-                    });
-                      me.closeModal();
-                      me.search_client(me.cc_client);
-                  })
-                  .catch(function (error) {
-                        var respuesta = error.response.data;
-                        me.arrayError = respuesta.errors;
-                        console.log(error.response.data);
-                  });
+            }).then(function (response) {
+                Swal.fire({
+                  position: 'center',
+                  icon: 'success',
+                  title: 'Tu huésped fue registrado con éxito',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+                  me.closeModal('modal');
+                  me.search_client(me.cc_client);
+              })
+              .catch(function (error) {
+                    var respuesta = error.response.data;
+                    me.arrayError = respuesta.errors;
+                    console.log(error.response.data);
+              });
 
-            },
+        },
 
         registerCertificate(){
 
@@ -1121,9 +1442,6 @@
                             'listAcomp'                   :    this.listAcomp,
                             'temperature_exit_client'     :    this.temperature_exit_client,
                             'temperature_entry_client'    :    this.temperature_entry_client,
-            
-                    
-                           
 
                 }).then(function (response) {
                     Swal.fire({
@@ -1147,24 +1465,46 @@
           
           switch (option){
             case 1 :{
-                var total_reception = 0;
+                this.total_reception = 0;
                 var sales = this.check;
                 for(var i = 0; i < sales.length; i++){
                   var item = sales[i]['total_sales'];
-                  total_reception += item;
+                  this.total_reception += item;
                 }
-                return total_reception;
+                return this.total_reception;
                 break;
             }
 
             case 2 :{
-                var total_reception = 0;
+                this.total_reception = 0;
                 var sales = this.listProduct;
                 for(var i = 0; i < sales.length; i++){
                   var item = sales[i]['sale_product']*sales[i]['cantidad_product'];
-                  total_reception += item;
+                  this.total_reception += item;
                 }
-                return total_reception;
+                return this.total_reception;
+                break;
+            }
+
+            case 3 :{
+                this.total_reception = 0;
+                var sales = this.listSales;
+                for(var i = 0; i < sales.length; i++){
+                  var item = sales[i]['total_sales'];
+                  this.total_reception += item;
+                }
+                return this.total_reception;
+                break;
+            }
+
+             case 4 :{
+                this.total_reception = 0;
+                var sales = this.listSales;
+                for(var i = 0; i < sales.length; i++){
+                  var item = sales[i]['total_sales'];
+                  this.total_reception += item;
+                }
+                return this.total_reception;
                 break;
             }
           }
@@ -1172,14 +1512,13 @@
         },
 
         openModal(model, accion, data = [] ){
-
           switch(model){
               case  "room" : {
-
                   switch(accion){
                       case "create" : {
                           this.search_check();
                           this.modal = 1;
+                          this.add = 0;
                           this.stateRoom = 'Disponible'
                           this.desactivar = 0;
                           this.titleModal = 'Ingreso de huésped';
@@ -1194,8 +1533,9 @@
 
                           // console.log(data);
                           this.factura = 1;
-                          // this.stateRoom = 'Ocupada'
+                          this.search_bill();
                           this.eleminar = 1;
+                          this.add = 0;
                           this.desactivar = 0;
                           this.titleModal = 'Información';
                           this.accion = 2;
@@ -1227,6 +1567,7 @@
                           this.search_certificate();
                           //console.log(data);
                           this.modal = 1;
+                          this.add = 0,
                           this.desactivar = 1;
                           this.stateRoom = 'certificate'
                           this.titleModal = 'Acta de entrada';
@@ -1266,6 +1607,7 @@
                       case "register" :{
                           //console.log(data);
                           this.modal = 1;
+                          this.add = 0;
                           this.desactivar = 1;
                           this.stateRoom = 'register'
                           this.titleModal = 'Registro de nuevo huésped';
@@ -1291,13 +1633,15 @@
                       case "agregar" :{
                         this.add = 1;
                         this.modal = 0;
+                        this.factura = 0;
                         this.titleModal = 'Listado de Acompañantes';
 
                         break;
                       };
 
                        case "sale" :{
-
+                        this.add2 = 1;
+                        this.newSale = 1;
                         this.factura = 2;
                         this.titleModal = 'Productos';
                         this.listProduct = [];
@@ -1307,7 +1651,7 @@
 
                       case "products" :{
                          
-                        this.add = 1;
+                        this.add2 = 1;
                         this.newSale = 1;
                         this.titleModal = 'Productos';
                         this.arrayProducts = [];
@@ -1320,8 +1664,8 @@
                       };
 
                       case "reception" :{
-                         
-                        this.add = 1;
+                        this.search_reception();
+                        this.add2 = 1;
                         this.newSale = 2;
                         this.titleModal = 'Factura recepción';
                         this.check = this.check;
@@ -1331,22 +1675,60 @@
 
                         break;
                       };
+
+                       case "move" :{
+                        this.newSale = 0;
+                        this.modal = 3;
+                        this.add2 = 1;
+                        this.move = 1;
+                        this.titleModal = 'Trasladar habitación';
+                        this.searchRoomMove();
+
+                        break;
+                      };
+
+                      case "additional" :{
+                        this.add3 = 1;
+                        this.titleModal = 'Adicionales';
+
+                        break;
+                      };
                   }
               }
           }
 
       },
 
-        closeModal(){
-          this.modal = 0;
-          this.search = '';
-         // this.arrayError = [];
-          this.listRoomsActive(1,this.search,this.valor);
-        },
-        closeModalAcomp(){
-          this.add = 0;
-          this.modal = 1;
-          this.titleModal ='Acta de entrada'; 
+        closeModal(model){
+          switch (model) {
+            case "modal":
+              this.modal = 0;
+              this.search = '';
+            // this.arrayError = [];
+              this.listRoomsActive(1,this.search,this.valor);
+              break;
+          
+            case "acomp":
+              this.add = 0;
+              this.modal = 1;
+              this.titleModal ='Acta de entrada'; 
+              this.check = [];
+              break;
+
+            case "Move":
+              this.add2 = 0;
+              this.move = 0;
+              this.modal = 0;
+              break;
+
+            case "product":
+              this.add2 = 0;
+              break;
+
+            case "additional":
+              this.add3 = 0;
+              break;
+          }
         },
         updateCertificate(){
           let me=this;
@@ -1380,6 +1762,22 @@
             });
 
         },
+        updateReception(){
+          let me=this;
+          var url = 'counter/update';
+          axios.put(url,{
+
+                      'option' : 4,
+                      'number_reception' :    this.number_update_reception,
+
+          })
+            .catch(function (error) {
+                  var respuesta = error.response.data;
+                  me.arrayError = respuesta.errors;
+                  console.log(error.response.data);
+            });
+
+        },
         stateBusy(){
 
                 let me = this;
@@ -1401,7 +1799,7 @@
                       showConfirmButton: false,
                       timer: 1500
                     });
-                      me.closeModal();
+                      me.closeModal('modal');
                       me.updateCustomers();
                       me.listRoomsActive(1,this.search,this.valor);
                   })
@@ -1413,49 +1811,178 @@
 
             },
 
-        registerBill(){
+        saleNewReception(){
 
-                let me = this;
-                var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
-                axios.post(url,{
+            let me = this;
+            let data = this.check;
+            if (data.length == 0) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'No tienes productos para facturar!',
+              })
 
-                            'cedula_client' :    this.cedula_client,
-                            'name_client' :    this.name_client,
-                            'firstSurname_client' :   this.firstSurname_client,
-                            'secondSurname_client'    : this.secondSurname_client,
-                            'birth_date_client'    : this.birth_date_client,
-                            'gender_client'    : this.gender_client,
-                            'age_client'    : this.age_client,
-                            'address_client'    : this.address_client,
-                            'city_client'    : this.city_client,
-                            'nationality_client'    : this.nationality_client,
-                            'state_client'    : this.state_client,
-                            'phone_client'    : this.phone_client,
-                            'email_client'    : this.email_client,
-                    
-                           
+            }else{
+              const swalWithBootstrapButtons = Swal.mixin({
+              customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-danger'
+              },
+              buttonsStyling: false
+              })
 
-                }).then(function (response) {
-                    Swal.fire({
-                      position: 'center',
-                      icon: 'success',
-                      title: 'Tu huésped fue registrado con éxito',
-                      showConfirmButton: false,
-                      timer: 1500
+              swalWithBootstrapButtons.fire({
+                title: 'Está seguro?',
+                text: "Va a facturar estos productos por recepción!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Si, facturar',
+                cancelButtonText: 'No, Cancelar!',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.value) { 
+
+                    let me = this;
+
+                    axios.put('sale/update',{
+                          'sale' : this.check,
+                          'number_reception' : this.number_reception,
+                    }).then(function (response) {
+                          me.registerCheckbooks();
+                          me.updateReception();
+                          me.check = [];
+                          var room = [];
+                          room = me.dataRoom;
+                          me.openModal('room','edit',room);
+                      
+                    }).catch(function (error) {
+                        console.log(error);
                     });
-                      me.closeModal();
-                      me.search_client(me.cc_client);
-                  })
-                  .catch(function (error) {
-                        var respuesta = error.response.data;
-                        me.arrayError = respuesta.errors;
-                        console.log(error.response.data);
-                  });
+                  swalWithBootstrapButtons.fire(
+                    'Facturado!',
+                    'Productos fueron facturados por recepción.',
+                    'success'
+                  )
+                } else if (
+                  /* Read more about handling dismissals below */
+                  result.dismiss === Swal.DismissReason.cancel
+                ) {
+                  swalWithBootstrapButtons.fire(
+                    'Cancelado',
+                    'Tus productos siguen cargados en la habitación :)',
+                    'error'
+                  )
+                }
+              })
+            }
+        },
 
+        searchRoomMove(){
+            let me=this;
+            var url = 'room/move';
+            axios.get(url).then(function (response) {
+                me.listRoomFree= response.data;
+                //  me.listSale = respuesta[0].number_certificate;
+                //  me.arrayRoom = respuesta.room.data;
+                // console.log(me.listRoomFree);
+
+            })
+              .catch(function (error) {
+                console.log(error);
+                });
+        },
+        registerBill(answer){
+             var answer = this.answer;
+              // console.log(answer);
+            let me = this;
+            var url  = 'bill/register';
+            axios.post(url,{
+
+                        'customer_id' :    1,
+                        'room_id' :    this.rooms_id,
+                        'certificate_id' :   1,
+                        'taxe_id'    : null,
+                        'number_bill'    : this.number_ticket,
+                        'faker_number_bill'    : this.number_certificate,
+                        'date_entry_bill'    : null,
+                        'date_exit_bill'    : null,
+                        'dian_bill'    : answer,
+                        'total_bill'    : this.total_reception,
+                        'state_bill'    : 1,
+                        
+
+            }).then(function (response) {
+                Swal.fire({
+                  position: 'center',
+                  icon: 'success',
+                  title: 'se creo la factura con éxito',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+              })
+              .catch(function (error) {
+                    var respuesta = error.response.data;
+                    me.arrayError = respuesta.errors;
+                    console.log(error.response.data);
+              });
+
+        },
+
+        registerCheckbooks(){
+
+            let me = this;
+            var url  = 'checkbook/register';
+            axios.post(url,{
+
+                        'customer_id' :   null,
+                        'taxe_id' :    null,
+                        'number_checkbooks' :   this.number_reception,
+                        'faker_number_checkbooks'    : this.number_reception,
+                        'date_exit_checkbooks'    : null,
+                        'dian_checkbooks'    : 'No',
+                        'total_checkbooks'    : this.total_reception,
+                        'state_checkbooks'    : 0,
+
+            })
+              .catch(function (error) {
+                    var respuesta = error.response.data;
+                    me.arrayError = respuesta.errors;
+                    console.log(error.response.data);
+              });
+
+        },
+
+        question(){
+          const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+              confirmButton: 'btn btn-success',
+              cancelButton: 'btn btn-danger'
             },
+            buttonsStyling: false
+          })
+          swalWithBootstrapButtons.fire({
+                  title: 'Desea factura fÍsica?',
+                  icon: 'info',
+                  showCancelButton: true,
+                  confirmButtonText: 'Si, generar factura',
+                  cancelButtonText: 'No, generar factura',
+                  reverseButtons: true
+                }).then((result) => {
+                  if (result.value) {
 
-        stateFree(){
-
+                    this.stateFree(this.answer='Yes');
+                  
+                  } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                  ) {
+                     this.stateFree(this.answer='No');
+                  }
+                })
+        },
+        stateFree(answer){
+                var answer = this.answer;
+                // console.log(answer);
                 const swalWithBootstrapButtons = Swal.mixin({
                 customClass: {
                   confirmButton: 'btn btn-success',
@@ -1474,7 +2001,7 @@
                   reverseButtons: true
                 }).then((result) => {
                   if (result.value) { 
-
+                        this.registerBill(answer);
                         let me = this;
                         var url  = 'room/statefree';
                         axios.put(url,{
@@ -1533,19 +2060,42 @@
            this.listAcomp.splice(index,1);
 
         },
-
-
         addProduct(product){
-              console.log(product);
+              // console.log(product);
+          this.listProduct.push({
+            product_id : product.id, 
+            name_product:product.name_product, 
+            sale_product:product.sale_product, 
+            cantidad_product:this.cantidad_product,
+            total:product.sale_product*this.cantidad_product, 
+            url_img:product.img_product, 
+            number_facture : this.number_facture,
+          });
 
-            this.listProduct.push({product_id : product.id, name_product:product.name_product, sale_product:product.sale_product, cantidad_product:this.cantidad_product,
-                                total:product.sale_product*this.cantidad_product, url_img:product.img_product, number_facture : this.number_facture});
+        },
+
+        addAdditional(additional){
+              // console.log(additional);
+          this.listAdditional.push({
+            additional_id : additional.id, 
+            name_additional:additional.name_additional, 
+            price_additional:additional.price_additional, 
+            description_additional:additional.description_additional, 
+            total:additional.price_additional,
+            number_facture : this.number_facture,
+          });
 
         },
         deleteProduct(product){
 
            var index =  this.listProduct.indexOf(product);
            this.listProduct.splice(index,1);
+
+        },
+        deleteAddition(additional){
+            // console.log(additional);
+           var index =  this.listAdditional.indexOf(additional);
+           this.listAdditional.splice(index,1);
 
         },
 
@@ -1604,7 +2154,7 @@
                       showConfirmButton: false,
                       timer: 1500
                     });
-                      me.closeModal();
+                      me.closeModal('modal');
                   })
                   .catch(function (error) {
                        var respuesta = error.response.data;
@@ -1614,20 +2164,20 @@
 
             },
 
-            selectAll(){
-                var items=document.getElementsByClassName('prueba');
-                for(var i=0; i<items.length; i++){
-                  if(items[i].type=='checkbox')
-                    items[i].checked=true;
-                    this.check=this.listSales;
-                }
+        selectAll(){
+            var items=document.getElementsByClassName('prueba');
+            for(var i=0; i<items.length; i++){
+              if(items[i].type=='checkbox')
+                items[i].checked=true;
+                this.check=this.listSales;
             }
+        }
 
         },
 
       mounted() {
         this.listRoomsActive(1,this.search,this.valor);
-      }
+    }
   }
 </script>
 

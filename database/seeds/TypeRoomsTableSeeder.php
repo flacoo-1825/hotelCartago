@@ -11,6 +11,6 @@ class TypeRoomsTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\TypeRoom::class, 5)->create();
+        factory(App\TypeRoom::class, 3)->create();
     }
 }

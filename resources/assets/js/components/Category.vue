@@ -247,7 +247,7 @@
                           //console.log(data);
                             this.modal = 1;
                             this.desactivar = 1;
-                            this.titleModal = 'Informacion completa de la categoría';
+                            this.titleModal = 'Información completa de la categoría';
                             this.accion = 3;
                             this.category_id = data['id'];
                             this.name_category =  data['name_category'];

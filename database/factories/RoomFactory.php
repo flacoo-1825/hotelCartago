@@ -6,7 +6,7 @@ $factory->define(App\Room::class, function (Faker $faker) {
     return [
         'client_id' => $faker->randomElement($array = array (NULL,NULL)),
         'type_room_id' => $faker->randomElement($array = array ('1','2','3')),
-    	'number' => $faker->randomDigit,
+    	'number' => $faker->numberBetween($min = 201, $max = 311),
     	'price' => $faker->numberBetween($min = 1000, $max = 9000),
     	'price_air' => $faker->numberBetween($min = 1000, $max = 9000),
     	'frozen' => $faker->randomElement($array = array ('Ventilador','Aire Acondicionado','Aire Acondicionado---Ventilador')),

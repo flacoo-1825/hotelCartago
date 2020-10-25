@@ -28,6 +28,9 @@ Vue.component('product', require('./components/Product.vue'));
 Vue.component('reception', require('./components/Reception.vue'));
 Vue.component('certificate', require('./components/Certificate.vue'));
 Vue.component('companion', require('./components/Companion.vue'));
+Vue.component('checkbook', require('./components/Checkbook.vue'));
+Vue.component('ticket', require('./components/Ticket.vue'));
+Vue.component('additional', require('./components/Additional.vue'));
 
 const app = new Vue({
     el: '#app',

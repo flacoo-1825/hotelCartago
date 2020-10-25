@@ -33,6 +33,8 @@ Route::put('room/statebusy','RoomController@statebusy')->name('room.statebusy');
 Route::put('room/statefree','RoomController@statefree')->name('room.statefree');
 Route::put('room/inactivo','RoomController@inactivo')->name('room.inactivo');
 Route::get('room/active','RoomController@listRoomActive')->name('room.listRoomActive');
+Route::get('room/move','RoomController@moveRoom')->name('room.move');
+Route::put('room/updatefacture','RoomController@updateFacture')->name('room.updatefacture');
 
 
 
@@ -59,7 +61,14 @@ Route::post('category/register','CategoryController@store')->name('category.stor
 Route::put('category/update','CategoryController@update')->name('category.update');
 Route::put('category/activo','CategoryController@activo')->name('category.activo');
 Route::put('category/inactivo','CategoryController@inactivo')->name('category.inactivo');
-Route::get('category/active','CategoryController@listCategoryActive')->name('category.listLinksActive');
+Route::get('category/active','CategoryController@listCategoryActive')->name('category.listCategoryActive');
+
+Route::get('additional','AdditionalController@index')->name('additional.index');
+Route::post('additional/register','AdditionalController@store')->name('additional.store');
+Route::put('additional/update','AdditionalController@update')->name('additional.update');
+Route::put('additional/activo','AdditionalController@activo')->name('additional.activo');
+Route::put('additional/inactivo','AdditionalController@inactivo')->name('additional.inactivo');
+Route::get('additional/active','AdditionalController@listAdditionalActive')->name('additional.listAdditionalActive');
 
 Route::get('provider','ProviderController@index')->name('provider.index');
 Route::post('provider/register','ProviderController@store')->name('provider.store');
@@ -102,3 +111,23 @@ Route::get('sale/searchCertificate','SaleController@searchCertificate')->name('s
 Route::get('sale/searchReception','SaleController@searchReception')->name('sale.searchReception');
 Route::get('sale/searchExt','SaleController@searchExt')->name('sale.searchExt');
 Route::get('sale/listSales','SaleController@listSales')->name('sale.listSales');
+
+Route::get('bill','BillController@index')->name('bill.index');
+Route::post('bill/register','BillController@store')->name('companion.store');
+Route::put('bill/update','BillController@update')->name('bill.update');
+Route::get('bill/searchCheck','BillController@searchCheck')->name('bill.searchCheck');
+Route::get('bill/searchTicket','BillController@searchTicket')->name('bill.searchTicket');
+Route::get('bill/searchCertificate','BillController@searchCertificate')->name('bill.searchCertificate');
+Route::get('bill/searchReception','BillController@searchReception')->name('bill.searchReception');
+Route::get('bill/searchExt','BillController@searchExt')->name('bill.searchExt');
+Route::get('bill/listbills','BillController@listBills')->name('bill.listBills');
+
+Route::get('checkbook','CheckbookController@index')->name('checkbook.index');
+Route::post('checkbook/register','CheckbookController@store')->name('companion.store');
+Route::put('checkbook/update','CheckbookController@update')->name('checkbook.update');
+Route::get('checkbook/listcheckbooks','CheckbookController@listCheckbooks')->name('checkbook.listcheckbooks');
+Route::get('checkbook/searchTicket','CheckbookController@searchTicket')->name('checkbook.searchTicket');
+Route::get('checkbook/searchCertificate','CheckbookController@searchCertificate')->name('checkbook.searchCertificate');
+Route::get('checkbook/searchReception','CheckbookController@searchReception')->name('checkbook.searchReception');
+Route::get('checkbook/searchExt','CheckbookController@searchExt')->name('checkbook.searchExt');
+Route::get('checkbook/listcheckbooks','CheckbookController@listcheckbooks')->name('checkbook.listSales');

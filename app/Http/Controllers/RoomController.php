@@ -54,11 +54,30 @@ class RoomController extends Controller
 
             $room =  Room::findOrFail($request->id);
 
-            $room->name_type_room = $request->name_type_room;
-            $room->description_type_room = $request->description_type_room;
-            $room->state_type_room = '1';
+            $room->type_room_id = $request->type_id;
+            $room->number = $request->number;
+            $room->price = $request->price;
+            $room->price_air = $request->price_air;
+            $room->frozen = $request->frozen;
+            $room->state = $request->state;
             $room->save();
-            
+           
+    }
+
+    public function updateFacture(Request $request)
+    {	
+      	
+      	if (!$request->ajax()) return redirect('/');
+
+        $room =  Room::findOrFail($request->id);
+        $room->number_facture = $request->number_facture;
+        $room->state = 'Ocupada';
+        $room->save();
+
+        $room =  Room::findOrFail($request->room_id);
+        $room->number_facture = '';
+        $room->state = 'Disponible';
+        $room->save();
     }
 
 
@@ -148,5 +167,14 @@ class RoomController extends Controller
             ],
             'room' => $room
         ];
+    }
+
+    public function moveRoom(Request $request)
+    {
+        $room = Room::select('id','number')
+                        ->where([['condition','=','1'] , ['state','=','Disponible']])
+                        ->orderBy('id', 'desc')->get();
+
+        return $room;
     }
 }

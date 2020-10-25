@@ -40,7 +40,7 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {     
-            // if (!$request->ajax()) return redirect('/');
+            if (!$request->ajax()) return redirect('/');
             // $sale=Sale::create($request->all());
             $listSale = $request->sale;
 
@@ -64,21 +64,20 @@ class SaleController extends Controller
 
     public function update(Request $request)
     {		
-       		
-       		if (!$request->ajax()) return redirect('/');
+        if (!$request->ajax()) return redirect('/');
+             
+        $listSale = $request->sale;
+        $number_reception = $request->number_reception;
 
-            $sale =  Sale::findOrFail($request->id);
+        for ($i=0; $i < count($listSale) ; $i++) { 
 
-            $sale->name_sale = $request->name_sale;
-            $sale->firstSurname_sale = $request->firstSurname_sale;
-            $sale->secondSurname_sale = $request->secondSurname_sale;
-            $sale->company_sale = $request->company_sale;
-            $sale->address_sale = $request->address_sale;
-            $sale->phone_sale = $request->phone_sale;
-            $sale->email_sale = $request->email_sale;
-            $sale->condition_sale = '1';
+            $sale =  Sale::findOrFail($listSale[$i]['id']);
+           
+            $sale->number_bill_sales = $number_reception;
+            $sale->state_bill = 0 ;
             $sale->save();
-            
+        }
+  
     }
 
 

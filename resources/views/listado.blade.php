@@ -96,7 +96,7 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="fas fa-file-invoice"></i> Facturas</a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=3">
-                                <a class="nav-link" href="i#"><i class="fab fa-cc-visa"></i> ventas</a>
+                                <a class="nav-link" href="#"><i class="fab fa-cc-visa"></i> ventas</a>
                             </li>
                             <li class="nav-item" @click="indice=4">
                                 <a class="nav-link" href="#"><i class="fas fa-cash-register"></i> Ventas Extras</a>
@@ -110,19 +110,22 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="fas fa-ellipsis-v"></i> Inventario</a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=20">
-                                <a class="nav-link" href="i#"><i class="fas fa-spell-check"></i> Categorias</a>
+                                <a class="nav-link" href="#"><i class="fas fa-spell-check"></i> Categorias</a>
                             </li>
                             <li class="nav-item" @click="indice=21">
-                                <a class="nav-link" href="i#"><i class="fas fa-list-ol"></i> Productos</a>
+                                <a class="nav-link" href="#"><i class="fas fa-list-ol"></i> Productos</a>
+                            </li>
+                            <li class="nav-item" @click="indice=24">
+                                <a class="nav-link" href="#"><i class="fas fa-plus-circle"></i></i> Adicionales</a>
                             </li>
                             <li class="nav-item" @click="indice=22">
-                                <a class="nav-link" href="i#"><i class="fas fa-people-arrows"></i> Proveedores</a>
+                                <a class="nav-link" href="#"><i class="fas fa-people-arrows"></i> Proveedores</a>
                             </li>
                             <li class="nav-item" @click="indice=6">
-                                <a class="nav-link" href="i#"><i class="icon-basket-loaded"></i> Inventario total</a>
+                                <a class="nav-link" href="#"><i class="icon-basket-loaded"></i> Inventario total</a>
                             </li>
                             <li class="nav-item" @click="indice=7">
-                                <a class="nav-link" href="i#"><i class="fas fa-shopping-basket"></i> Canasta</a>
+                                <a class="nav-link" href="#"><i class="fas fa-shopping-basket"></i> Canasta</a>
                             </li>
                         </ul>
                     </li>
@@ -130,13 +133,13 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="fas fa-users"></i> Empleados</a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=8">
-                                <a class="nav-link" href="i#"><i class="fas fa-address-card"></i> Tipo de Vinculación</a>
+                                <a class="nav-link" href="#"><i class="fas fa-address-card"></i> Tipo de Vinculación</a>
                             </li>
                             <li class="nav-item" @click="indice=9">
-                                <a class="nav-link" href="i#"><i class="fas fa-user-friends"></i> Empleados</a>
+                                <a class="nav-link" href="#"><i class="fas fa-user-friends"></i> Empleados</a>
                             </li>
                             <li class="nav-item" @click="indice=10">
-                                <a class="nav-link" href="i#"><i class="fas fa-key"></i> Cargo</a>
+                                <a class="nav-link" href="#"><i class="fas fa-key"></i> Cargo</a>
                             </li>
                             <li class="nav-item" @click="indice=11">
                                 <a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> Horario</a>
@@ -147,7 +150,7 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-people"></i> Acceso</a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=12">
-                                <a class="nav-link" href="i#"><i class="icon-user"></i> Usuarios</a>
+                                <a class="nav-link" href="#"><i class="icon-user"></i> Usuarios</a>
                             </li>
                             <li class="nav-item" @click="indice=13">
                                 <a class="nav-link" href="#"><i class="icon-user-following"></i> Roles</a>
@@ -158,7 +161,7 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="icon-pie-chart"></i>Reportes<span class="badge badge-danger">PDF</span><span class="badge badge-success">EXCEL</span></a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=14">
-                                <a class="nav-link" href="i#"><i class="fas fa-chart-bar"></i> Reporte Ingresos</a>
+                                <a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> Reporte Ingresos</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" @click="indice=15"><i class="icon-chart"></i> Reporte Ventas</a>
@@ -178,7 +181,7 @@
                         <a class="nav-link nav-dropdown-toggle" href="#"><i class="fas fa-recycle"></i> Residuos</a>
                         <ul class="nav-dropdown-items">
                             <li class="nav-item" @click="indice=18">
-                                <a class="nav-link" href="i#"><i class="fab fa-battle-net"></i> Residuos Ordinarios</a>
+                                <a class="nav-link" href="#"><i class="fab fa-battle-net"></i> Residuos Ordinarios</a>
                             </li>
                             <li class="nav-item" @click="indice=19">
                                 <a class="nav-link" href="#"><i class="fas fa-trash-restore-alt"></i> Residuos Peligrosos</a>

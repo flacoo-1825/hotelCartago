@@ -55,7 +55,7 @@ class CounterController extends Controller
 
             case 4 : {
 
-                $counter->number_reception = $request->number_reception;
+                $counter->number_reception = $request->number_reception+1;
                 $counter->save();
 
             break;
