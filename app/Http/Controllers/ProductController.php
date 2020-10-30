@@ -162,5 +162,42 @@ class ProductController extends Controller
        
   
     }
+
+
+    public function listProductProvider(Request $request)
+    {   
+         
+       if (!$request->ajax()) return redirect('/');
+        //  $search = $request->search;
+        //  $valor = $request->valor;
+        $provider_id = $request->provider_id;
+        $search = $request->search;
+        $valor = $request->valor;
+         
+        if ($search=='') {
+            $product = [];
+            return [
+               
+            'products' => $product
+        ];
+        }else{
+            $product = Product::where('condition_product','=','1')
+            ->where('provider_id','=',$provider_id)
+            ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(8);
+            return [
+                    'pagination'      => [
+                    'total'              => $product->total(),
+                    'current_page' => $product->currentPage(),
+                    'per_page'       => $product->perPage(),
+                    'last_page'      => $product->lastPage(),
+                    'from'              => $product->firstItem(),
+                    'to'                  => $product->lastItem(),
+                ],
+                'products' => $product
+            ];
+        }
+       
+  
+    }
 }
 

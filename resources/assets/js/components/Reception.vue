@@ -573,7 +573,7 @@
                           <hr>
                           <div class="row mb-4 mt-3">
                               <div class="col-md-12 mb-2 text-center certificate">
-                                  <h4>Adiccionales</h4>
+                                  <h4>Adicionales</h4>
                               </div>
                           </div>
                           <div class="row">
@@ -1909,6 +1909,7 @@
                         'dian_bill'    : answer,
                         'total_bill'    : this.total_reception,
                         'state_bill'    : 1,
+                        'class_bill'    : 'Venta',
                         
 
             }).then(function (response) {

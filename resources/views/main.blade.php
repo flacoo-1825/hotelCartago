@@ -10,6 +10,7 @@
     <room v-if="indice==2"></room>
     <ticket v-if="indice==3"></ticket>
     <checkbook v-if="indice==4"></checkbook>
+    <buy v-if="indice==5"></buy>
 
     <links v-if="indice==8"></links>
     <worker v-if="indice==9"></worker>

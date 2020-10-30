@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\bill;
 use App\Sale;
+use App\Buy;
 use Illuminate\Http\Request;
 
 class BillController extends Controller
@@ -33,9 +34,35 @@ class BillController extends Controller
             ],
             'bills' => $bills
         ];
-        // $bills = Bill::get();
-        // return $bills;
-      
+    }
+
+    public function indexBuy(Request $request)
+    {   
+         
+       	if (!$request->ajax()) return redirect('/');
+         $search = $request->search;
+         $valor = $request->valor;
+         
+        if ($search==''){
+            $bills = Bill::where('class_bill','=','Compra')
+                        ->orderBy('id', 'desc')->paginate(10);
+        }
+        else{
+            $bills = Bill::where('class_bill','=','Compra')
+                        ->where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(10);
+        }
+ 
+        return [
+                'pagination'      => [
+                'total'              => $bills->total(),
+                'current_page' => $bills->currentPage(),
+                'per_page'       => $bills->perPage(),
+                'last_page'      => $bills->lastPage(),
+                'from'              => $bills->firstItem(),
+                'to'                  => $bills->lastItem(),
+            ],
+            'bills' => $bills
+        ];
     }
 
 
@@ -43,36 +70,6 @@ class BillController extends Controller
     {     
             if (!$request->ajax()) return redirect('/');
             $bill=bill::create($request->all());
-            
-
-            // $client = new Client();
-
-            // $bill->room_id = $request->cedula_bill;
-            // $bill->customer_id = $request->name_bill;
-            // $bill->certificate_id = $request->firstSurname_bill;
-            // $bill->taxe_id = $request->secondSurname_bill;
-            // $bill->number_bill = $request->birth_date_bill;
-            // $bill->faker_number_bill = $request->gender_bill;
-            // $bill->date_entry_bill = $request->age_bill;
-            // $bill->date_exit_bill = $request->address_bill;
-            // $bill->dian_bill = $request->city_bill;
-            // $bill->total_bill = $request->nationality_bill;
-            // $bill->state_bill = $request->state_bill;
-            // $bill->state_bill = $request->phone_bill;
-            // $client->save();
-     
-
-        //     'customer_id' , 
-        // 'room_id',
-        // 'certificate_id',
-        // 'taxe_id',
-        // 'number_bill',
-        // 'faker_number_bill',
-        // 'date_entry_bill',
-        // 'date_exit_bill',
-        // 'dian_bill',
-        // 'total_bill',
-        // 'state_bill',
     }
 
     
@@ -101,7 +98,7 @@ class BillController extends Controller
       	if (!$request->ajax()) return redirect('/');
 
         $bill =  Bill::findOrFail($request->id);
-        $bill->condition_bill = '1';
+        $bill->state_bill = '1';
         $bill->save();
     }
 
@@ -120,7 +117,7 @@ class BillController extends Controller
       public function listBills(Request $request)
     {   
          
-    //    if (!$request->ajax()) return redirect('/');
+       if (!$request->ajax()) return redirect('/');
 
         // $number_facture = '4604Fact';
         $number_facture = $request->number_bill;
@@ -147,6 +144,39 @@ class BillController extends Controller
                 
             'bills' => $bills,
             'sales' => $sales
+        ];
+
+        // return $bills;
+    }
+
+    public function detailsBillsBuy(Request $request)
+    {   
+         
+       if (!$request->ajax()) return redirect('/');
+
+        // $number_facture = '4604Fact';
+        $number_facture = $request->number_bill_buy;
+        
+        $bills = Bill::join('providers', 'bills.provider_id', '=' ,'providers.id')
+                    ->select('bills.id','bills.number_bill','bills.date_entry_bill',
+                    'bills.date_exit_bill','bills.total_bill', 'bills.state_bill',
+                    'providers.nit_provider','bills.description_bill',
+                    'providers.company_provider','providers.name_provider',
+                    'providers.phone_provider','providers.email_provider')
+                    ->where('bills.number_bill','=',$number_facture)
+                    ->orderBy('id', 'desc')->get(); 
+
+        $buys = Buy::join('products', 'buys.product_id', '=' ,'products.id')
+                    ->select('buys.id','buys.number_bill_buy','buys.quantity_buy',
+                    'buys.price_unit_buy','buys.class_pay','buys.date_pay',
+                    'buys.total_buy','products.name_product','products.img_product')
+                    ->where('number_bill','=',$number_facture)
+                    ->orderBy('id', 'desc')->get();
+       
+        return [
+                
+            'bills' => $bills,
+            'buys' => $buys
         ];
 
         // return $bills;

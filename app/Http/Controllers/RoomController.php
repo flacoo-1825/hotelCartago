@@ -15,10 +15,10 @@ class RoomController extends Controller
          $valor = $request->valor;
          
         if ($search==''){
-            $rooms = Room::orderBy('id', 'desc')->paginate(10);
+            $rooms = Room::orderBy('id', 'asc')->paginate(10);
         }
         else{
-            $rooms = Room::where($valor, 'like', '%'. $search . '%')->orderBy('id', 'desc')->paginate(10);
+            $rooms = Room::where($valor, 'like', '%'. $search . '%')->orderBy('id', 'asc')->paginate(10);
         }
  
         return [
@@ -141,7 +141,7 @@ class RoomController extends Controller
                         'customers.name_client','customers.nationality_client','customers.phone_client', 
                         'customers.secondSurname_client')
                         ->where('condition','=','1')
-                        ->orderBy('id', 'desc')->paginate(9);
+                        ->orderBy('id', 'asc')->paginate(9);
         }
         else{
             $room = Room::leftJoin('customers','rooms.client_id' ,'=', 'customers.id')
@@ -173,7 +173,7 @@ class RoomController extends Controller
     {
         $room = Room::select('id','number')
                         ->where([['condition','=','1'] , ['state','=','Disponible']])
-                        ->orderBy('id', 'desc')->get();
+                        ->orderBy('id', 'asc')->get();
 
         return $room;
     }

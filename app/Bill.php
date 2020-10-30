@@ -9,6 +9,10 @@ class Bill extends Model
      protected $fillable = [
         'customer_id' , 
         'room_id',
+        'worker_id',
+        'provider_id',
+        'buy_id',
+        'sale',
         'certificate_id',
         'taxe_id',
         'number_bill',
@@ -18,9 +22,9 @@ class Bill extends Model
         'dian_bill',
         'total_bill',
         'state_bill',
-        
+        'class_bill',
+        'description_bill'
     ];
-
 
     // public function products()
     // {

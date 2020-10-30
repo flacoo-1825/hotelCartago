@@ -69,7 +69,15 @@ class CounterController extends Controller
             break;
             };
 
-            case 5 : {
+            case 6 : {
+
+                $counter->number_buy = $request->number_buy+1;
+                $counter->save();
+
+            break;
+            };
+
+            case 7 : {
 
                 $counter->number_ticket = $request->number_ticket;
                 $counter->end_ticket = $request->end_ticket;
@@ -123,5 +131,12 @@ class CounterController extends Controller
         if (!$request->ajax()) return redirect('/');
         $ext = counter::select('number_ext','end_ext')->get();
         return  $ext;
+    }
+
+    public function searchBuy(Request $request)
+    {   
+        if (!$request->ajax()) return redirect('/');
+        $buy = counter::select('number_buy','end_buy')->get();
+        return  $buy;
     }
 }

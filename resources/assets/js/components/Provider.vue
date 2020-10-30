@@ -282,7 +282,7 @@
                             this.firstSurname_provider =  data['firstSurname_provider'];
                             this.secondSurname_provider =  data['secondSurname_provider'];
                             this.company_provider =  data['company_provider'];
-                            this.address_provider =  data['address_provider'];s
+                            this.address_provider =  data['address_provider'];
                             this.phone_provider =  data['phone_provider'];
                             this.email_provider =  data['email_provider'];
 
@@ -302,7 +302,7 @@
                             this.firstSurname_provider =  data['firstSurname_provider'];
                             this.secondSurname_provider =  data['secondSurname_provider'];
                             this.company_provider =  data['company_provider'];
-                            this.address_provider =  data['address_provider'];s
+                            this.address_provider =  data['address_provider'];
                             this.phone_provider =  data['phone_provider'];
                             this.email_provider =  data['email_provider'];
 

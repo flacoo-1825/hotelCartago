@@ -17,7 +17,9 @@ class Counter extends Model
         'number_reception', 
         'end_reception',
         'number_ext', 
-        'end_ext'
+        'end_ext',
+        'number_buy',
+        'end_buy',
 
     ];
 }

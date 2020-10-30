@@ -15,7 +15,6 @@ class CreateSalesTable extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('bill_id')->unsigned()->nullable();
             $table->integer('checkbook_id')->unsigned()->nullable();
             $table->integer('product_id')->unsigned()->nullable();
             $table->integer('additional_id')->unsigned()->nullable();
@@ -29,7 +28,6 @@ class CreateSalesTable extends Migration
             $table->boolean('state_bill')->default(1);
             $table->timestamps();
 
-            $table->foreign('bill_id')->references('id')->on('bills');
             $table->foreign('product_id')->references('id')->on('products');
             $table->foreign('taxe_id')->references('id')->on('taxes');
             $table->foreign('checkbook_id')->references('id')->on('checkbooks');

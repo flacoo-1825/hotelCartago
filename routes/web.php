@@ -82,7 +82,8 @@ Route::post('product/register','ProductController@store')->name('product.store')
 Route::put('product/update','ProductController@update')->name('product.update');
 Route::put('product/activo','ProductController@activo')->name('product.activo');
 Route::put('product/inactivo','ProductController@inactivo')->name('product.inactivo');
-Route::get('product/active','ProductController@listProductActive')->name('v.listproductsActive');
+Route::get('product/active','ProductController@listProductActive')->name('product.listproductsActive');
+Route::get('product/provider','ProductController@listProductProvider')->name('product.listproductprovider');
 
 Route::get('certificate','CertificateController@index')->name('certificate.index');
 Route::post('certificate/register','CertificateController@store')->name('certificate.store');
@@ -101,6 +102,7 @@ Route::get('counter/searchTicket','CounterController@searchTicket')->name('count
 Route::get('counter/searchCertificate','CounterController@searchCertificate')->name('counter.searchCertificate');
 Route::get('counter/searchReception','CounterController@searchReception')->name('counter.searchReception');
 Route::get('counter/searchExt','CounterController@searchExt')->name('counter.searchExt');
+Route::get('counter/searchBuy','CounterController@searchBuy')->name('counter.searchBuy');
 
 Route::get('sale','SaleController@index')->name('sale.index');
 Route::post('sale/register','SaleController@store')->name('companion.store');
@@ -115,12 +117,15 @@ Route::get('sale/listSales','SaleController@listSales')->name('sale.listSales');
 Route::get('bill','BillController@index')->name('bill.index');
 Route::post('bill/register','BillController@store')->name('companion.store');
 Route::put('bill/update','BillController@update')->name('bill.update');
+Route::put('bill/active','BillController@activo')->name('bill.update');
 Route::get('bill/searchCheck','BillController@searchCheck')->name('bill.searchCheck');
 Route::get('bill/searchTicket','BillController@searchTicket')->name('bill.searchTicket');
 Route::get('bill/searchCertificate','BillController@searchCertificate')->name('bill.searchCertificate');
 Route::get('bill/searchReception','BillController@searchReception')->name('bill.searchReception');
-Route::get('bill/searchExt','BillController@searchExt')->name('bill.searchExt');
+Route::get('bill/searchExt','BillController@searchExt')->name('bill.searchExt'); 
 Route::get('bill/listbills','BillController@listBills')->name('bill.listBills');
+Route::get('bill/indexBuy','BillController@indexBuy')->name('bill.indexBuy');
+Route::get('bill/detailsBillsBuy','BillController@detailsBillsBuy')->name('bill.detailsBillsBuy');
 
 Route::get('checkbook','CheckbookController@index')->name('checkbook.index');
 Route::post('checkbook/register','CheckbookController@store')->name('companion.store');
@@ -131,3 +136,13 @@ Route::get('checkbook/searchCertificate','CheckbookController@searchCertificate'
 Route::get('checkbook/searchReception','CheckbookController@searchReception')->name('checkbook.searchReception');
 Route::get('checkbook/searchExt','CheckbookController@searchExt')->name('checkbook.searchExt');
 Route::get('checkbook/listcheckbooks','CheckbookController@listcheckbooks')->name('checkbook.listSales');
+
+Route::get('buy','BuyController@index')->name('buy.index');
+Route::post('buy/register','BuyController@store')->name('companion.store');
+Route::put('buy/update','BuyController@update')->name('buy.update');
+Route::get('buy/searchCheck','BuyController@searchCheck')->name('buy.searchCheck');
+Route::get('buy/searchTicket','BuyController@searchTicket')->name('buy.searchTicket');
+Route::get('buy/searchCertificate','BuyController@searchCertificate')->name('buy.searchCertificate');
+Route::get('buy/searchReception','BuyController@searchReception')->name('buy.searchReception');
+Route::get('buy/searchExt','BuyController@searchExt')->name('buy.searchExt');
+Route::get('buy/listbuys','BuyController@listbuys')->name('buy.listSales');

@@ -31,6 +31,7 @@ Vue.component('companion', require('./components/Companion.vue'));
 Vue.component('checkbook', require('./components/Checkbook.vue'));
 Vue.component('ticket', require('./components/Ticket.vue'));
 Vue.component('additional', require('./components/Additional.vue'));
+Vue.component('buy', require('./components/Buy.vue'));
 
 const app = new Vue({
     el: '#app',
