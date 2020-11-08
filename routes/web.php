@@ -35,6 +35,8 @@ Route::put('room/inactivo','RoomController@inactivo')->name('room.inactivo');
 Route::get('room/active','RoomController@listRoomActive')->name('room.listRoomActive');
 Route::get('room/move','RoomController@moveRoom')->name('room.move');
 Route::put('room/updatefacture','RoomController@updateFacture')->name('room.updatefacture');
+Route::get('room/reservation','RoomController@listReservation')->name('room.reservation');
+
 
 
 
@@ -49,6 +51,8 @@ Route::get('customers','CustomersController@index')->name('customers.index');
 Route::post('customers/register','CustomersController@store')->name('customers.store');
 Route::put('customers/update','CustomersController@update')->name('customers.update');
 Route::get('customers/searchClient','CustomersController@searchClient')->name('customers.searchClient');
+Route::get('searchCustomer','CustomersController@searchCustomer')->name('customers.searchCustomer');
+
         
 Route::get('worker','WorkerController@index')->name('worker.index');
 Route::post('worker/register','WorkerController@store')->name('worker.store');
@@ -146,3 +150,11 @@ Route::get('buy/searchCertificate','BuyController@searchCertificate')->name('buy
 Route::get('buy/searchReception','BuyController@searchReception')->name('buy.searchReception');
 Route::get('buy/searchExt','BuyController@searchExt')->name('buy.searchExt');
 Route::get('buy/listbuys','BuyController@listbuys')->name('buy.listSales');
+
+Route::get('reservation','ReservationController@index')->name('reservation.index');
+Route::post('reservation/register','ReservationController@store')->name('reservation.store');
+Route::put('reservation/update','ReservationController@update')->name('reservation.update');
+Route::put('reservation/activo','ReservationController@activo')->name('reservation.activo');
+Route::put('reservation/inactivo','ReservationController@inactivo')->name('reservation.inactivo');
+Route::get('reservation/active','ReservationController@listreservationActive')->name('reservation.listreservationsActive');
+Route::get('reservation/provider','ReservationController@listreservationProvider')->name('reservation.listreservationprovider');

@@ -67,6 +67,17 @@
                               </li>
                             </ul>
                         </nav>
+                        <hr class="mt-4">
+                        <div class="row mb-3">
+                          <div class="col text-center">
+                            <h2>Reservas</h2>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col">
+                              <FullCalendar class="calendar" :options="calendarOptions" />
+                          </div>
+                        </div>
                     </div>
                 </div>
                 <!--open modal acomp -->
@@ -123,7 +134,7 @@
                 </div>
                 <!-- closed modal acomp -->
                 <!-- Fin ejemplo de tabla Listado -->
-                <div class="modal fade" :class="{'mostrar' : modal }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+                <div class="modal fade" :class="{'mostrar' : modal == 1 }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-scrollable modal-primary modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -140,6 +151,11 @@
                                         <div class="col-md-6 mb-2">
                                             <label for="text-input ">Ingrese la cédula del huésped</label>
                                             <input type="text"  class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cc_client">
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                          <a href="#" class="btn btn-warning shadow" @click="search_client(cc_client, option = 2)">
+                                            <i class="far fa-calendar-check"></i> Ver reservas
+                                          </a>
                                         </div>
                                     </div>
                                   </template>
@@ -435,7 +451,7 @@
                             </div>
                             <div class="modal-footer">
                                 <a  class="btn btn-danger  text-white" @click="closeModal('modal')">Cerrar</a>
-                                <a  class="btn btn-success  text-white"  @click="search_client(cc_client)" v-if="accion==1">Ingresar</a>
+                                <a  class="btn btn-success  text-white"  @click="search_client(cc_client,option = 1)" v-if="accion==1">Ingresar</a>
                                 <a  class="btn btn-success  text-white" @click="registerCustomers()" v-if="accion==3">Registrar</a>
                                 <a  class="btn btn-success  text-white" @click="stateBusy()" v-if="accion==4">Hospedar</a>
                                 <hr>
@@ -452,8 +468,149 @@
                     </div>
                     <!-- /.modal-dialog -->
                 </div>
-        </template>
-                
+      <!--modal reservar  -->
+                <div class="modal fade reservation" :class="{'mostrar' : modal == 4 }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-primary modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" v-text="titleModal"></h4>
+                                <button type="button" class="close" @click="closeModal('modal')">
+                                <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal product customers">
+                                  <template v-if="stateRoom=='search'">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-2"></div>
+                                        <div class="col-md-6 mb-2">
+                                            <label for="text-input ">Ingrese la cédula del huésped</label>
+                                            <input type="text"  class="form-control" placeholder="" v-bind:disabled="desactivar==1" v-model="cc_client">
+                                        </div>
+                                    </div>
+                                  </template>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <a  class="btn btn-danger  text-white" @click="closeModal('modal')">Cerrar</a>
+                                <a  class="btn btn-success  text-white"  @click="search_client(cc_client,option = 2)" v-if="accion==1">Buscar</a>
+                            </div>
+                        </div>
+                        <!-- /.modal-content -->
+                    </div>
+                    <!-- /.modal-dialog -->
+                </div>
+                <div class="modal" tabindex="-1" :class="{'mostrar' : modal2 }">
+                  <div class="modal-dialog dialog-scrollable">
+                    <div class="modal-content">
+                      <div class="modal-header bg-primary">
+                        <h5 class="modal-title">Reservas</h5>
+                        <button type="button" class="close" @click="closeModal('reservation')" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-2 text-center certificate">
+                                <h3>Información del huéped</h3>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label for="text-input ">Cliente</label>
+                                <input type="text" class="form-control" placeholder=""  v-model="name_client">
+                            </div>
+                            <div class="col-sm-12 col-md-4">
+                                <label for="text-input ">Primer apellido</label>
+                                <input type="text" class="form-control" v-model="firstSurname_client"    placeholder="introduzca apellido paterno">
+                            </div>
+                            <div class="col-sm-12 col-md-4">
+                                <label for="text-input ">Segundo apellido</label>
+                                <input type="text" class="form-control" v-model='secondSurname_client'   placeholder="introduzca apellido materno">
+                              </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-4">
+                                <label for="text-input ">Cédula</label>
+                                <input type="text" class="form-control"  v-model="cedula_client"  v-bind:disabled="desactivar==1" >
+                            </div>
+                            <div class="col-sm-12 col-md-4">
+                                <label for="text-input ">Celular</label>
+                                <input type="text" class="form-control"  v-model=' phone_client '  placeholder="introduzca el celular">
+                            </div>        
+                            <div class="col-sm-12 col-md-4">  
+                                <label for="email-input ">Nacionalidad</label>
+                                <input type="text" class="form-control"  v-model=' nationality_client '  placeholder="introduzca la nacionalidad">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-6">
+                                <label for="email-input ">Correo Electrónico</label>
+                                <input type="email" class="form-control"  v-model=' email_client '  placeholder="introduzca el correo">
+                            </div>
+                            <div class="col-sm-12 col-md-6  mb-2">
+                              <label for="text-input ">Fecha de entrada</label>
+                              <date-picker v-model="reservation_date_entry"   :language="es" :lang="lang" valueType="format"></date-picker>
+                            </div>
+                            <div class="col-sm-12 col-md-6  mb-2">
+                              <label for="text-input ">Fecha de salida</label>
+                              <date-picker v-model="reservation_date_exit"   :language="es" :lang="lang" valueType="format"></date-picker>
+                            </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="text-input">Tipo de reserva</label>
+                                <div>
+                                    <select class="form-control custom-select" v-model='condition_state'>
+                                        <option value="-R.Editable">Reserva-editable</option>
+                                        <option value="-R.Fija">Reserva-fija</option>
+                                    </select>
+                                </div>
+                            </div>
+                          </div>
+                          <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label" for="text-input">Habitación</label>
+                                <div>
+                                  <select class="form-control custom-select" v-model='room_id'>
+                                      <option value="*">Elige una opción</option>
+                                      <option v-for="room in arrayRooms"  :Key="room.id" :value="room.id" v-text="room.number"></option>
+                                  </select>
+                                </div>
+                            </div>
+                          </div>
+                          <div class="col-sm-12 col-md-6">
+                                <label for="email-input ">Color de tu reserva</label>
+                                <input type="color" class="form-control"  v-model=' color ' >
+                            </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                       <template v-if = "options">
+                          <button type="button" class="btn btn-warning" @click="closeModal('reservation')">
+                            <i class="fas fa-times-circle"></i> Cerrar
+                          </button>
+                          <button type="button" class="btn btn-danger" @click="addReservation()"> Eliminar reserva 
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                          <button type="button" class="btn btn-success" @click="addReservation()"> Actualizar reserva 
+                            <i class="fas fa-exchange-alt"></i>
+                          </button>
+                       </template>
+                       <template v-else>
+                          <button type="button" class="btn btn-danger" @click="closeModal('reservation')">
+                            <i class="fas fa-times-circle"></i> Cerrar
+                          </button>
+                          <button type="button" class="btn btn-success" @click="addReservation()"> Generar reserva 
+                            <i class="far fa-share-square"></i>
+                          </button>
+                       </template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        </template> 
         <template v-if="factura==1">
           <div class="card">
                     <div class="card-header">
@@ -944,13 +1101,12 @@
           </div>
         </template>
     </div>
-            
-  
 </template>
 
-
-
 <script>
+  import FullCalendar from '@fullcalendar/vue'
+  import dayGridPlugin from '@fullcalendar/daygrid'
+  import interactionPlugin from '@fullcalendar/interaction'
   import DatePicker from 'vue2-datepicker';
   import 'vue2-datepicker/index.css';
   import {es}  from 'vue2-datepicker/locale/es';
@@ -964,7 +1120,9 @@
     symbolSpacing: true // Indica si debe poner un espacio entre el símbolo y la cantidad
   })
   export default {
-
+     components: {
+        FullCalendar // make the <FullCalendar> tag available
+      },
     data() {
         return {
             lang: {
@@ -973,7 +1131,28 @@
                     },
                     monthBeforeYear: false,
             },
+            calendarOptions: {
+              plugins: [ dayGridPlugin, interactionPlugin ],
+              initialView: 'dayGridMonth',
+              dateClick: this.reservar,
+              eventClick:this.eventClick,
+              locale : 'es',
+              headerToolbar : {
+                start: '', // will normally be on the left. if RTL, will be on the right
+                center: 'title',
+                end: 'prev,next' // will normally be on the right. if RTL, will be on the left
+              },
+              events: 'http://localhost/nuevo/hotel/public/reservation'
+            },
+            options : 0,
+            reservation_id : 0,
+            color: "#df2020",
+            room_id : '*',
+            arrayRooms : [],
+            condition_state : '-R.Editable',
             id : 1,
+            reservation_date_entry : '',
+            reservation_date_exit : '',
             name_additional : '',
             price_additional : '',
             description_additional : '',
@@ -1057,6 +1236,7 @@
             rooms : '',
             opcion : 'Elige una opción',
             modal : 0,
+            modal2 : 0,
             titleModal : '',
             accion : 0,
             rooms_id : 0,
@@ -1133,6 +1313,45 @@
 
 
     methods : {
+
+         eventClick(info) {
+          // alert('date click! ' + arg.dateStr)
+          // console.log(info.event._def.title);
+          const complement = info.event._def;
+          const complement1 = info.event._def.extendedProps;
+          // console.log(info.event);
+
+          this.room_id =  complement1.room_id; 
+          this.title = complement.title; 
+          this.reservation_date_entry = info.event.startStr; 
+          this.reservation_date_exit  =  info.event.endStr; 
+          this.textColor =  '#000';
+          this.color = info.event.backgroundColor;
+          this.client_id =  complement1.customer_id;
+          this.reservation_id = info.event.id;
+          this.search_customer(this.client_id);
+
+        },
+        reservar(arg) {
+          // console.log(arg);
+          let me = this;
+          me.reservation_date_entry = arg.dateStr
+          me.openModal('room','search');
+        },
+
+        search_customer(customer_id){
+          let me=this;
+          var url = 'searchCustomer?customer_id='+ customer_id;
+          axios.get(url).then(function (response) {
+              //  var respuesta= response.data;
+              me.client = response.data;
+              me.listRoom();
+              me.openModal('room','event',me.client);
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
         FormAdditional(){
             if (this.price_additional === '' || this.description_additional === '') {
               Swal.fire('Debes Completar los campos')
@@ -1192,6 +1411,20 @@
            me.listRoomsActive(1,this.search,this.valor);
 
         },
+        listRoom(){
+          let me=this;
+          var url = 'room/reservation';
+          axios.get(url).then(function (response) {
+               me.arrayRooms= response.data;
+            
+              //console.log( me.arrayRooms[1]['number']);
+
+          })
+            .catch(function (error) {
+              console.log(error);
+              });
+        },
+
         listProductActive(page,search){
           let me=this;
           var valor = 'name_product'
@@ -1327,9 +1560,38 @@
           me.pagination.current_page = page;
           //Envia la petición para visualizar la data de esa página
           me.listRoomsActive(page,search,valor);
-      },
+        },
 
-        search_client(cc_client){
+        addReservation(){
+          let me=this;
+          var url = 'reservation/register';
+          axios.post(url,{
+                      'room_id' : this.room_id,
+                      'customer_id' : this.client_id,
+                      'reservation_date' :    this.reservation_date,
+                      'title': 'H-' + this.arrayRooms[this.room_id-1]['number']+this.condition_state, 
+                      'start' : this.reservation_date_entry, 
+                      'end'   : this.reservation_date_exit, 
+                      'color' : this.color,
+                      // 'borderColor' : this.condition_state,
+                      'textColor' : '#000',
+          })
+            .catch(function (error) {
+                  var respuesta = error.response.data;
+                  me.arrayError = respuesta.errors;
+                  console.log(error.response.data);
+            });
+          me.closeModal('reservation');
+          Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Reserva realizada',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+
+        search_client(cc_client,option){
                 let me=this;
                 var url = 'customers/searchClient?cc_client=' + cc_client;
                 axios.get(url).then(function (response) {
@@ -1364,14 +1626,27 @@
                                 } else if (result.dismiss === Swal.DismissReason.cancel ){
                                   swalWithBootstrapButtons.fire(
                                     'Cancelado',
-                                    'Recuerda él huésped no está en la base de datos :)',
+                                    'Recuerda él huésped no está en la base de datos!',
                                     'error'
                                   )
                                   }
                               })
                     }else{
-                        me.closeModal('modal');
-                        me.openModal('room','certificate',me.arrayUsuarioCliente);
+                      switch (option) {
+                        case 1: {
+                          me.closeModal('modal');
+                          me.openModal('room','certificate',me.arrayUsuarioCliente);
+                          break;
+                        };
+                        case 2:{
+                          me.closeModal('modal');
+                          me.openModal('room','reservation',me.arrayUsuarioCliente);
+                          break;
+                        }
+                         
+                      }
+                        // me.closeModal('modal');
+                        // me.openModal('room','certificate',me.arrayUsuarioCliente);
                     }
                    
                     
@@ -1382,10 +1657,10 @@
                   });
       },
         
-        registerCustomers(page,search,valor){
+        registerCustomers(){
 
             let me = this;
-            var url  = 'customers/register?page=' + page + '&search='+ search + "&valor=" + valor;
+            var url  = 'customers/register';
             axios.post(url,{
 
                         'cedula_client' :    this.cedula_client,
@@ -1413,7 +1688,7 @@
                   timer: 1500
                 });
                   me.closeModal('modal');
-                  me.search_client(me.cc_client);
+                  me.search_client(me.cc_client,me.option);
               })
               .catch(function (error) {
                     var respuesta = error.response.data;
@@ -1430,7 +1705,7 @@
                 axios.post(url,{
 
                             'client_id'                   :    this.client_id,
-                            'number_certificate'          :    this.number_certificate,
+                            'title__certificate'          :    this.title__certificate,
                             'cityOrigin_certificate'      :    this.cityOrigin_certificate,
                             'cityDestination_certificate' :    this.cityDestination_certificate,
                             'placabike_certificate'       :    this.placabike_certificate,
@@ -1525,7 +1800,6 @@
                           this.accion = 1;
                           this.cc_client = '';
                           this.rooms_id = data['id'];
-
                         break;       
                       };
 
@@ -1541,7 +1815,7 @@
                           this.accion = 2;
                           this.rooms_id = data['id'];
                           this.type_room =  data['type_room_id'];
-                          this.number =  data['number'];
+                          this.title_ =  data['title_'];
                           this.price =  data['price'];
                           this.price_air =  data['price_air'];
                           this.frozen =  data['frozen'];
@@ -1552,7 +1826,7 @@
                           this.phone_client=  data['phone_client'];
                           this.firstSurname_client =  data['firstSurname_client'];
                           this.secondSurname_client =  data['secondSurname_client'];
-                          this.number_facture = data['number_facture'];
+                          this.title__facture = data['number_facture'];
                           this.name_type_room = data['name_type_room'];
                           this.dataRoom = data;
                           this.search_sales();
@@ -1693,6 +1967,68 @@
 
                         break;
                       };
+
+                       case "search" :{
+                          this.listRoom();
+                          this.modal = 4;
+                          this.stateRoom = 'search'
+                          this.desactivar = 0;
+                          this.titleModal = 'Reserva a realizar';
+                          this.accion = 1;
+                          this.cc_client = '';
+                          this.search = '';
+
+                        break;
+                      };
+
+                      case "reservation" :{
+                          this.modal = 0;
+                          this.add = 0,
+                          this.modal2 = 1 ;
+                          this.desactivar = 1;
+                          this.reservation_date_entry = this.reservation_date_entry;
+                          this.reservation_date_exit = this.reservation_date_entry;
+                          this.titleModal = 'Acta de entrada';
+                          this.children_certificate = '';
+                          this.adults_certificate = '';
+                          this.name_client = data['name_client'];
+                          this.client_id = data['id'];
+                          this.cedula_client=  data['cedula_client'];
+                          this.firstSurname_client =  data['firstSurname_client'];
+                          this.secondSurname_client =  data['secondSurname_client'];
+                          this.gender_client =  data['gender_client'];
+                          this.address_client =  data['address_client'];
+                          this.nationality_client =  data['nationality_client'];
+                          this.phone_client =  data['phone_client'];
+                          this.email_client =  data['email_client'];
+                          break;
+
+                      };
+
+                      case "event" :{
+                        // console.log(data);
+                          this.modal = 0;
+                          this.options = 1,
+                          this.add = 0,
+                          this.modal2 = 1 ;
+                          this.desactivar = 1;
+                          this.room_id = this.room_id;
+                          this.reservation_date_entry = this.reservation_date_entry;
+                          this.reservation_date_exit = this.reservation_date_entry;
+                          this.name_client = data[0]['name_client'];
+                          this.client_id = data[0]['id'];
+                          this.cedula_client=  data[0]['cedula_client'];
+                          this.firstSurname_client =  data[0]['firstSurname_client'];
+                          this.secondSurname_client =  data[0]['secondSurname_client'];
+                          this.gender_client =  data[0]['gender_client'];
+                          this.address_client =  data[0]['address_client'];
+                          this.nationality_client =  data[0]['nationality_client'];
+                          this.phone_client =  data[0]['phone_client'];
+                          this.email_client =  data[0]['email_client'];
+                          this.color = this.color;
+                          break;
+
+                      };
                   }
               }
           }
@@ -1727,6 +2063,10 @@
 
             case "additional":
               this.add3 = 0;
+              break;
+
+            case "reservation":
+              this.modal2 = 0;
               break;
           }
         },
@@ -2306,6 +2646,15 @@
 
     .imgProduct img{
         width: 100%;
+    }
+
+    .calendar{
+      width: 100%;
+      height: 400px;
+    }
+
+    .reservation{
+      margin-top: 400px;
     }
 
 </style>

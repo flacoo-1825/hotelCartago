@@ -17,7 +17,7 @@ class Room extends Model
         'number_facture' , 
         'state' , 
         'condition' ,
-        'condition_state'
+        'condition_state',
 
    ];
 

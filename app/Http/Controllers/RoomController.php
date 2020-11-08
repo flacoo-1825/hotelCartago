@@ -60,6 +60,20 @@ class RoomController extends Controller
             $room->price_air = $request->price_air;
             $room->frozen = $request->frozen;
             $room->state = $request->state;
+            $room->reservation_date = $request->reservation_date;
+            $room->save();
+           
+    }
+
+    public function reservation(Request $request)
+    {		
+       		
+       		if (!$request->ajax()) return redirect('/');
+
+            $room =  Room::findOrFail($request->id);
+
+            $room->reservation_client_id = $request->reservation_client_id;
+            $room->reservation_date = $request->reservation_date;
             $room->save();
            
     }
@@ -176,5 +190,18 @@ class RoomController extends Controller
                         ->orderBy('id', 'asc')->get();
 
         return $room;
+    }
+
+    public function listReservation(Request $request)
+    {   
+         
+    //    if (!$request->ajax()) return redirect('/');
+         
+  
+        $rooms = Room::select('id','number')
+                    ->where('condition','=','1')
+                    ->orderBy('id', 'asc')->get();
+    
+        return $rooms;
     }
 }

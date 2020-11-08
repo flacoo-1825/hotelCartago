@@ -20,6 +20,10 @@
         "vue": "^2.5.7"
     },
     "dependencies": {
+        "@fullcalendar/daygrid": "^5.3.2",
+        "@fullcalendar/interaction": "^5.3.1",
+        "@fullcalendar/vue": "^5.3.1",
+        "ajv": "^6.12.6",
         "vue-currency-filter": "^5.2.0",
         "vue2-datepicker": "^3.6.2"
     }

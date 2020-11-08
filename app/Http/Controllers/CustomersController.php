@@ -92,6 +92,20 @@ class CustomersController extends Controller
 
      }
 
+     public function searchCustomer(Request $request){
+
+        // $customer_id = 1;
+
+        if (!$request->ajax()) return redirect('/');
+        $customer_id = $request->customer_id;
+        $customer = Customers::where('id','=',$customer_id)
+                                ->select('id','cedula_client','name_client','firstSurname_client',
+                                'secondSurname_client','nationality_client','phone_client','email_client')
+                                ->get();
+         return $customer;
+
+     }
+
 
 
 }

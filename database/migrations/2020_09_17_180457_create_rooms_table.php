@@ -23,7 +23,6 @@ class CreateRoomsTable extends Migration
             $table->enum('frozen',['Ventilador','Aire Acondicionado','Aire Acondicionado---Ventilador']);
             $table->string('number_facture')->nullable();
             $table->enum('state',['Disponible','Ocupada','Mantenimiento'])->nullable();
-            $table->enum('condition_state',['R',''])->nullable();
             $table->boolean('condition')->default(1);
             $table->timestamps();
 

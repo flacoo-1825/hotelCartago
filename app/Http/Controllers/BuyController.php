@@ -63,7 +63,7 @@ class BuyController extends Controller
                 $buy->description_buy = 'here';
                 $buy->dian_bill = 'No' ;
                 $buy->total_buy = $listBuy[$i]['total'] ;
-                $buy->state_buy = 1 ;
+                $buy->state_buy = 0 ;
                 $buy->save();
             }
           

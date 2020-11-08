@@ -25,7 +25,7 @@ class CreateSalesTable extends Migration
             $table->text('description_sales')->nullable();
             $table->double('price_unit_sales', 8, 2)->nullable();
             $table->double('total_sales', 8, 2)->nullable();
-            $table->boolean('state_bill')->default(1);
+            $table->boolean('state_bill')->default(0);
             $table->timestamps();
 
             $table->foreign('product_id')->references('id')->on('products');

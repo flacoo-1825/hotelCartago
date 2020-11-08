@@ -273,7 +273,7 @@
                     <div class="col-sm-12 mb-2 mt-3">
                       <div class="form-group">
                         <label for="exampleFormControlTextarea1">Observaciones</label>
-                        <textarea class="form-control" Disabled id="exampleFormControlTextarea1" rows="4" v-model="description_bill"></textarea>
+                        <textarea Disabled class="form-control"  id="exampleFormControlTextarea1" rows="4" v-model="description_bill"></textarea>
                       </div>
                     </div>
                   </div>
@@ -645,7 +645,7 @@
               me.registerBuy(this.listProduct);
               var url  = 'bill/register';
               axios.post(url,{
-
+ 
                   'customer_id' :    null,
                   'room_id' :    null,
                   'certificate_id' :   null,
@@ -662,7 +662,7 @@
                   'dian_bill'    : 'No',
                   'total_bill'    : this.total_facture,
                   'description_bill'    : this.description_bill,
-                  'state_bill'    : 1,     
+                  'state_bill'    : 0,     
 
               }).then(function (response) {
                   me.updateBuy();
@@ -856,6 +856,7 @@
               this.nit_provider = '';
               this.listProduct =  [];
               this.total_facture = '';
+              number_bill_buy = '';
               this.listBillBuy(1,this.search,this.valor);
               break;
 
@@ -1145,6 +1146,10 @@
 
     .imgProduct img{
         width: 100%;
+    }
+
+    .form-control:disabled{
+      background-color: rgb(240, 233, 0, 0.4);
     }
 
 </style>
