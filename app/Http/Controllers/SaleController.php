@@ -35,7 +35,7 @@ class SaleController extends Controller
         // $sales = sale::get();
         // return $sales;
       
-    }
+    } 
 
 
     public function store(Request $request)
@@ -46,7 +46,6 @@ class SaleController extends Controller
 
             for ($i=0; $i < count($listSale) ; $i++) { 
                 $sale = new Sale();
-                $sale->bill_id = NULL ;
                 $sale->checkbook_id = NULL ;
                 $sale->product_id = $listSale[$i]['product_id'] ;
                 $sale->taxe_id = NULL ;

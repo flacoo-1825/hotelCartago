@@ -18,8 +18,8 @@ class CreateReservationsTable extends Migration
             $table->integer('room_id')->unsigned()->nullable();
             $table->integer('customer_id')->unsigned()->nullable();
             $table->string('title')->nullable();
-            $table->dateTime('start')->nullable();
-            $table->dateTime('end')->nullable();
+            $table->date('start')->nullable();
+            $table->date('end')->nullable();
             $table->string('color')->nullable();
             $table->string('textColor')->nullable();
             $table->string('borderColor')->nullable();

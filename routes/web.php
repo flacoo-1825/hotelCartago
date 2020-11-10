@@ -154,7 +154,4 @@ Route::get('buy/listbuys','BuyController@listbuys')->name('buy.listSales');
 Route::get('reservation','ReservationController@index')->name('reservation.index');
 Route::post('reservation/register','ReservationController@store')->name('reservation.store');
 Route::put('reservation/update','ReservationController@update')->name('reservation.update');
-Route::put('reservation/activo','ReservationController@activo')->name('reservation.activo');
-Route::put('reservation/inactivo','ReservationController@inactivo')->name('reservation.inactivo');
-Route::get('reservation/active','ReservationController@listreservationActive')->name('reservation.listreservationsActive');
-Route::get('reservation/provider','ReservationController@listreservationProvider')->name('reservation.listreservationprovider');
+Route::delete('reservation/delete','ReservationController@destroy')->name('reservation.delete');
